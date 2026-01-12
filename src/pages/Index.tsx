@@ -116,6 +116,8 @@ susciter des questions ? Certainement pas.</p>
                 <p>Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique.</p>
                 <p>Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.</p>
                 <p>Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil pour mieux construire sa vie.</p>
+                <p>Et je souhaite à l’auteur de poursuivre sur cette voie : lire d’avantage, se former, dialoguer, remettre en question, approfondir… car c’est ainsi que naissent les esprits éclairés. Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curiosité, ce ne sera 
+certainement pas le dernier</p>
                 
                 <div className="pt-6 mt-6 border-t border-gray-200 text-right">
                   <p className="font-bold text-primary text-lg md:text-xl">M. Edouard Normand BIGENDAKO</p>

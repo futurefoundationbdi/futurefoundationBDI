@@ -110,6 +110,20 @@ const Index = () => {
 de la volonté d’un jeune passionné qui a décidé de 
 comprendre – puis d’expliquer – ce que beaucoup 
 préfèrent ignorer.</p>
+                <p>On y sent la spontanéité 
+de quelqu’un qui cherche à apprendre autant qu’à 
+transmettre, et c’est précisément ce qui rend cet 
+ouvrage inspirant. Il ne prétend pas offrir toutes 
+les réponses ni rivaliser avec les grands manuels 
+Préface 
+d’économie ; il ouvre plutôt une porte, celle de la 
+découverte et de la réflexion personnelle. 
+Bien sûr, certaines explications pourraient gagner 
+à être enrichies par des recherches plus 
+approfondies, par des lectures, des expériences et 
+des conseils d’experts. Mais faut-il déjà tout 
+maîtriser pour commencer à écrire, à partager et à 
+susciter des questions ? Certainement pas.</p>
                 <p>Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique.</p>
                 <p>Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.</p>
                 <p>Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil pour mieux construire sa vie.</p>

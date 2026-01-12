@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Couleurs exactes de la Fondation */
+    --background: 40 33% 98%;
+    --foreground: 160 30% 10%;
+
+    /* Vert forêt profond pour la section Impact */
+    --primary: 160 45% 20%; 
+    --primary-foreground: 40 33% 98%;
+
+    /* Or chaleureux pour les objectifs et icônes */
+    --secondary: 38 90% 55%;
+    --secondary-foreground: 160 30% 10%;
+
+    /* Amélioration du contraste pour les textes secondaires */
+    --muted: 40 20% 92%;
+    --muted-foreground: 160 15% 35%; 
+
+    --accent: 20 70% 50%;
+    --accent-foreground: 40 33% 98%;
+
+    --border: 40 20% 88%;
+    --radius: 0.75rem;
+
+    /* Gradients vitaux pour Hero et ImpactSection */
+    --gradient-hero: linear-gradient(135deg, hsl(160 45% 15%) 0%, hsl(160 40% 25%) 50%, hsl(38 60% 40%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(38 90% 55%) 0%, hsl(30 85% 45%) 100%);
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+@layer components {
+  /* Ces classes sont appelées dans ImpactSection et ProgramsSection */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-gold);
+  }
+  .bg-hero-gradient {
+    background: var(--gradient-hero);
+  }
+}

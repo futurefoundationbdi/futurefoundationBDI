@@ -106,7 +106,10 @@ const Index = () => {
               </div>
               
               <div className="p-6 md:p-12 overflow-y-auto leading-relaxed md:leading-[1.8] text-gray-800 space-y-4 md:space-y-6 text-left md:text-justify font-serif text-base md:text-lg custom-scrollbar">
-                <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder. C’est ce qui rend ce livre si particulier.</p>
+                <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder. C’est ce qui rend ce livre si particulier:il est né de la curiosité, de l’audace et 
+de la volonté d’un jeune passionné qui a décidé de 
+comprendre – puis d’expliquer – ce que beaucoup 
+préfèrent ignorer.</p>
                 <p>Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique.</p>
                 <p>Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.</p>
                 <p>Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil pour mieux construire sa vie.</p>

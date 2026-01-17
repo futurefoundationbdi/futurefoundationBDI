@@ -70,7 +70,7 @@ export const LIFE_SKILLS_DATA = {
     description: "Un coaching axé sur la discipline, la confiance en soi et les soft skills indispensables pour réussir en société."
   },
   gallery: [
-    { url: "/photo2.jpg", caption: "Atelier de leadership en groupe" } // Tu pourras changer les photos plus tard
+    { url: "/Discipline1.jpg", caption: "Atelier de leadership en groupe" } // Tu pourras changer les photos plus tard
   ],
   stories: [
     { 

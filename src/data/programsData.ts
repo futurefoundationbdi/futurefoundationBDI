@@ -73,7 +73,7 @@ export const VACATION_PROGRAM_DATA = {
     { 
       name: "Mugisha Don De Dieu", 
       context: "Enfant asthmatique", 
-      text: "Grâce au programme, Robin a reçu un pull pour se protéger du froid. Il a pu suivre les cours sereinement et admirer la générosité de Noël." 
+      text: "Grâce au programme, Mugisha Don De Dieu a reçu un pull pour se protéger du froid. Il a pu suivre les cours sereinement et admirer la générosité de Noël." 
     },
     { 
       name: "Aline", 

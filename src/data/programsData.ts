@@ -14,16 +14,56 @@ export const VACATION_PROGRAM_DATA = {
   // Conseil : Utilisez des images au format Paysage (Horizontal) pour un meilleur rendu mobile
   gallery: [
     { 
-      url: "/act1.jpg", 
-      caption: "Atelier de lecture & leadership" 
+      url: "/photo1.jpg", 
+      caption: "Apres les Ateliers de Devellopement Personnel" 
     },
     { 
-      url: "/act2.jpg", 
-      caption: "Distribution de kits scolaires" 
+      url: "/photo2.jpg", 
+      caption: "Distribution des Habits" 
     },
     { 
-      url: "/act3.jpg", 
-      caption: "Activités d'éveil et de sport" 
+      url: "/photo3.jpg", 
+      caption: "Partage du Repas après les sessions" 
+    },
+    { 
+      url: "/photo4.jpg", 
+      caption: "Jour de la fête de Noël" 
+    },
+       { 
+      url: "/photo5.jpg", 
+      caption: "Jour de la fête de Noël" 
+    },  
+    { 
+      url: "/photo6.jpg", 
+      caption: "Jour de la fête de Noël" 
+    },   
+    { 
+      url: "/photo7.jpg", 
+      caption: "Jour de la fête de Noël" 
+    },   
+    { 
+      url: "/photo8.jpg", 
+      caption: "Jour de la fête de Noël" 
+    },  
+    { 
+      url: "/photo9.jpg", 
+      caption: "Jour de la fête de Noël" 
+    },
+     { 
+      url: "/photo10.jpg", 
+      caption: "Jour de la fête de Noël" 
+    }, 
+    { 
+      url: "/photo11.jpg", 
+      caption: "Jour de la fête de Noël" 
+    }, 
+    { 
+      url: "/photo12.jpg", 
+      caption: "Repas le jour de la deuxième session" 
+    }, 
+    { 
+      url: "/photo13.jpg", 
+      caption: "Jour de la fête de Noël" 
     }
   ],
 
@@ -31,7 +71,7 @@ export const VACATION_PROGRAM_DATA = {
   // Conseil : Maximum 2-3 phrases par histoire pour éviter de trop longs défilements sur mobile
   stories: [
     { 
-      name: "Robin", 
+      name: "Mugisha Don De Dieu", 
       context: "Enfant asthmatique", 
       text: "Grâce au programme, Robin a reçu un pull pour se protéger du froid. Il a pu suivre les cours sereinement et admirer la générosité de Noël." 
     },

@@ -1,3 +1,4 @@
+import { useState } from "react"; // Ajouté pour gérer l'ouverture
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import MissionSection from "@/components/MissionSection";
@@ -6,11 +7,14 @@ import ImpactSection from "@/components/ImpactSection";
 import TeamSection from "@/components/TeamSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
-import FinanceQuiz from "@/components/FinanceQuiz"; // Importation du Quiz
+import FinanceQuiz from "@/components/FinanceQuiz"; 
+import QuizFloatingButton from "@/components/QuizFloatingButton"; // Import du nouveau bouton
 import { Button } from "@/components/ui/button";
-import { Trophy } from "lucide-react"; // Importation de l'icône pour le bouton push
 
 const Index = () => {
+  // État pour contrôler l'ouverture du quiz en mode plein écran
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background relative">
       <Navbar />
@@ -39,7 +43,7 @@ const Index = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent rounded-r-lg"></div>
                   </div>
-                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground text-[10px] md:text-xs font-bold py-2 px-4 rounded-full shadow-lg whitespace-nowrap animate-bounce">
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-secondary text-primary text-[10px] md:text-xs font-black py-2 px-4 rounded-full shadow-lg whitespace-nowrap animate-bounce">
                     Cliquez pour lire la préface
                   </div>
                 </div>
@@ -87,7 +91,7 @@ const Index = () => {
             <div className="bg-[#fdfbf7] w-full max-w-2xl max-h-[90vh] rounded-lg shadow-2xl overflow-hidden flex flex-col border-l-[8px] md:border-l-[15px] border-primary animate-fade-up">
               <div className="p-4 md:p-6 border-b flex justify-between items-center bg-white shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold text-[10px]">FF</div>
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-secondary flex items-center justify-center text-primary font-bold text-[10px]">FF</div>
                   <h3 className="font-bold text-primary uppercase tracking-tighter text-sm md:text-base">Préface Officielle</h3>
                 </div>
                 <button onClick={() => document.getElementById('modal-preface')?.classList.add('hidden')} className="text-gray-400 hover:text-primary text-xl font-bold p-2">✕</button>
@@ -108,7 +112,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* --- SECTION QUIZ (Placée ici pour la visibilité) --- */}
+        {/* --- SECTION QUIZ (Placée ici pour la visibilité statique) --- */}
         <FinanceQuiz />
 
         <ProgramsSection />
@@ -119,16 +123,13 @@ const Index = () => {
 
       <Footer />
 
-      {/* --- INVITATION PUSH (Bouton flottant Quiz) --- */}
-      <button 
-        onClick={() => document.getElementById('finance-quiz')?.scrollIntoView({ behavior: 'smooth' })}
-        className="fixed bottom-6 right-6 z-[40] group flex items-center gap-3 bg-secondary text-secondary-foreground p-3 md:p-4 rounded-full shadow-2xl animate-bounce hover:animate-none transition-all hover:scale-110 active:scale-95 border-none"
-      >
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap font-bold text-xs md:text-sm px-0 group-hover:px-2">
-          Teste ton QI Financier !
-        </span>
-        <Trophy className="w-5 h-5 md:w-6 md:h-6" />
-      </button>
+      {/* --- LE BOUTON FLOTTANT (IQ BRAIN) --- */}
+      <QuizFloatingButton onClick={() => setIsQuizOpen(true)} />
+
+      {/* --- LE MODAL DE JEU PLEIN ÉCRAN --- */}
+      {isQuizOpen && (
+        <FinanceQuiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
+      )}
 
     </div>
   );

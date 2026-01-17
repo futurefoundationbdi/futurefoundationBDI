@@ -1,18 +1,18 @@
-import { useState } from "react"; // Ajouté pour gérer l'ouverture
+import { useState } from "react"; 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import MissionSection from "@/components/MissionSection";
+import PartnersSection from "@/components/PartnersSection"; // AJOUTÉ
 import ProgramsSection from "@/components/ProgramsSection";
 import ImpactSection from "@/components/ImpactSection";
 import TeamSection from "@/components/TeamSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import FinanceQuiz from "@/components/FinanceQuiz"; 
-import QuizFloatingButton from "@/components/QuizFloatingButton"; // Import du nouveau bouton
+import QuizFloatingButton from "@/components/QuizFloatingButton"; 
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  // État pour contrôler l'ouverture du quiz en mode plein écran
   const [isQuizOpen, setIsQuizOpen] = useState(false);
 
   return (
@@ -21,6 +21,10 @@ const Index = () => {
       
       <main>
         <HeroSection />
+        
+        {/* --- SECTION PARTENAIRES (Ajoutée ici pour la visibilité) --- */}
+        <PartnersSection />
+
         <MissionSection />
 
         {/* --- SECTION TÉMOIGNAGES & LECTURE --- */}
@@ -112,7 +116,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* --- SECTION QUIZ (Placée ici pour la visibilité statique) --- */}
+        {/* --- SECTION QUIZ STATIQUE --- */}
         <FinanceQuiz />
 
         <ProgramsSection />
@@ -123,7 +127,7 @@ const Index = () => {
 
       <Footer />
 
-      {/* --- LE BOUTON FLOTTANT (IQ BRAIN) --- */}
+      {/* --- LE BOUTON FLOTTANT --- */}
       <QuizFloatingButton onClick={() => setIsQuizOpen(true)} />
 
       {/* --- LE MODAL DE JEU PLEIN ÉCRAN --- */}

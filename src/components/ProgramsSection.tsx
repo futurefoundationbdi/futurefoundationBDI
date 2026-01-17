@@ -1,114 +1,104 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
   BookOpen, 
   TrendingUp, 
   Sun, 
-  Rocket, 
   Calendar, 
-  Lock 
+  Lock,
+  Rocket,
+  ChevronRight
 } from "lucide-react";
+import ProgramModal from "./ProgramModal";
+
 import educationImage from "@/assets/education-program.jpg";
 import financialImage from "@/assets/financial-literacy.jpg";
 import communityImage from "@/assets/community-program.jpg";
 
 const ProgramsSection = () => {
+  const [isVacationModalOpen, setIsVacationModalOpen] = useState(false);
+
   const programs = [
     {
+      id: "finance",
       icon: TrendingUp,
       title: "Éducation Financière",
-      subtitle: "Indépendance financière",
-      description:
-        "Ateliers pratiques sur la gestion budgétaire, l'épargne et les bases de l'investissement pour préparer les jeunes.",
+      subtitle: "Indépendance",
+      description: "Ateliers pratiques sur la gestion budgétaire et l'épargne pour préparer les jeunes à l'autonomie.",
       image: financialImage,
-      buttonLabel: "Prochaines Sessions / Lives",
+      buttonLabel: "Prochaines Sessions",
     },
     {
+      id: "life",
       icon: BookOpen,
       title: "Compétences de Vie",
-      subtitle: "Développement personnel",
-      description:
-        "Coaching sur la discipline, les soft skills et le leadership pour naviguer sereinement dans la société actuelle.",
+      subtitle: "Leadership",
+      description: "Coaching sur la discipline et les soft skills pour naviguer sereinement dans la société actuelle.",
       image: educationImage,
-      buttonLabel: "Consulter le Calendrier",
+      buttonLabel: "Calendrier",
     },
     {
+      id: "vacation",
       icon: Sun,
       title: "Programme Vacances",
-      subtitle: "Pour les enfants marginalisés",
-      description:
-        "Apprentissage accéléré et activités de développement personnel offrant des opportunités uniques aux plus démunis.",
+      subtitle: "Impact Social",
+      description: "Apprentissage accéléré et soutien pour les enfants démunis lors de périodes clés.",
       image: communityImage,
-      buttonLabel: "En savoir plus",
+      buttonLabel: "Voir les histoires", // Nom mis à jour !
     },
   ];
 
-  const impactPacks = [
-    { name: "Pack Mineur", age: "15-18 ans", price: "15.000 Fbu", active: true },
-    { name: "Pack Majeur", age: "18-25 ans", price: "50.000 Fbu", active: true },
-    { name: "Pack Adulte", age: "25-30 ans", price: "100.000 Fbu", active: false },
-  ];
+  const handleProgramClick = (programId: string) => {
+    if (programId === "vacation") {
+      setIsVacationModalOpen(true);
+    }
+  };
 
   return (
-    <section id="programmes" className="py-12 md:py-32 bg-slate-50">
+    <section id="programmes" className="py-16 md:py-32 bg-slate-50 overflow-hidden">
       <div className="container mx-auto px-4">
         
-        {/* Header - Taille de texte optimisée */}
-        <div className="max-w-3xl mx-auto text-center mb-10 md:mb-16">
-          <span className="inline-block px-4 py-2 bg-primary/10 rounded-full text-primary font-bold text-[10px] md:text-xs uppercase tracking-widest mb-4">
+        {/* Header - Centré et lisible sur mobile */}
+        <div className="max-w-3xl mx-auto text-center mb-12 md:mb-20">
+          <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-primary font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-4">
             Nos Initiatives
           </span>
-          <h2 className="text-3xl md:text-5xl font-black text-foreground mb-4 md:mb-6 leading-tight">
-            Des programmes pour{" "}
-            <span className="text-primary">transformer l'avenir</span>
+          <h2 className="text-3xl md:text-6xl font-black text-foreground mb-4 md:mb-6 leading-[1.1] uppercase tracking-tighter">
+            Transformer <span className="text-primary italic">l'Avenir</span>
           </h2>
         </div>
 
-        {/* --- SECTION IMPACT 360 --- */}
-        <div className="mb-12 md:mb-16 bg-primary rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-2 md:border-4 border-white">
+        {/* --- SECTION IMPACT 360 (Version Optimisée Mobile) --- */}
+        <div className="mb-10 md:mb-20 bg-primary rounded-[2rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border-4 border-white transform hover:scale-[1.01] transition-transform duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            
-            {/* Contenu Texte - Alignement centré sur mobile */}
-            <div className="p-6 sm:p-8 md:p-12 text-white flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-4 md:mb-6 text-secondary">
-                <Rocket className="w-6 h-6 md:w-8 md:h-8" />
-                <span className="font-black uppercase tracking-tighter text-base md:text-xl italic">Impact 360</span>
+            <div className="p-8 md:p-16 text-white flex flex-col justify-center">
+              <div className="flex items-center gap-3 mb-6 text-secondary animate-pulse">
+                <Rocket className="w-8 h-8" />
+                <span className="font-black uppercase tracking-widest text-lg italic">Elite Impact</span>
               </div>
-              <h3 className="text-2xl md:text-4xl font-black mb-4 md:mb-6 leading-tight">
-                L'Accompagnement Élite <br className="hidden md:block"/> sur 3 mois
-              </h3>
-              <p className="text-white/80 mb-6 md:mb-8 text-sm md:text-base leading-relaxed">
-                Un pack premium : coaching personnalisé, accès bibliothèque privée et stratégies d'investissement.
+              <h3 className="text-3xl md:text-5xl font-black mb-6 leading-tight uppercase">L'Accompagnement de <span className="text-secondary italic">Haut Niveau</span></h3>
+              <p className="text-white/70 mb-8 text-sm md:text-lg leading-relaxed max-w-md">
+                Un coaching personnalisé sur 3 mois pour ceux qui veulent accélérer leur réussite financière.
               </p>
-              <Button className="w-full md:w-max bg-secondary hover:bg-secondary/90 text-primary font-black px-6 py-5 md:px-10 md:py-7 rounded-xl md:rounded-2xl group transition-all text-base md:text-lg">
-                S'inscrire au programme
-                <ArrowRight className="ml-2 group-hover:translate-x-2 transition-transform" />
+              <Button className="w-full md:w-max h-16 bg-secondary hover:bg-white text-primary font-black px-10 rounded-2xl group transition-all text-lg shadow-xl">
+                REJOINDRE LE PROGRAMME <ArrowRight className="ml-2 group-hover:translate-x-2 transition-transform" />
               </Button>
             </div>
 
-            {/* Grille des Packs - Espacement réduit sur mobile */}
-            <div className="bg-white/5 backdrop-blur-sm p-5 sm:p-6 md:p-8 flex flex-col gap-3 md:gap-4 justify-center border-t lg:border-t-0 lg:border-l border-white/10">
-              {impactPacks.map((pack) => (
-                <div 
-                  key={pack.name} 
-                  className={`p-4 md:p-5 rounded-xl md:rounded-2xl border-2 transition-all ${
-                    pack.active 
-                    ? "bg-white/10 border-white/20 hover:border-secondary/50" 
-                    : "bg-black/20 border-white/5 opacity-50 grayscale"
-                  }`}
-                >
+            <div className="bg-white/5 backdrop-blur-sm p-6 md:p-12 flex flex-col gap-4 justify-center border-t lg:border-t-0 lg:border-l border-white/10">
+              {[
+                { n: "Pack Mineur", a: "15-18 ans", p: "15.000 Fbu", active: true },
+                { n: "Pack Majeur", a: "18-25 ans", p: "50.000 Fbu", active: true },
+                { n: "Pack Adulte", a: "25-30 ans", p: "100.000 Fbu", active: false },
+              ].map((pack) => (
+                <div key={pack.n} className={`p-5 rounded-2xl border-2 transition-all ${pack.active ? "bg-white/10 border-white/20 hover:border-secondary" : "bg-black/20 opacity-40 grayscale cursor-not-allowed"}`}>
                   <div className="flex justify-between items-center text-white">
-                    <div className="max-w-[65%]">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-bold text-sm md:text-lg leading-tight">{pack.name}</h4>
-                        {!pack.active && <span className="text-[7px] md:text-[8px] bg-white/20 px-1.5 py-0.5 rounded-full flex items-center gap-1 uppercase font-bold"><Lock size={8}/> Indisponible</span>}
-                      </div>
-                      <p className="text-[9px] md:text-xs text-white/60 mt-0.5">Âge : {pack.age}</p>
+                    <div>
+                      <h4 className="font-bold text-lg">{pack.n}</h4>
+                      <p className="text-[10px] text-white/50 uppercase font-black tracking-widest">Cible : {pack.a}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-black text-secondary text-sm md:text-xl">{pack.price}</p>
-                      {pack.active && <p className="text-[7px] md:text-[8px] uppercase font-bold text-white/40">Frais</p>}
-                    </div>
+                    <p className="font-black text-secondary text-xl">{pack.p}</p>
                   </div>
                 </div>
               ))}
@@ -116,44 +106,42 @@ const ProgramsSection = () => {
           </div>
         </div>
 
-        {/* --- GRILLE DES AUTRES PROGRAMMES --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {programs.map((program, index) => (
-            <div
-              key={program.title}
-              className="group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-500 flex flex-col"
-            >
-              <div className="relative h-40 sm:h-44 md:h-52 overflow-hidden shrink-0">
-                <img
-                  src={program.image}
-                  alt={program.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
-                <div className="absolute top-3 left-3 md:top-4 md:left-4">
-                  <div className="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-white/90 backdrop-blur-md shadow-lg flex items-center justify-center">
-                    <program.icon className="w-4 h-4 md:w-6 md:h-6 text-primary" />
+        {/* --- GRILLE DES PROGRAMMES (Adaptabilité 1, 2 ou 3 colonnes) --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+          {programs.map((program) => (
+            <div key={program.title} className="group bg-white rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 flex flex-col border border-slate-100">
+              <div className="relative h-56 md:h-64 overflow-hidden">
+                <img src={program.image} alt={program.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute top-5 left-5">
+                  <div className="w-12 h-12 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg flex items-center justify-center text-primary">
+                    <program.icon className="w-6 h-6" />
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 md:p-8 flex flex-col flex-grow">
-                <div className="mb-3">
-                  <span className="text-[8px] md:text-[9px] font-black text-secondary uppercase tracking-widest bg-secondary/10 px-2 py-1 rounded-full">
+              <div className="p-8 flex flex-col flex-grow">
+                <div className="mb-4">
+                  <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] bg-secondary/10 px-3 py-1.5 rounded-full">
                     {program.subtitle}
                   </span>
                 </div>
-                <h3 className="text-lg md:text-2xl font-bold text-primary mb-2 md:mb-3 italic leading-tight">
+                <h3 className="text-2xl font-black text-primary mb-3 uppercase tracking-tighter">
                   {program.title}
                 </h3>
-                <p className="text-[13px] md:text-sm text-muted-foreground leading-relaxed mb-6 flex-grow">
+                <p className="text-sm text-slate-500 leading-relaxed mb-8 flex-grow">
                   {program.description}
                 </p>
+                
                 <Button
-                  variant="outline"
-                  className="w-full border-primary/20 text-primary hover:bg-primary hover:text-white rounded-xl h-10 md:h-12 font-bold text-[11px] md:text-sm flex gap-2 mt-auto"
+                  onClick={() => handleProgramClick(program.id)}
+                  variant={program.id === "vacation" ? "default" : "outline"}
+                  className={`w-full h-14 rounded-2xl font-black text-xs uppercase tracking-widest flex gap-3 transition-all ${
+                    program.id === "vacation" 
+                    ? "bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/20" 
+                    : "border-primary/20 text-primary hover:bg-slate-50"
+                  }`}
                 >
-                  <Calendar className="w-3.5 h-3.5 md:w-4 h-4" />
+                  {program.id === "vacation" ? <ChevronRight className="w-5 h-5" /> : <Calendar className="w-4 h-4" />}
                   {program.buttonLabel}
                 </Button>
               </div>
@@ -161,6 +149,8 @@ const ProgramsSection = () => {
           ))}
         </div>
       </div>
+
+      <ProgramModal isOpen={isVacationModalOpen} onClose={() => setIsVacationModalOpen(false)} />
     </section>
   );
 };

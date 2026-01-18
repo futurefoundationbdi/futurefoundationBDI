@@ -106,25 +106,10 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  // --- MODIFICATION ICI : SUPPRESSION DU RENDU PAR DÉFAUT ---
+  // Si le quiz n'est pas ouvert, on ne retourne rien (pas de section en bas du footer)
   if (!isOpen) {
-    return (
-      <section className="py-16 bg-slate-50" id="quiz-cta">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-4xl mx-auto bg-primary rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-[10px] font-black mb-4 uppercase">
-                  <Zap className="w-4 h-4 fill-secondary" /> {totalXP} XP CUMULÉS
-                </div>
-                <h2 className="text-3xl md:text-5xl font-black mb-6 italic leading-tight">Es-tu un génie de la <span className="text-secondary">Finance ?</span></h2>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Button onClick={() => startQuiz("debutant")} className="bg-secondary text-primary font-black px-8 h-14 rounded-2xl shadow-lg">NIVEAU DÉBUTANT</Button>
-                  <Button onClick={() => startQuiz("intermediaire")} variant="outline" className="border-2 border-white/20 text-white px-8 h-14 rounded-2xl font-black">NIVEAU EXPERT</Button>
-                </div>
-              </div>
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (

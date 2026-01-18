@@ -99,7 +99,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   const shareScore = () => {
     const currentUrl = window.location.origin;
     const currentBadgeName = [...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name;
-    const text = `🔥 J'ai cumulé ${score * 10} points d'intelligence financière sur Future Foundation ! Mon grade : ${currentBadgeName} 🧠\n\nPeux-tu me battre ? Fais le test ici : ${currentUrl}`;
+    const text = `🔥 J'ai cumulé ${score * 10} points d'intelligence financière sur Future Foundation BDI ! Mon grade : ${currentBadgeName} 🧠\n\nPeux-tu me battre ? Fais le test ici : ${currentUrl}`;
     
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };

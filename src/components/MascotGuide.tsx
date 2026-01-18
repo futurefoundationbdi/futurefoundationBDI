@@ -1,15 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MascotGuide = () => {
   const [showBubble, setShowBubble] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-
-  useEffect(() => {
-    // On attend 2 secondes après l'arrivée pour montrer la bulle
-    const timer = setTimeout(() => setShowBubble(true), 2500);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (!isVisible) return null;
 
@@ -42,27 +36,28 @@ const MascotGuide = () => {
                 Plus tard
               </button>
             </div>
-            {/* Petite flèche de la bulle */}
             <div className="absolute -bottom-2 left-6 w-4 h-4 bg-white border-b-2 border-r-2 border-[#1a4d4a] rotate-45"></div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 2. LA MASCOTTE (L'ANIMATION EST ICI) */}
+      {/* 2. LA MASCOTTE */}
       <motion.div
         className="pointer-events-auto"
-        // ANIMATION DE L'ENTRÉE (Elle vient de la gauche)
         initial={{ x: -400, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
+        // ON DÉCLENCHE LA BULLE ICI : Seulement quand la course est finie
+        onAnimationComplete={() => {
+            setTimeout(() => setShowBubble(true), 500); // Petit délai de 0.5s pour le réalisme
+        }}
         transition={{ 
           type: "spring", 
           stiffness: 50, 
           damping: 15,
-          duration: 1.5 
+          duration: 1.2 // J'ai un peu accéléré la course
         }}
       >
         <motion.div
-          // ANIMATION DE REBOND CONTINU (Pour qu'elle ne reste pas figée)
           animate={{ 
             y: [0, -10, 0],
             rotate: [0, -2, 2, 0] 

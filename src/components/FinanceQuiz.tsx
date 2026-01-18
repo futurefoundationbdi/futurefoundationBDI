@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { 
   CheckCircle2, XCircle, Trophy, RefreshCcw, 
-  Star, MessageCircle, X, ArrowRight, Zap, Award
+  Star, MessageCircle, X, Zap 
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion"; // Ajout de framer-motion
+import { motion, AnimatePresence } from "framer-motion";
 import { QUIZ_DATABASE, Question } from "../data/quizQuestions";
 
 interface FinanceQuizProps {
@@ -12,7 +12,6 @@ interface FinanceQuizProps {
   onClose?: () => void;
 }
 
-// Configuration des paliers pour les badges
 const BADGE_LEVELS = [
   { name: "Novice en Épargne", xp: 0, icon: "🌱" },
   { name: "Apprenti Investisseur", xp: 100, icon: "💰" },
@@ -41,9 +40,12 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
   const loadNewSession = (lvl: "debutant" | "intermediaire" | "avance") => {
     const all = QUIZ_DATABASE[lvl];
-    if (!all) return;
+    if (!all || all.length === 0) return;
+
     const shuffled = [...all].sort(() => 0.5 - Math.random());
-    setCurrentQuestions(shuffled.slice(0, 5));
+    const selectedQuestions = shuffled.slice(0, 5);
+
+    setCurrentQuestions(selectedQuestions);
     setStep(0);
     setScore(0);
     setIsFinished(false);
@@ -66,7 +68,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   };
 
   const handleAnswer = (idx: number) => {
-    if (hasAnswered) return;
+    if (hasAnswered || !currentQuestions[step]) return;
     setSelected(idx);
     setHasAnswered(true);
     if (idx === currentQuestions[step].c) setScore((prev) => prev + 1);
@@ -82,7 +84,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
       const oldXP = totalXP;
       const updatedTotalXP = oldXP + earnedXP;
       
-      // Vérifier si un nouveau badge est débloqué
       const oldBadge = [...BADGE_LEVELS].reverse().find(b => oldXP >= b.xp);
       const currentBadge = [...BADGE_LEVELS].reverse().find(b => updatedTotalXP >= b.xp);
       
@@ -92,7 +93,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
       setTotalXP(updatedTotalXP);
       localStorage.setItem("future_foundation_xp", updatedTotalXP.toString());
-      // Déclencher l'événement storage pour mettre à jour le WisdomDashboard
       window.dispatchEvent(new Event("storage"));
       setIsFinished(true);
     }
@@ -103,6 +103,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  // --- RENDU SECTION ACCUEIL ---
   if (!isOpen) {
     return (
       <section className="py-16 bg-slate-50">
@@ -125,6 +126,18 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     );
   }
 
+  // --- SÉCURITÉ MOBILE : CHARGEMENT ---
+  if (currentQuestions.length === 0) {
+    return (
+      <div className="fixed inset-0 z-[10000] bg-primary flex items-center justify-center p-4">
+        <div className="text-white text-center">
+          <RefreshCcw className="w-10 h-10 animate-spin mx-auto mb-4 text-secondary" />
+          <p className="font-black italic">Chargement des questions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[10000] bg-primary/98 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
       <button onClick={handleClose} className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 p-3 rounded-full transition-colors z-50">
@@ -135,11 +148,14 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
         <div className="bg-white text-primary rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative border-b-[10px] border-secondary animate-in zoom-in duration-300">
           
           {!isFinished ? (
-            // --- ETAPE : QUESTIONS (IDEM QU'AVANT) ---
-            <div className="space-y-6">
+            <div className="space-y-6" key={step}>
               <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase">
-                <span className="flex items-center gap-1 text-secondary"><Star className="w-3 h-3 fill-secondary" /> {level}</span>
-                <span className="bg-slate-100 px-3 py-1 rounded-full text-primary font-bold">Question {step + 1}/5</span>
+                <span className="flex items-center gap-1 text-secondary">
+                  <Star className="w-3 h-3 fill-secondary" /> {level}
+                </span>
+                <span className="bg-slate-100 px-3 py-1 rounded-full text-primary font-bold">
+                  Question {step + 1}/5
+                </span>
               </div>
               
               <h3 className="text-xl md:text-2xl font-black leading-tight min-h-[80px] text-primary">
@@ -149,7 +165,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
               <div className="grid gap-3">
                 {currentQuestions[step]?.o.map((opt, i) => (
                   <button 
-                    key={i} 
+                    key={`${step}-${i}`} 
                     disabled={hasAnswered} 
                     onClick={() => handleAnswer(i)}
                     className={`w-full p-4 sm:p-5 rounded-2xl text-left text-sm font-bold border-2 transition-all flex justify-between items-center group ${
@@ -170,14 +186,13 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                   <div className="p-4 bg-secondary/10 rounded-2xl border-l-4 border-secondary">
                     <p className="text-xs text-primary/80 font-bold italic">💡 {currentQuestions[step].e}</p>
                   </div>
-                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-xl">
+                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-xl hover:bg-primary/90">
                     {step + 1 < currentQuestions.length ? "QUESTION SUIVANTE" : "VOIR MON SCORE"} 
                   </Button>
                 </div>
               )}
             </div>
           ) : (
-            // --- ETAPE : RESULTATS & BADGES (MIS À JOUR) ---
             <div className="text-center space-y-6 py-4 animate-in zoom-in">
               <AnimatePresence mode="wait">
                 {newBadge ? (

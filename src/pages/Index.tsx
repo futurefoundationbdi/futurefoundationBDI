@@ -125,7 +125,7 @@ const Index = () => {
             <button onClick={() => document.getElementById('modal-preface')?.classList.add('hidden')} className="text-gray-400 hover:text-primary text-xl font-bold p-2">✕</button>
           </div>
           <div className="p-6 md:p-12 overflow-y-auto leading-relaxed text-gray-800 space-y-4 text-justify font-serif text-base md:text-lg">
-            <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder. 
+            <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder.</p> 
             <p> C’est ce qui rend ce livre si particulier : il est né de la curiosité, de l’audace et de la volonté d’un jeune passionné qui a décidé de comprendre – puis d’expliquer – ce que beaucoup préfèrent ignorer.</p> 
              <p>Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique. On y sent la spontanéité de quelqu’un qui cherche à apprendre autant qu’à transmettre, et c’est précisément ce qui rend cet ouvrage inspirant. 
                Il ne prétend pas offrir toutes les réponses ni rivaliser avec les grands manuels d’économie ; il ouvre plutôt une porte, celle de la découverte et de la réflexion personnelle.</p>  

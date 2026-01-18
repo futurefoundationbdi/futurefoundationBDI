@@ -2,14 +2,23 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { 
   CheckCircle2, XCircle, Trophy, RefreshCcw, 
-  Star, MessageCircle, X, ArrowRight, Zap 
+  Star, MessageCircle, X, ArrowRight, Zap, Award
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion"; // Ajout de framer-motion
 import { QUIZ_DATABASE, Question } from "../data/quizQuestions";
 
 interface FinanceQuizProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
+
+// Configuration des paliers pour les badges
+const BADGE_LEVELS = [
+  { name: "Novice en Épargne", xp: 0, icon: "🌱" },
+  { name: "Apprenti Investisseur", xp: 100, icon: "💰" },
+  { name: "Stratège de la BRB", xp: 300, icon: "🏛️" },
+  { name: "Maître de la Liberté", xp: 600, icon: "👑" },
+];
 
 const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: FinanceQuizProps) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -21,15 +30,9 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   const [selected, setSelected] = useState<number | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [totalXP, setTotalXP] = useState<number>(0);
+  const [newBadge, setNewBadge] = useState<{name: string, icon: string} | null>(null);
 
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
-
-  // CHARGEMENT AUTOMATIQUE DES QUESTIONS LORS DE L'OUVERTURE
-  useEffect(() => {
-    if (isOpen && currentQuestions.length === 0) {
-      loadNewSession("debutant");
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     const savedXP = localStorage.getItem("future_foundation_xp");
@@ -47,6 +50,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     setSelected(null);
     setHasAnswered(false);
     setLevel(lvl);
+    setNewBadge(null);
   };
 
   const startQuiz = (lvl: "debutant" | "intermediaire" | "avance") => {
@@ -56,14 +60,9 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   };
 
   const handleClose = () => {
-    if (externalOnClose) {
-      externalOnClose();
-    } else {
-      setInternalIsOpen(false);
-    }
+    if (externalOnClose) externalOnClose();
+    else setInternalIsOpen(false);
     document.body.style.overflow = "unset";
-    // Optionnel : Réinitialiser pour la prochaine ouverture
-    setCurrentQuestions([]);
   };
 
   const handleAnswer = (idx: number) => {
@@ -79,15 +78,28 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
       setSelected(null);
       setHasAnswered(false);
     } else {
-      const newTotalXP = totalXP + (score * 10);
-      setTotalXP(newTotalXP);
-      localStorage.setItem("future_foundation_xp", newTotalXP.toString());
+      const earnedXP = score * 10;
+      const oldXP = totalXP;
+      const updatedTotalXP = oldXP + earnedXP;
+      
+      // Vérifier si un nouveau badge est débloqué
+      const oldBadge = [...BADGE_LEVELS].reverse().find(b => oldXP >= b.xp);
+      const currentBadge = [...BADGE_LEVELS].reverse().find(b => updatedTotalXP >= b.xp);
+      
+      if (currentBadge && currentBadge.name !== oldBadge?.name) {
+        setNewBadge({ name: currentBadge.name, icon: currentBadge.icon });
+      }
+
+      setTotalXP(updatedTotalXP);
+      localStorage.setItem("future_foundation_xp", updatedTotalXP.toString());
+      // Déclencher l'événement storage pour mettre à jour le WisdomDashboard
+      window.dispatchEvent(new Event("storage"));
       setIsFinished(true);
     }
   };
 
   const shareScore = () => {
-    const text = `🔥 J'ai accumulé ${totalXP} points d'intelligence financière sur Future Foundation ! Peux-tu me battre ?\n\nFais le test ici : ${window.location.origin}`;
+    const text = `🔥 J'ai atteint le grade de "${[...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name}" sur Future Foundation ! Peux-tu me battre ?\n\nFais le test ici : ${window.location.origin}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -96,8 +108,8 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto bg-primary rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden group">
-             <div className="absolute -right-20 -top-20 w-64 h-64 bg-secondary/10 rounded-full blur-3xl group-hover:bg-secondary/20 transition-colors" />
-             <div className="relative z-10">
+              <div className="absolute -right-20 -top-20 w-64 h-64 bg-secondary/10 rounded-full blur-3xl group-hover:bg-secondary/20 transition-colors" />
+              <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-[10px] font-black mb-4 uppercase tracking-widest">
                   <Zap className="w-4 h-4 fill-secondary" /> {totalXP} XP CUMULÉS
                 </div>
@@ -106,7 +118,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                   <Button onClick={() => startQuiz("debutant")} className="bg-secondary text-primary font-black px-8 h-14 rounded-2xl shadow-lg hover:scale-105 transition-transform">NIVEAU DÉBUTANT</Button>
                   <Button onClick={() => startQuiz("intermediaire")} variant="outline" className="border-2 border-white/20 text-white px-8 h-14 rounded-2xl font-black hover:bg-white hover:text-primary transition-all">NIVEAU EXPERT</Button>
                 </div>
-             </div>
+              </div>
           </div>
         </div>
       </section>
@@ -114,21 +126,16 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] bg-primary/98 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4">
+    <div className="fixed inset-0 z-[10000] bg-primary/98 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
       <button onClick={handleClose} className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 p-3 rounded-full transition-colors z-50">
         <X className="w-6 h-6" />
       </button>
 
-      <div className="w-full max-w-xl">
+      <div className="w-full max-w-xl my-auto">
         <div className="bg-white text-primary rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative border-b-[10px] border-secondary animate-in zoom-in duration-300">
           
-          {/* SÉCURITÉ : Vérifier si les questions sont chargées */}
-          {currentQuestions.length === 0 ? (
-            <div className="flex flex-col items-center py-10">
-              <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="font-bold">Chargement du quiz...</p>
-            </div>
-          ) : !isFinished ? (
+          {!isFinished ? (
+            // --- ETAPE : QUESTIONS (IDEM QU'AVANT) ---
             <div className="space-y-6">
               <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase">
                 <span className="flex items-center gap-1 text-secondary"><Star className="w-3 h-3 fill-secondary" /> {level}</span>
@@ -159,37 +166,58 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
               </div>
 
               {hasAnswered && (
-                <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-                  <div className="p-4 bg-secondary/10 rounded-2xl border-l-4 border-secondary shadow-inner">
-                    <p className="text-xs text-primary/80 font-bold italic leading-relaxed">
-                      💡 {currentQuestions[step].e}
-                    </p>
+                <div className="space-y-4">
+                  <div className="p-4 bg-secondary/10 rounded-2xl border-l-4 border-secondary">
+                    <p className="text-xs text-primary/80 font-bold italic">💡 {currentQuestions[step].e}</p>
                   </div>
-                  
-                  <Button 
-                    onClick={nextStep}
-                    className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-xl flex items-center justify-center gap-2 hover:bg-primary/90 group"
-                  >
+                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-xl">
                     {step + 1 < currentQuestions.length ? "QUESTION SUIVANTE" : "VOIR MON SCORE"} 
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center space-y-8 py-4 animate-in zoom-in">
-              <Trophy className="w-20 h-20 text-secondary mx-auto animate-bounce" />
-              <div>
-                <h3 className="text-2xl font-black text-primary uppercase">SCORE : {score}/5</h3>
-                <p className="text-6xl font-black text-secondary my-4">+{score * 10} XP</p>
+            // --- ETAPE : RESULTATS & BADGES (MIS À JOUR) ---
+            <div className="text-center space-y-6 py-4 animate-in zoom-in">
+              <AnimatePresence mode="wait">
+                {newBadge ? (
+                  <motion.div 
+                    initial={{ scale: 0.5, rotate: -20, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    className="space-y-4"
+                  >
+                    <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-secondary blur-2xl opacity-30 animate-pulse"></div>
+                        <div className="text-8xl relative">{newBadge.icon}</div>
+                    </div>
+                    <h3 className="text-2xl font-black text-secondary uppercase tracking-tighter">Nouveau Badge Débloqué !</h3>
+                    <p className="text-lg font-bold text-primary italic">" {newBadge.name} "</p>
+                  </motion.div>
+                ) : (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <Trophy className="w-20 h-20 text-secondary mx-auto animate-bounce" />
+                    <h3 className="text-2xl font-black text-primary uppercase mt-4">SCORE : {score}/5</h3>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
+                <p className="text-sm font-black text-slate-400 uppercase mb-1">XP Gagnés</p>
+                <p className="text-5xl font-black text-primary">+{score * 10}</p>
               </div>
-              <div className="flex flex-col gap-3">
-                <Button onClick={shareScore} className="bg-[#25D366] text-white rounded-2xl h-16 font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:scale-105 transition-transform">
-                  <MessageCircle className="w-6 h-6 fill-current" /> DÉFIE TES AMIS
+
+              <div className="flex flex-col gap-3 pt-4">
+                <Button onClick={shareScore} className="bg-[#25D366] text-white rounded-2xl h-14 font-black text-md shadow-xl flex items-center justify-center gap-3">
+                  <MessageCircle className="w-5 h-5 fill-current" /> PARTAGER SUR WHATSAPP
                 </Button>
-                <Button onClick={() => loadNewSession(level)} variant="ghost" className="rounded-2xl h-12 text-slate-400 font-black uppercase text-[10px] hover:bg-slate-50">
-                   <RefreshCcw className="w-4 h-4 mr-2" /> Rejouer ce niveau
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => loadNewSession(level)} variant="outline" className="flex-1 rounded-2xl h-12 border-2 font-black text-xs">
+                    <RefreshCcw className="w-4 h-4 mr-2" /> REJOUER
+                  </Button>
+                  <Button onClick={handleClose} variant="ghost" className="flex-1 rounded-2xl h-12 font-black text-xs">
+                    QUITTER
+                  </Button>
+                </div>
               </div>
             </div>
           )}

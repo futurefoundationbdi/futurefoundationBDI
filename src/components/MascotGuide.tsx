@@ -1,97 +1,89 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X } from "lucide-react"; // Importation d'icônes pour le mode réduit
 
 const MascotGuide = () => {
-  const [status, setStatus] = useState<"arriving" | "talking" | "minimized">("arriving");
+  const [step, setStep] = useState("entering"); // "entering", "chatting", "leaving"
   const [isVisible, setIsVisible] = useState(true);
+
+  const handleDismiss = () => {
+    setStep("leaving");
+    // On retire le composant après l'animation de sortie
+    setTimeout(() => setIsVisible(false), 800);
+  };
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-[10000] flex items-end pointer-events-none">
+    <div className="fixed bottom-4 left-4 z-[10000] pointer-events-none flex items-end">
       
-      {/* 1. BULLE DE TEXTE (Uniquement en mode talking) */}
+      {/* 1. LA BULLE DE TEXTE */}
       <AnimatePresence>
-        {status === "talking" && (
+        {step === "chatting" && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.5, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            className="mb-32 ml-10 p-4 bg-white rounded-2xl shadow-2xl border-2 border-[#1a4d4a] text-[#1a4d4a] w-56 pointer-events-auto relative"
+            initial={{ opacity: 0, scale: 0.5, x: -20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.5, x: -50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="mb-32 ml-10 p-4 bg-white rounded-2xl shadow-2xl border-2 border-[#1a4d4a] text-[#1a4d4a] w-52 pointer-events-auto relative"
           >
-            <p className="text-[11px] font-black leading-tight">
-              Génial ! Je reste dans le coin pour t'aider. Prêt à découvrir nos secrets financiers ?
+            <p className="text-xs font-black leading-tight mb-3">
+              Salut ! La réussite de tous est notre priorité. Content de te voir ici !
             </p>
-            <div className="flex gap-2 mt-3">
-              <button 
-                onClick={() => setStatus("minimized")}
-                className="text-[10px] bg-[#f1c40f] px-3 py-1.5 rounded-full font-black text-primary shadow-sm hover:scale-105 transition-transform"
-              >
-                C'est parti !
-              </button>
-              <button 
-                onClick={() => setIsVisible(false)}
-                className="text-[10px] text-gray-400 font-bold"
-              >
-                Fermer
-              </button>
-            </div>
+            
+            <button 
+              onClick={handleDismiss}
+              className="w-full text-[10px] bg-[#f1c40f] px-3 py-2 rounded-full font-black text-primary shadow-sm hover:bg-yellow-400 transition-colors active:scale-95"
+            >
+              C'EST PARTI !
+            </button>
+
+            {/* Flèche de la bulle */}
             <div className="absolute -bottom-2 left-6 w-4 h-4 bg-white border-b-2 border-r-2 border-[#1a4d4a] rotate-45"></div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 2. LA MASCOTTE (S'adapte selon le status) */}
+      {/* 2. LA MASCOTTE */}
       <motion.div
-        className="pointer-events-auto cursor-pointer relative"
-        layout // Permet une transition fluide de taille et position
+        className="pointer-events-auto"
+        // État initial (caché à gauche)
         initial={{ x: -400, opacity: 0 }}
+        // Animation selon l'étape
         animate={{ 
-          x: 0, 
-          opacity: 1,
-          scale: status === "minimized" ? 0.4 : 1, // Réduction de taille
+          x: step === "leaving" ? -400 : 0, 
+          opacity: step === "leaving" ? 0 : 1 
         }}
+        // SYNCHRONISATION : On lance la bulle dès que l'entrée est finie
         onAnimationComplete={() => {
-          if (status === "arriving") setStatus("talking");
+          if (step === "entering") setStep("chatting");
         }}
-        onClick={() => status === "minimized" && setStatus("talking")} // Redevient grande au clic
-        transition={{ type: "spring", stiffness: 60, damping: 15 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 40, 
+          damping: 12
+        }}
       >
         <motion.div
-          animate={status === "talking" ? { 
+          // Animation de vie (salut/respiration) uniquement quand elle discute
+          animate={step === "chatting" ? { 
             rotate: [0, -6, 6, -6, 6, 0],
-            y: [0, -5, 0] 
-          } : { y: [0, -3, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
+            y: [0, -8, 0] 
+          } : {}}
+          transition={{ 
+            duration: 2.5, 
+            repeat: Infinity, 
+            repeatDelay: 2,
+            ease: "easeInOut" 
+          }}
           style={{ originX: 0.5, originY: 1 }}
-          className="relative group"
+          className="relative w-32 md:w-44"
         >
-          {/* L'IMAGE DE LA MASCOTTE */}
           <img 
             src="/masc.png" 
-            alt="Guide" 
-            className={`w-32 md:w-44 h-auto drop-shadow-2xl transition-all ${status === "minimized" ? "filter saturate-150" : ""}`} 
+            alt="Mascotte Future Foundation" 
+            className="w-full h-auto drop-shadow-2xl" 
           />
-          
-          {/* Badge de notification quand elle est réduite */}
-          {status === "minimized" && (
-            <motion.div 
-              initial={{ scale: 0 }} 
-              animate={{ scale: 1 }}
-              className="absolute -top-2 -right-2 bg-secondary text-primary w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg"
-            >
-              <MessageCircle className="w-6 h-6 fill-current" />
-            </motion.div>
-          )}
         </motion.div>
-
-        {/* Tooltip au survol en mode réduit */}
-        {status === "minimized" && (
-          <div className="absolute left-full ml-4 bottom-10 bg-primary text-white text-[10px] font-bold py-1 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Besoin d'aide ?
-          </div>
-        )}
       </motion.div>
     </div>
   );

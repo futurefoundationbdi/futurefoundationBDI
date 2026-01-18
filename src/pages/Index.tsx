@@ -1,7 +1,7 @@
 import { useState } from "react"; 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import WisdomDashboard from "@components/WisdomDashboard";
+import WisdomDashboard from "@/components/WisdomDashboard";
 import MissionSection from "@/components/MissionSection";
 import PartnersSection from "@/components/PartnersSection";
 import ProgramsSection from "@/components/ProgramsSection";
@@ -11,7 +11,7 @@ import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import FinanceQuiz from "@/components/FinanceQuiz"; 
 import QuizFloatingButton from "@/components/QuizFloatingButton"; 
-import MascotGuide from "@/components/MascotGuide"; // NOUVEL IMPORT
+import MascotGuide from "@/components/MascotGuide"; 
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -26,6 +26,9 @@ const Index = () => {
         
         {/* Section Partenaires juste après le Hero pour la crédibilité */}
         <PartnersSection />
+
+        {/* Tableau de bord de points et badges juste après les partenaires */}
+        <WisdomDashboard />
 
         <MissionSection />
 
@@ -130,18 +133,12 @@ const Index = () => {
       <Footer />
 
       {/* --- ÉLÉMENTS INTERACTIFS FLOTTANTS --- */}
-      
-      {/* 1. La Mascotte Guide (elle arrive de la gauche) */}
       <MascotGuide />
-
-      {/* 2. Le Bouton de Quiz (Cerveau IQ) */}
       <QuizFloatingButton onClick={() => setIsQuizOpen(true)} />
 
-      {/* 3. Le Modal du Quiz */}
       {isQuizOpen && (
         <FinanceQuiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
       )}
-
     </div>
   );
 };

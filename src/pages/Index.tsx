@@ -17,27 +17,29 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
 
+  // Fonction centralisée pour ouvrir le quiz
+  const openQuiz = () => setIsQuizOpen(true);
+
   return (
     <div className="min-h-screen bg-background relative">
-      <Navbar />
+      {/* 1. On passe la fonction à la Navbar */}
+      <Navbar onOpenQuiz={openQuiz} />
       
       <main>
         <HeroSection />
         
-        {/* Section Partenaires juste après le Hero pour la crédibilité */}
         <PartnersSection />
 
-        {/* Tableau de bord de points et badges juste après les partenaires */}
-        <WisdomDashboard />
+        {/* 2. On passe la fonction au Dashboard */}
+        <WisdomDashboard onOpenQuiz={openQuiz} />
 
         <MissionSection />
 
-        {/* --- SECTION TÉMOIGNAGES & LECTURE --- */}
+        {/* --- SECTION LECTURE (LIVRE) --- */}
         <section id="livre" className="py-16 md:py-24 bg-card/30 overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-16">
               
-              {/* Côté Image avec Effet Flip-Book */}
               <div className="w-full md:w-1/2 flex justify-center mb-8 md:mb-0">
                 <div 
                   className="relative cursor-pointer group"
@@ -58,7 +60,6 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Côté Texte */}
               <div className="w-full md:w-1/2 space-y-6 md:space-y-8 text-center md:text-left">
                 <div>
                   <span className="inline-block px-4 py-2 bg-secondary/20 rounded-full text-secondary font-bold text-[10px] md:text-xs mb-4 uppercase tracking-[0.2em]">
@@ -90,44 +91,10 @@ const Index = () => {
               </div>
             </div>
           </div>
-
-          {/* FENÊTRE MODALE PRÉFACE */}
-          <div 
-            id="modal-preface" 
-            className="fixed inset-0 z-[100] hidden bg-primary/40 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
-            onClick={(e) => { if(e.target === e.currentTarget) e.currentTarget.classList.add('hidden') }}
-          >
-            <div className="bg-[#fdfbf7] w-full max-w-2xl max-h-[90vh] rounded-lg shadow-2xl overflow-hidden flex flex-col border-l-[8px] md:border-l-[15px] border-primary animate-fade-up">
-              <div className="p-4 md:p-6 border-b flex justify-between items-center bg-white shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-secondary flex items-center justify-center text-primary font-bold text-[10px]">FF</div>
-                  <h3 className="font-bold text-primary uppercase tracking-tighter text-sm md:text-base">Préface Officielle</h3>
-                </div>
-                <button onClick={() => document.getElementById('modal-preface')?.classList.add('hidden')} className="text-gray-400 hover:text-primary text-xl font-bold p-2">✕</button>
-              </div>
-              <div className="p-6 md:p-12 overflow-y-auto leading-relaxed md:leading-[1.8] text-gray-800 space-y-4 md:space-y-6 text-left md:text-justify font-serif text-base md:text-lg custom-scrollbar">
-                <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder.</p>
-                <p>C’est ce qui rend ce livre si particulier : il est né de la curiosité, de l’audace et de la volonté d’un jeune passionné qui a décidé de comprendre – puis d’expliquer – ce que beaucoup préfèrent ignorer.
-Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique. On y sent la spontanéité de quelqu’un qui cherche à apprendre autant qu’à transmettre, et c’est précisément ce qui rend cet ouvrage inspirant. 
-                  Il ne prétend pas offrir toutes les réponses ni rivaliser avec les grands manuels d’économie ; il ouvre plutôt une porte, celle de la découverte et de la réflexion personnelle.</p>
-                <p>Bien sûr, certaines explications pourraient gagner à être enrichies par des recherches plus approfondies, par des lectures, des expériences et des conseils d’experts. Mais faut-il déjà tout maîtriser pour commencer à écrire, à partager et à susciter des questions ? Certainement pas. 
-                  Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.</p>
-                <p>Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil qu’il faut comprendre pour mieux construire sa vie. Et je souhaite à l’auteur de poursuivre sur cette voie : lire d’avantage, se former, dialoguer, remettre en question, approfondir… car c’est ainsi que naissent les esprits éclairés.
-Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curiosité, ce ne sera certainement pas le dernier.</p>
-                <div className="pt-6 mt-6 border-t border-gray-200 text-right">
-                  <p className="font-bold text-primary text-lg md:text-xl">M. Edouard Normand BIGENDAKO</p>
-                  <p className="text-[10px] md:text-sm font-semibold text-gray-600 uppercase tracking-widest">Gouverneur de la BRB</p>
-                </div>
-                <div className="flex justify-center pt-6">
-                  <Button onClick={() => document.getElementById('modal-preface')?.classList.add('hidden')} variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">Fermer la lecture</Button>
-                </div>
-              </div>
-              <div className="p-3 bg-primary text-white text-center text-[8px] md:text-[10px] tracking-[0.2em] uppercase shrink-0">The Future Foundation BDI</div>
-            </div>
-          </div>
         </section>
 
-        {/* --- SECTION QUIZ STATIQUE --- */}
+        {/* --- SECTION QUIZ (MODE SECTION) --- */}
+        {/* Ici, il s'affiche comme une section normale de la page */}
         <FinanceQuiz />
 
         <ProgramsSection />
@@ -140,11 +107,38 @@ Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curi
 
       {/* --- ÉLÉMENTS INTERACTIFS FLOTTANTS --- */}
       <MascotGuide />
-      <QuizFloatingButton onClick={() => setIsQuizOpen(true)} />
+      
+      {/* 3. Le bouton flottant appelle la même fonction */}
+      <QuizFloatingButton onClick={openQuiz} />
 
-      {isQuizOpen && (
-        <FinanceQuiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
-      )}
+      {/* 4. LE QUIZ MODAL (S'affiche par-dessus tout le reste) */}
+      <FinanceQuiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
+
+      {/* FENÊTRE MODALE PRÉFACE (Gardée intacte) */}
+      <div 
+        id="modal-preface" 
+        className="fixed inset-0 z-[100] hidden bg-primary/40 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
+        onClick={(e) => { if(e.target === e.currentTarget) e.currentTarget.classList.add('hidden') }}
+      >
+        <div className="bg-[#fdfbf7] w-full max-w-2xl max-h-[90vh] rounded-lg shadow-2xl overflow-hidden flex flex-col border-l-[8px] md:border-l-[15px] border-primary">
+          <div className="p-4 md:p-6 border-b flex justify-between items-center bg-white">
+            <h3 className="font-bold text-primary uppercase text-sm md:text-base">Préface Officielle</h3>
+            <button onClick={() => document.getElementById('modal-preface')?.classList.add('hidden')} className="text-gray-400 hover:text-primary text-xl font-bold p-2">✕</button>
+          </div>
+          <div className="p-6 md:p-12 overflow-y-auto leading-relaxed text-gray-800 space-y-4 text-justify font-serif text-base md:text-lg">
+            <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder. C’est ce qui rend ce livre si particulier : il est né de la curiosité, de l’audace et de la volonté d’un jeune passionné qui a décidé de comprendre – puis d’expliquer – ce que beaucoup préfèrent ignorer.
+Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique. On y sent la spontanéité de quelqu’un qui cherche à apprendre autant qu’à transmettre, et c’est précisément ce qui rend cet ouvrage inspirant. Il ne prétend pas offrir toutes les réponses ni rivaliser avec les grands manuels d’économie ; il ouvre plutôt une porte, celle de la découverte et de la réflexion personnelle.
+Bien sûr, certaines explications pourraient gagner à être enrichies par des recherches plus approfondies, par des lectures, des expériences et des conseils d’experts. Mais faut-il déjà tout maîtriser pour commencer à écrire, à partager et à susciter des questions ? Certainement pas. Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.
+Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil qu’il faut comprendre pour mieux construire sa vie. Et je souhaite à l’auteur de poursuivre sur cette voie : lire d’avantage, se former, dialoguer, remettre en question, approfondir… car c’est ainsi que naissent les esprits éclairés.
+Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curiosité, ce ne sera certainement pas le dernier.
+</p>
+            <div className="pt-6 mt-6 border-t border-gray-200 text-right">
+              <p className="font-bold text-primary text-lg md:text-xl">M. Edouard Normand BIGENDAKO</p>
+              <p className="text-[10px] md:text-sm font-semibold text-gray-600 uppercase">Gouverneur de la BRB</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

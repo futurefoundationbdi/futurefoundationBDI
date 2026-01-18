@@ -75,7 +75,7 @@ const MascotGuide = () => {
           className="relative w-32 md:w-44"
         >
           <img 
-            src="/mascot.png" 
+            src="/masc.png" 
             alt="Mascotte Future Foundation"
             className="w-full h-auto drop-shadow-2xl"
           />

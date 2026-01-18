@@ -1,32 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { 
-  CheckCircle2, XCircle, Trophy, RefreshCcw, 
-  Star, MessageCircle, X, Zap 
-} from "lucide-react";
+import { CheckCircle2, XCircle, Trophy, RefreshCcw, Star, MessageCircle, X, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-// --- LES QUESTIONS SONT ICI POUR ÉVITER TOUT PROBLÈME DE CHARGEMENT ---
-const QUIZ_DATA = {
-  debutant: [
-    { q: "Qui découvre les secrets de l'argent ?", o: ["Ismaël", "Alain", "Edouard"], c: 0, e: "L'histoire suit le jeune Ismaël et sa grand-mère." },
-    { q: "Que signifie 'Ex-Nihilo' ?", o: ["Depuis le coffre", "À partir de rien", "Par le travail"], c: 1, e: "Création monétaire à partir de rien lors d'un prêt." },
-    { q: "Quelle institution émet les billets au Burundi ?", o: ["La Bancobu", "La BRB", "Le Ministère"], c: 1, e: "Seule la Banque de la République du Burundi a ce pouvoir." },
-    { q: "Comment Ismaël définit-il l'argent ?", o: ["Une chose physique", "Une histoire", "Un mal"], c: 1, e: "L'argent est une histoire de confiance." },
-    { q: "Qu'est-ce qu'un Actif ?", o: ["Une voiture de luxe", "Ce qui met de l'argent en poche", "Un vêtement"], c: 1, e: "Un actif génère des revenus." }
-  ],
-  intermediaire: [
-    { q: "Qu'est-ce qu'une action ?", o: ["Une dette", "Une part de propriété", "Un prêt"], c: 1, e: "Posséder une action, c'est posséder une part d'entreprise." },
-    { q: "Que sont les intérêts composés ?", o: ["Des intérêts simples", "Des intérêts sur les intérêts", "Une taxe"], c: 1, e: "Les intérêts génèrent de nouveaux intérêts." },
-    { q: "Un actif 'liquide' est...", o: ["Vendable vite en cash", "Très cher", "Imaginaire"], c: 0, e: "C'est la vitesse de conversion en argent." },
-    { q: "Que signifie ROI ?", o: ["Roi de la banque", "Retour sur Investissement", "Risque"], c: 1, e: "Mesure de la rentabilité." },
-    { q: "L'inflation grignote...", o: ["Les dettes", "Le pouvoir d'achat", "Les banques"], c: 1, e: "On achète moins avec la même somme." }
-  ],
-  avance: [
-     { q: "L'effet de levier consiste à...", o: ["Réduire ses dettes", "Utiliser l'emprunt pour investir plus", "Travailler plus"], c: 1, e: "C'est augmenter sa capacité d'investissement grâce à l'endettement." },
-     { q: "Qu'est-ce que l'inclusion financière ?", o: ["Payer ses impôts", "L'accès aux services financiers pour tous", "Avoir beaucoup d'argent"], c: 1, e: "C'est permettre à chacun d'accéder à l'économie." }
-  ]
-};
+// IMPORTATION DE TA VRAIE BASE DE DONNÉES
+import { QUIZ_DATABASE, Question } from "../data/quizQuestions";
 
 const BADGE_LEVELS = [
   { name: "Novice en Épargne", xp: 0, icon: "🌱" },
@@ -43,7 +20,7 @@ interface FinanceQuizProps {
 const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: FinanceQuizProps) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [level, setLevel] = useState<"debutant" | "intermediaire" | "avance">("debutant");
-  const [currentQuestions, setCurrentQuestions] = useState<any[]>([]);
+  const [currentQuestions, setCurrentQuestions] = useState<Question[]>([]);
   const [step, setStep] = useState(0);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
@@ -54,13 +31,12 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
 
-  // Charger l'XP au démarrage
   useEffect(() => {
     const savedXP = localStorage.getItem("future_foundation_xp");
     if (savedXP) setTotalXP(parseInt(savedXP));
   }, []);
 
-  // --- LE FIX : Charger des questions si le quiz est ouvert via le bouton flottant ---
+  // Fix : Si on ouvre le quiz sans questions (via Navbar/Dashboard), on lance par défaut
   useEffect(() => {
     if (isOpen && currentQuestions.length === 0) {
       loadNewSession("debutant");
@@ -68,8 +44,14 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   }, [isOpen]);
 
   const loadNewSession = (lvl: "debutant" | "intermediaire" | "avance") => {
-    const questions = [...(QUIZ_DATA[lvl] || QUIZ_DATA.debutant)].sort(() => 0.5 - Math.random()).slice(0, 5);
-    setCurrentQuestions(questions);
+    const all = QUIZ_DATABASE[lvl] || [];
+    if (all.length === 0) return;
+
+    // MELANGE ALÉATOIRE : On mélange et on prend 5 questions
+    const shuffled = [...all].sort(() => Math.random() - 0.5);
+    const selectedQuestions = shuffled.slice(0, 5);
+
+    setCurrentQuestions(selectedQuestions);
     setStep(0);
     setScore(0);
     setIsFinished(false);
@@ -89,6 +71,8 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     if (externalOnClose) externalOnClose();
     else setInternalIsOpen(false);
     document.body.style.overflow = "unset";
+    // Important : on vide pour forcer un nouveau mélange au prochain essai
+    setCurrentQuestions([]); 
   };
 
   const handleAnswer = (idx: number) => {
@@ -107,7 +91,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
       const earnedXP = score * 10;
       const oldXP = totalXP;
       const updatedTotalXP = oldXP + earnedXP;
-      
       const oldBadge = [...BADGE_LEVELS].reverse().find(b => oldXP >= b.xp);
       const currentBadge = [...BADGE_LEVELS].reverse().find(b => updatedTotalXP >= b.xp);
       
@@ -123,14 +106,14 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   };
 
   const shareScore = () => {
-    const text = `🔥 Grade : "${[...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name}" sur Future Foundation !`;
+    const text = `🔥 J'ai le grade "${[...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name}" sur Future Foundation !`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
-  // --- RENDU SECTION ACCUEIL ---
+  // Section Accueil (Visible quand le quiz est fermé)
   if (!isOpen) {
     return (
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-slate-50" id="quiz-cta">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto bg-primary rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
               <div className="relative z-10">
@@ -149,6 +132,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     );
   }
 
+  // Rendu du Quiz (Fenêtre flottante)
   return (
     <div className="fixed inset-0 z-[10000] bg-primary/98 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
       <button onClick={handleClose} className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 p-3 rounded-full z-50">
@@ -164,36 +148,23 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                 <span className="flex items-center gap-1 text-secondary"><Star className="w-3 h-3 fill-secondary" /> {level}</span>
                 <span className="bg-slate-100 px-3 py-1 rounded-full text-primary font-bold">Question {step + 1}/5</span>
               </div>
-              
-              <h3 className="text-xl md:text-2xl font-black leading-tight text-primary">
-                {currentQuestions[step]?.q}
-              </h3>
-
+              <h3 className="text-xl md:text-2xl font-black text-primary">{currentQuestions[step]?.q}</h3>
               <div className="grid gap-3">
-                {currentQuestions[step]?.o.map((opt: any, i: number) => (
-                  <button 
-                    key={`${step}-${i}`} 
-                    disabled={hasAnswered} 
-                    onClick={() => handleAnswer(i)}
-                    className={`w-full p-4 rounded-2xl text-left text-sm font-bold border-2 transition-all flex justify-between items-center ${
+                {currentQuestions[step]?.o.map((opt, i) => (
+                  <button key={i} disabled={hasAnswered} onClick={() => handleAnswer(i)}
+                    className={`w-full p-4 rounded-2xl text-left text-sm font-bold border-2 transition-all ${
                       selected === i 
                         ? (i === currentQuestions[step].c ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-red-500 bg-red-50 text-red-700") 
                         : (hasAnswered && i === currentQuestions[step].c ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-100")
-                    }`}
-                  >
-                    <span>{opt}</span>
-                    {hasAnswered && i === currentQuestions[step].c && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-                    {hasAnswered && selected === i && i !== currentQuestions[step].c && <XCircle className="w-5 h-5 text-red-500" />}
+                    }`}>
+                    {opt}
                   </button>
                 ))}
               </div>
-
               {hasAnswered && (
-                <div className="space-y-4 animate-in slide-in-from-bottom-2">
-                  <div className="p-4 bg-secondary/10 rounded-2xl border-l-4 border-secondary">
-                    <p className="text-xs text-primary/80 font-bold italic">💡 {currentQuestions[step].e}</p>
-                  </div>
-                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-xl">
+                <div className="space-y-4">
+                  <div className="p-4 bg-secondary/10 rounded-2xl border-l-4 border-secondary text-xs italic font-bold">💡 {currentQuestions[step].e}</div>
+                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black">
                     {step + 1 < currentQuestions.length ? "QUESTION SUIVANTE" : "VOIR MON SCORE"} 
                   </Button>
                 </div>
@@ -201,28 +172,12 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
             </div>
           ) : (
             <div className="text-center space-y-6 py-4 animate-in zoom-in">
-              <AnimatePresence mode="wait">
-                {newBadge ? (
-                  <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-4">
-                    <div className="text-8xl">{newBadge.icon}</div>
-                    <h3 className="text-2xl font-black text-secondary uppercase">Nouveau Badge !</h3>
-                    <p className="text-lg font-bold text-primary italic">"{newBadge.name}"</p>
-                  </motion.div>
-                ) : (
-                  <div className="py-4">
-                    <Trophy className="w-16 h-16 text-secondary mx-auto animate-bounce" />
-                    <h3 className="text-2xl font-black text-primary uppercase mt-4">SCORE : {score}/5</h3>
-                  </div>
-                )}
-              </AnimatePresence>
-
-              <div className="bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
-                <p className="text-5xl font-black text-primary">+{score * 10} XP</p>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <Button onClick={shareScore} className="bg-[#25D366] text-white rounded-2xl h-14 font-black shadow-xl flex items-center justify-center gap-3">
-                  <MessageCircle className="w-5 h-5 fill-current" /> WHATSAPP
+              <Trophy className="w-16 h-16 text-secondary mx-auto mb-4" />
+              <h3 className="text-2xl font-black">SCORE : {score}/5</h3>
+              <div className="bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200 text-5xl font-black">+{score * 10} XP</div>
+              <div className="flex flex-col gap-3 pt-4">
+                <Button onClick={shareScore} className="bg-[#25D366] text-white rounded-2xl h-14 font-black flex items-center justify-center gap-3">
+                  <MessageCircle className="w-5 h-5 fill-current" /> PARTAGER
                 </Button>
                 <div className="flex gap-2">
                   <Button onClick={() => loadNewSession(level)} variant="outline" className="flex-1 rounded-2xl h-12 font-black">REJOUER</Button>

@@ -50,7 +50,7 @@ const HeroSection = () => {
           
           <p className="text-base md:text-xl text-primary-foreground/90 mb-8 leading-relaxed max-w-lg">
             Découvrez la clé de la liberté financière avec l'ouvrage de référence de 
-            <strong> The Future Foundation</strong>. Apprenez à transformer votre vision 
+            <strong> The Future Foundation BDI</strong>. Apprenez à transformer votre vision 
             de l'argent pour bâtir un avenir prospère.
           </p>
 

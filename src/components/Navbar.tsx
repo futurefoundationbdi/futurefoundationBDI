@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Zap, Award } from "lucide-react"; 
+import { Menu, X, Zap } from "lucide-react"; 
 import DonationModal from "./DonationModal"; 
 
-// Logique des grades synchronisée
 const getRankInfo = (points: number) => {
   if (points < 100) return { name: "Novice", icon: "🌱" };
   if (points < 300) return { name: "Apprenti", icon: "💰" };
@@ -12,7 +11,7 @@ const getRankInfo = (points: number) => {
 };
 
 interface NavbarProps {
-  onOpenQuiz: () => void; // La fonction magique pour ouvrir le quiz
+  onOpenQuiz: () => void; 
 }
 
 const Navbar = ({ onOpenQuiz }: NavbarProps) => {
@@ -20,15 +19,22 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [xp, setXp] = useState(0);
 
-  // Synchronisation en temps réel de l'XP
+  // Définition des liens de navigation
+  const navLinks = [
+    { label: "Accueil", href: "#" },
+    { label: "Mission", href: "#mission" },
+    { label: "Livre", href: "#livre" },
+    { label: "Programmes", href: "#programmes" },
+    { label: "Équipe", href: "#equipe" },
+    { label: "Impact", href: "#impact" },
+  ];
+
   useEffect(() => {
     const updateXP = () => {
       const savedXP = localStorage.getItem("future_foundation_xp");
       if (savedXP) setXp(parseInt(savedXP));
     };
-
     updateXP();
-    // Écoute les changements d'XP venant du quiz
     window.addEventListener("storage", updateXP);
     return () => window.removeEventListener("storage", updateXP);
   }, []);
@@ -54,21 +60,25 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
             </a>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-6">
-              <a href="#" className="text-[13px] font-bold text-muted-foreground hover:text-primary transition-colors">Accueil</a>
-              <a href="#mission" className="text-[13px] font-bold text-muted-foreground hover:text-primary transition-colors">Mission</a>
-              <a href="#livre" className="text-[13px] font-bold text-muted-foreground hover:text-primary transition-colors">Livre</a>
+            <div className="hidden lg:flex items-center gap-5">
+              {navLinks.map((link) => (
+                <a 
+                  key={link.label} 
+                  href={link.href} 
+                  className="text-[12px] font-bold text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
               
-              {/* BOUTON QUIZ XP DESKTOP */}
+              {/* Quiz XP Desktop Highlight */}
               <button
                 onClick={onOpenQuiz}
-                className="text-[13px] font-black text-secondary bg-secondary/10 px-4 py-1.5 rounded-full border border-secondary/20 flex items-center gap-1.5 hover:bg-secondary/20 transition-all scale-100 hover:scale-105"
+                className="text-[12px] font-black text-secondary bg-secondary/10 px-4 py-1.5 rounded-full border border-secondary/20 flex items-center gap-1.5 hover:bg-secondary/20 transition-all scale-100 hover:scale-105"
               >
                 <Zap className="w-3 h-3 fill-secondary" />
                 QUIZ XP
               </button>
-
-              <a href="#impact" className="text-[13px] font-bold text-muted-foreground hover:text-primary transition-colors">Impact</a>
             </div>
 
             {/* XP Badge & Don */}
@@ -101,9 +111,9 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
 
           {/* Mobile Menu */}
           {isOpen && (
-            <div className="lg:hidden py-4 border-t border-border animate-in slide-in-from-top duration-300">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl mb-2">
+            <div className="lg:hidden py-4 border-t border-border animate-in slide-in-from-top duration-300 max-h-[85vh] overflow-y-auto">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl mb-2 mx-2">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{rank.icon}</span>
                     <span className="font-black text-primary uppercase text-sm">{rank.name}</span>
@@ -111,24 +121,31 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
                   <span className="font-black text-secondary text-lg">{xp} XP</span>
                 </div>
 
-                <a href="#" className="text-sm font-black py-3 px-4 rounded-xl hover:bg-slate-50" onClick={() => setIsOpen(false)}>Accueil</a>
-                <a href="#mission" className="text-sm font-black py-3 px-4 rounded-xl hover:bg-slate-50" onClick={() => setIsOpen(false)}>Mission</a>
+                {navLinks.map((link) => (
+                  <a 
+                    key={link.label}
+                    href={link.href} 
+                    className="text-sm font-black py-3 px-6 rounded-xl hover:bg-slate-50 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ))}
                 
-                {/* BOUTON QUIZ XP MOBILE */}
                 <button
                   onClick={() => {
                     setIsOpen(false);
                     onOpenQuiz();
                   }}
-                  className="text-sm font-black py-4 px-4 rounded-xl bg-primary text-white shadow-lg flex items-center justify-between"
+                  className="mx-2 mt-2 text-sm font-black py-4 px-6 rounded-xl bg-secondary text-primary shadow-lg flex items-center justify-between"
                 >
                   JOUER AU QUIZ XP
-                  <Zap className="w-4 h-4 fill-secondary text-secondary" />
+                  <Zap className="w-4 h-4 fill-primary text-primary" />
                 </button>
 
                 <Button 
                   variant="hero" 
-                  className="w-full h-14 mt-2 font-black rounded-2xl"
+                  className="mx-2 h-14 mt-2 font-black rounded-2xl"
                   onClick={() => {
                     setIsOpen(false);
                     setIsDonationOpen(true);

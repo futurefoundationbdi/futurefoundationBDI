@@ -107,7 +107,13 @@ const Index = () => {
               </div>
               <div className="p-6 md:p-12 overflow-y-auto leading-relaxed md:leading-[1.8] text-gray-800 space-y-4 md:space-y-6 text-left md:text-justify font-serif text-base md:text-lg custom-scrollbar">
                 <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder.</p>
-                <p>Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.</p>
+                <p>C’est ce qui rend ce livre si particulier : il est né de la curiosité, de l’audace et de la volonté d’un jeune passionné qui a décidé de comprendre – puis d’expliquer – ce que beaucoup préfèrent ignorer.
+Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique. On y sent la spontanéité de quelqu’un qui cherche à apprendre autant qu’à transmettre, et c’est précisément ce qui rend cet ouvrage inspirant. 
+                  Il ne prétend pas offrir toutes les réponses ni rivaliser avec les grands manuels d’économie ; il ouvre plutôt une porte, celle de la découverte et de la réflexion personnelle.</p>
+                <p>Bien sûr, certaines explications pourraient gagner à être enrichies par des recherches plus approfondies, par des lectures, des expériences et des conseils d’experts. Mais faut-il déjà tout maîtriser pour commencer à écrire, à partager et à susciter des questions ? Certainement pas. 
+                  Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre.</p>
+                <p>Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil qu’il faut comprendre pour mieux construire sa vie. Et je souhaite à l’auteur de poursuivre sur cette voie : lire d’avantage, se former, dialoguer, remettre en question, approfondir… car c’est ainsi que naissent les esprits éclairés.
+Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curiosité, ce ne sera certainement pas le dernier.</p>
                 <div className="pt-6 mt-6 border-t border-gray-200 text-right">
                   <p className="font-bold text-primary text-lg md:text-xl">M. Edouard Normand BIGENDAKO</p>
                   <p className="text-[10px] md:text-sm font-semibold text-gray-600 uppercase tracking-widest">Gouverneur de la BRB</p>

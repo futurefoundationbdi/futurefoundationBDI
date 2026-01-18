@@ -57,12 +57,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     setNewBadge(null);
   };
 
-  const startQuiz = (lvl: "debutant" | "intermediaire" | "avance") => {
-    loadNewSession(lvl);
-    if (externalIsOpen === undefined) setInternalIsOpen(true);
-    document.body.style.overflow = "hidden";
-  };
-
   const handleClose = () => {
     if (externalOnClose) externalOnClose();
     else setInternalIsOpen(false);
@@ -101,16 +95,16 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     }
   };
 
+  // --- LOGIQUE DE PARTAGE MISE À JOUR ---
   const shareScore = () => {
-    const text = `🔥 Grade : "${[...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name}" sur Future Foundation !`;
+    const currentUrl = window.location.origin;
+    const currentBadgeName = [...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name;
+    const text = `🔥 J'ai cumulé ${score * 10} points d'intelligence financière sur Future Foundation ! Mon grade : ${currentBadgeName} 🧠\n\nPeux-tu me battre ? Fais le test ici : ${currentUrl}`;
+    
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
-  // --- MODIFICATION ICI : SUPPRESSION DU RENDU PAR DÉFAUT ---
-  // Si le quiz n'est pas ouvert, on ne retourne rien (pas de section en bas du footer)
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[10000] bg-primary/98 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -175,9 +169,15 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
               </div>
 
               <div className="flex flex-col gap-3 pt-4">
-                <Button onClick={shareScore} className="bg-[#25D366] text-white rounded-2xl h-14 font-black flex items-center justify-center gap-3 shadow-xl">
-                  <MessageCircle className="w-5 h-5 fill-current" /> PARTAGER LE SCORE
+                {/* --- BOUTON DÉFIER UN AMI --- */}
+                <Button 
+                  onClick={shareScore} 
+                  className="bg-[#25D366] hover:bg-[#128C7E] text-white rounded-2xl h-14 font-black flex items-center justify-center gap-3 shadow-xl transition-transform active:scale-95"
+                >
+                  <MessageCircle className="w-5 h-5 fill-current" /> 
+                  DÉFIER UN AMI
                 </Button>
+
                 <div className="flex gap-2">
                   <Button onClick={() => loadNewSession(level)} variant="outline" className="flex-1 rounded-2xl h-12 font-black">REJOUER</Button>
                   <Button onClick={handleClose} variant="ghost" className="flex-1 font-black">QUITTER</Button>

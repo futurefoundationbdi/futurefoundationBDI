@@ -6,14 +6,12 @@ import {
 } from "lucide-react";
 import { QUIZ_DATABASE, Question } from "../data/quizQuestions";
 
-// On ajoute des "Props" pour que le bouton externe puisse contrôler le quiz
 interface FinanceQuizProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
 
 const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: FinanceQuizProps) => {
-  // États internes
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [level, setLevel] = useState<"debutant" | "intermediaire" | "avance">("debutant");
   const [currentQuestions, setCurrentQuestions] = useState<Question[]>([]);
@@ -24,8 +22,14 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   const [hasAnswered, setHasAnswered] = useState(false);
   const [totalXP, setTotalXP] = useState<number>(0);
 
-  // Synchronisation avec l'état externe (si appelé via le bouton flottant)
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+
+  // CHARGEMENT AUTOMATIQUE DES QUESTIONS LORS DE L'OUVERTURE
+  useEffect(() => {
+    if (isOpen && currentQuestions.length === 0) {
+      loadNewSession("debutant");
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const savedXP = localStorage.getItem("future_foundation_xp");
@@ -34,6 +38,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
   const loadNewSession = (lvl: "debutant" | "intermediaire" | "avance") => {
     const all = QUIZ_DATABASE[lvl];
+    if (!all) return;
     const shuffled = [...all].sort(() => 0.5 - Math.random());
     setCurrentQuestions(shuffled.slice(0, 5));
     setStep(0);
@@ -57,6 +62,8 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
       setInternalIsOpen(false);
     }
     document.body.style.overflow = "unset";
+    // Optionnel : Réinitialiser pour la prochaine ouverture
+    setCurrentQuestions([]);
   };
 
   const handleAnswer = (idx: number) => {
@@ -84,15 +91,12 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
-  // 1. SI LE QUIZ N'EST PAS OUVERT : On affiche le bloc d'appel (Hero du quiz)
   if (!isOpen) {
     return (
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto bg-primary rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden group">
-             {/* Background decoration */}
              <div className="absolute -right-20 -top-20 w-64 h-64 bg-secondary/10 rounded-full blur-3xl group-hover:bg-secondary/20 transition-colors" />
-             
              <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full text-[10px] font-black mb-4 uppercase tracking-widest">
                   <Zap className="w-4 h-4 fill-secondary" /> {totalXP} XP CUMULÉS
@@ -109,7 +113,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     );
   }
 
-  // 2. SI LE QUIZ EST OUVERT : On affiche l'interface de jeu par-dessus tout (Modal)
   return (
     <div className="fixed inset-0 z-[10000] bg-primary/98 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4">
       <button onClick={handleClose} className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 p-3 rounded-full transition-colors z-50">
@@ -118,7 +121,14 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
       <div className="w-full max-w-xl">
         <div className="bg-white text-primary rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative border-b-[10px] border-secondary animate-in zoom-in duration-300">
-          {!isFinished ? (
+          
+          {/* SÉCURITÉ : Vérifier si les questions sont chargées */}
+          {currentQuestions.length === 0 ? (
+            <div className="flex flex-col items-center py-10">
+              <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="font-bold">Chargement du quiz...</p>
+            </div>
+          ) : !isFinished ? (
             <div className="space-y-6">
               <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase">
                 <span className="flex items-center gap-1 text-secondary"><Star className="w-3 h-3 fill-secondary" /> {level}</span>
@@ -160,7 +170,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                     onClick={nextStep}
                     className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-xl flex items-center justify-center gap-2 hover:bg-primary/90 group"
                   >
-                    {step + 1 < 5 ? "QUESTION SUIVANTE" : "VOIR MON SCORE"} 
+                    {step + 1 < currentQuestions.length ? "QUESTION SUIVANTE" : "VOIR MON SCORE"} 
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>

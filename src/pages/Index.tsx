@@ -1,6 +1,7 @@
 import { useState } from "react"; 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import WisdomDashboard from "@components/WisdomDashboard";
 import MissionSection from "@/components/MissionSection";
 import PartnersSection from "@/components/PartnersSection";
 import ProgramsSection from "@/components/ProgramsSection";

@@ -135,11 +135,11 @@ const ImpactSection = () => {
             <div className="relative bg-white/5 border border-white/10 p-8 rounded-[3rem] backdrop-blur-xl">
               <h4 className="text-secondary font-black text-xl mb-4 italic">Notre Vision 2026</h4>
               <p className="text-white/80 text-sm md:text-lg leading-relaxed italic">
-                "D'ici fin 2026, nous visons à distribuer 1000 exemplaires de **L'Argent Révélé** dans 5 provinces du Burundi, créant ainsi la première génération de 'Génies Financiers' du pays."
+                "D'ici fin 2026, nous visons à distribuer 2000 exemplaires de "L'Argent Révélé" dans 28 écoles du Burundi, créant ainsi la première génération de 'Génies Financiers' du pays."
               </p>
               <div className="mt-8 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-slate-200 border-2 border-secondary overflow-hidden">
-                  <img src="/masc.png" alt="Mascotte" className="w-full h-auto scale-150 mt-2" />
+                  <img src="/futurelogo.jpg" alt="Futurelogo" className="w-full h-auto scale-150 mt-2" />
                 </div>
                 <div>
                   <p className="font-bold text-sm">Le Guide Future Foundation</p>

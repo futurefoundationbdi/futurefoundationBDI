@@ -130,20 +130,35 @@ const ImpactSection = () => {
               ))}
             </div>
           </div>
+
           <div className="relative group">
+            {/* Effet lumineux derrière */}
             <div className="absolute inset-0 bg-secondary blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
-            <div className="relative bg-white/5 border border-white/10 p-8 rounded-[3rem] backdrop-blur-xl">
+            
+            <div className="relative bg-white/5 border border-white/10 p-8 rounded-[3rem] backdrop-blur-xl overflow-hidden">
               <h4 className="text-secondary font-black text-xl mb-4 italic">Notre Vision 2026</h4>
-              <p className="text-white/80 text-sm md:text-lg leading-relaxed italic">
+              <p className="text-white/80 text-sm md:text-lg leading-relaxed italic mb-8">
                 "D'ici fin 2026, nous visons à distribuer 2000 exemplaires de "L'Argent Révélé" dans 28 écoles du Burundi, créant ainsi la première génération de 'Génies Financiers' du pays."
               </p>
-              <div className="mt-8 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-slate-200 border-2 border-secondary overflow-hidden">
-                  <img src="/futurelogo.jpg" alt="Futurelogo" className="w-full h-auto scale-150 mt-2" />
+              
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/5 rounded-2xl border border-white/10">
+                {/* Conteneur de l'image des jumelles (Vision) */}
+                <div className="w-24 h-24 md:w-32 md:h-32 shrink-0 flex items-center justify-center">
+                  <img 
+                    src="/vision-jumelles.webp" 
+                    alt="Vision Future Foundation" 
+                    className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500" 
+                  />
                 </div>
-                <div>
-                  <p className="font-bold text-sm">Le Guide Future Foundation</p>
-                  <p className="text-[10px] text-secondary font-black uppercase">Mission Burundi</p>
+                
+                <div className="text-center sm:text-left">
+                  <p className="font-bold text-base md:text-xl text-white">The Future Foundation Vision</p>
+                  <p className="text-[10px] md:text-xs text-secondary font-black uppercase tracking-[0.2em] mt-1">
+                    Mission Burundi • Horizon 2026
+                  </p>
+                  <div className="mt-3 flex justify-center sm:justify-start">
+                    <div className="h-1 w-12 bg-secondary rounded-full"></div>
+                  </div>
                 </div>
               </div>
             </div>

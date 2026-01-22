@@ -12,22 +12,27 @@ import Footer from "@/components/Footer";
 import FinanceQuiz from "@/components/FinanceQuiz"; 
 import QuizFloatingButton from "@/components/QuizFloatingButton"; 
 import MascotGuide from "@/components/MascotGuide"; 
+import DonationModal from "@/components/DonationModal"; // Importation du modal de Don
+import AlliesModal from "@/components/AlliesModal"; // Importation du modal des Alliés
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [isDonationOpen, setIsDonationOpen] = useState(false); // État pour le don
+  const [isAlliesOpen, setIsAlliesOpen] = useState(false);     // État pour les alliés
 
-  // Fonction centralisée pour ouvrir le quiz
+  // Fonctions d'ouverture
   const openQuiz = () => setIsQuizOpen(true);
+  const openDonation = () => setIsDonationOpen(true);
+  const openAllies = () => setIsAlliesOpen(true);
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* 1. Navbar connectée */}
+      {/* 1. Navbar connectée (on peut aussi y lier le don si besoin) */}
       <Navbar onOpenQuiz={openQuiz} />
       
       <main>
         <HeroSection />
-        
         <PartnersSection />
 
         {/* 2. Dashboard connecté */}
@@ -93,27 +98,33 @@ const Index = () => {
           </div>
         </section>
 
-        {/* --- LE DOUBLON DE FINANCEQUIZ A ÉTÉ SUPPRIMÉ D'ICI --- */}
-
         <ProgramsSection />
         <ImpactSection />
         <TeamSection />
-        <CTASection />
+
+        {/* 3. CTASection mise à jour avec les déclencheurs de modales */}
+        <CTASection 
+          onOpenDonation={openDonation} 
+          onOpenAllies={openAllies} 
+        />
       </main>
 
-      {/* Le site se termine officiellement par le Footer */}
       <Footer />
 
-      {/* --- ÉLÉMENTS INTERACTIFS FLOTTANTS --- */}
+      {/* --- ÉLÉMENTS INTERACTIFS ET MODALES --- */}
       <MascotGuide />
-      
-      {/* 3. Bouton flottant connecté */}
       <QuizFloatingButton onClick={openQuiz} />
 
-      {/* 4. LE QUIZ MODAL (Unique version active) */}
+      {/* Modal du Quiz */}
       <FinanceQuiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
 
-      {/* FENÊTRE MODALE PRÉFACE (Texte intégral conservé) */}
+      {/* Modal de Don */}
+      <DonationModal isOpen={isDonationOpen} onClose={() => setIsDonationOpen(false)} />
+
+      {/* Modal des Alliés (basé sur le PDF) */}
+      <AlliesModal isOpen={isAlliesOpen} onClose={() => setIsAlliesOpen(false)} />
+
+      {/* FENÊTRE MODALE PRÉFACE */}
       <div 
         id="modal-preface" 
         className="fixed inset-0 z-[100] hidden bg-primary/40 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
@@ -127,12 +138,11 @@ const Index = () => {
           <div className="p-6 md:p-12 overflow-y-auto leading-relaxed text-gray-800 space-y-4 text-justify font-serif text-base md:text-lg">
             <p>Depuis sa forme primitive à celle plus élaborée et moderne, l’argent fait rêver, interroge, inquiète parfois… et pourtant, peu de jeunes osent réellement le sonder.</p> 
             <p> C’est ce qui rend ce livre si particulier : il est né de la curiosité, de l’audace et de la volonté d’un jeune passionné qui a décidé de comprendre – puis d’expliquer – ce que beaucoup préfèrent ignorer.</p> 
-             <p>Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique. On y sent la spontanéité de quelqu’un qui cherche à apprendre autant qu’à transmettre, et c’est précisément ce qui rend cet ouvrage inspirant. 
-               Il ne prétend pas offrir toutes les réponses ni rivaliser avec les grands manuels d’économie ; il ouvre plutôt une porte, celle de la découverte et de la réflexion personnelle.</p>  
+             <p>Dans ces pages, l’auteur partage sa vision de l’argent avec des mots simples, un regard frais et une énergie authentique. On y sent la spontanéité de quelqu’un qui cherche à apprendre autant qu’à transmettre, et c’est précisément ce qui rend cet ouvrage inspirant.</p>  
              <p>Bien sûr, certaines explications pourraient gagner à être enrichies par des recherches plus approfondies, par des lectures, des expériences et des conseils d’experts. Mais faut-il déjà tout maîtriser pour commencer à écrire, à partager et à susciter des questions ? Certainement pas.</p> 
-              <p>Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre. Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil qu’il faut comprendre pour mieux construire sa vie. 
-                Et je souhaite à l’auteur de poursuivre sur cette voie : lire d’avantage, se former, dialoguer, remettre en question, approfondir… car c’est ainsi que naissent les esprits éclairés. 
-                Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curiosité, ce ne sera certainement pas le dernier.</p>
+              <p>Ce livre est la preuve qu’on peut avancer, dès lors qu’on a la passion et la volonté d’apprendre. Je souhaite que cette œuvre encourage d’autres jeunes à s’intéresser à l’argent, non comme une fin en soi, mais comme un outil qu’il faut comprendre pour mieux construire sa vie.</p> 
+                <p> Et je souhaite à l’auteur de poursuivre sur cette voie : lire d’avantage, se former, dialoguer, remettre en question, approfondir… car c’est ainsi que naissent les esprits éclairés.</p> 
+                <p> Ce livre est un début prometteur. Avec de la persévérance et beaucoup de curiosité, ce ne sera certainement pas le dernier.</p>
             <div className="pt-6 mt-6 border-t border-gray-200 text-right">
               <p className="font-bold text-primary text-lg md:text-xl">M. Edouard Normand BIGENDAKO</p>
               <p className="text-[10px] md:text-sm font-semibold text-gray-600 uppercase">Gouverneur de la BRB</p>

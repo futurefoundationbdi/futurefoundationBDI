@@ -30,14 +30,27 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
 
+  // --- NOUVELLE LOGIQUE : DETERMINER LE NIVEAU ---
+  const getLevelFromXP = (xp: number): "debutant" | "intermediaire" | "avance" => {
+    if (xp >= 600) return "avance";
+    if (xp >= 300) return "intermediaire";
+    return "debutant";
+  };
+
   useEffect(() => {
     const savedXP = localStorage.getItem("future_foundation_xp");
     if (savedXP) setTotalXP(parseInt(savedXP));
   }, []);
 
+  // --- CORRECTION : Chargement dynamique à l'ouverture ---
   useEffect(() => {
-    if (isOpen && currentQuestions.length === 0) {
-      loadNewSession("debutant");
+    if (isOpen) {
+      const savedXP = localStorage.getItem("future_foundation_xp");
+      const currentXP = savedXP ? parseInt(savedXP) : 0;
+      const targetLevel = getLevelFromXP(currentXP);
+      
+      // On ne recharge que si aucune question n'est chargée ou si le niveau a changé
+      loadNewSession(targetLevel);
     }
   }, [isOpen]);
 
@@ -53,7 +66,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     setIsFinished(false);
     setSelected(null);
     setHasAnswered(false);
-    setLevel(lvl);
+    setLevel(lvl); // Mise à jour du niveau actuel
     setNewBadge(null);
   };
 
@@ -95,7 +108,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     }
   };
 
-  // --- LOGIQUE DE PARTAGE MISE À JOUR ---
   const shareScore = () => {
     const currentUrl = window.location.origin;
     const currentBadgeName = [...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name;
@@ -118,7 +130,10 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
           {!isFinished ? (
             <div className="space-y-6" key={step}>
               <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase">
-                <span className="flex items-center gap-1 text-secondary"><Star className="w-3 h-3 fill-secondary" /> {level}</span>
+                <span className="flex items-center gap-1 text-secondary">
+                  <Star className="w-3 h-3 fill-secondary" /> 
+                  NIVEAU : {level.toUpperCase()}
+                </span>
                 <span className="bg-slate-100 px-3 py-1 rounded-full text-primary font-bold">Question {step + 1}/5</span>
               </div>
               <h3 className="text-xl md:text-2xl font-black text-primary">{currentQuestions[step]?.q}</h3>
@@ -169,7 +184,6 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
               </div>
 
               <div className="flex flex-col gap-3 pt-4">
-                {/* --- BOUTON DÉFIER UN AMI --- */}
                 <Button 
                   onClick={shareScore} 
                   className="bg-[#25D366] hover:bg-[#128C7E] text-white rounded-2xl h-14 font-black flex items-center justify-center gap-3 shadow-xl transition-transform active:scale-95"
@@ -179,7 +193,13 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                 </Button>
 
                 <div className="flex gap-2">
-                  <Button onClick={() => loadNewSession(level)} variant="outline" className="flex-1 rounded-2xl h-12 font-black">REJOUER</Button>
+                  <Button 
+                    onClick={() => loadNewSession(getLevelFromXP(totalXP))} 
+                    variant="outline" 
+                    className="flex-1 rounded-2xl h-12 font-black"
+                  >
+                    REJOUER
+                  </Button>
                   <Button onClick={handleClose} variant="ghost" className="flex-1 font-black">QUITTER</Button>
                 </div>
               </div>

@@ -1,29 +1,37 @@
-const CACHE_NAME = 'future-foundation-v1';
-const OFFLINE_ASSETS = [
-  '/offline.html'
-];
+// On change le nom ici pour forcer la mise à jour
+const CACHE_NAME = 'future-runner-v2'; 
+const OFFLINE_URL = '/offline.html';
 
-// Installation : on met le jeu en mémoire
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(OFFLINE_ASSETS);
+      return cache.add(OFFLINE_URL);
     })
   );
-  self.skipWaiting(); // Force l'activation immédiate
+  self.skipWaiting(); 
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim()); // Prend le contrôle des pages immédiatement
+  // Supprime les anciens caches (le vieux jeu de parcours)
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  return self.clients.claim();
 });
 
-// L'intercepteur magique
 self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
-        // Si le fetch échoue (pas d'internet), on sort le jeu du cache
-        return caches.match('/offline.html');
+        return caches.match(OFFLINE_URL);
       })
     );
   }

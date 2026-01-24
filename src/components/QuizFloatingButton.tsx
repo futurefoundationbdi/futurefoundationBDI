@@ -9,7 +9,7 @@ const QuizFloatingButton = ({ onClick }: QuizFloatingButtonProps) => {
   return (
     <motion.div
       // On descend à 12px (environ bottom-3) pour un alignement au ras du chatbot
-      className="fixed bottom-[10px] right-[85px] z-[999] md:bottom-[15px] md:right-[115px]"
+      className="fixed bottom-[11px] right-[85px] z-[999] md:bottom-[15px] md:right-[115px]"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.1 }}

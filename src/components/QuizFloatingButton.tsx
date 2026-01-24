@@ -7,15 +7,14 @@ interface QuizFloatingButtonProps {
 
 const QuizFloatingButton = ({ onClick }: QuizFloatingButtonProps) => {
   return (
-    <motion.div
-      // bottom-24 aligne le bouton juste au-dessus du chat (qui est à ~bottom-6)
-      // right-[24px] ou right-[26px] aligne souvent parfaitement avec le centre du widget Chatbase
-      className="fixed bottom-24 right-[24px] z-[999] md:bottom-32 md:right-[30px]"
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-    >
+   <motion.div
+  // On passe à right-[30px] pour bien s'aligner sur l'axe central du chatbot
+  className="fixed bottom-24 right-[30px] z-[999] md:bottom-32 md:right-[36px]"
+  initial={{ scale: 0, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  whileHover={{ scale: 1.1 }}
+  whileTap={{ scale: 0.9 }}
+>
       <button
         onClick={onClick}
         // On réduit la taille : p-3 au lieu de p-4 pour être proportionnel au chat

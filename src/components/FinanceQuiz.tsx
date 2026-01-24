@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { CheckCircle2, XCircle, Trophy, RefreshCcw, Star, MessageCircle, X, Zap } from "lucide-react";
+import { Trophy, Star, MessageCircle, X, Zap, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QUIZ_DATABASE, Question } from "../data/quizQuestions";
 
@@ -27,10 +27,10 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   const [hasAnswered, setHasAnswered] = useState(false);
   const [totalXP, setTotalXP] = useState<number>(0);
   const [newBadge, setNewBadge] = useState<{name: string, icon: string} | null>(null);
+  const [usedQuestionIds, setUsedQuestionIds] = useState<string[]>([]); // Mémoire anti-répétition
 
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
 
-  // --- NOUVELLE LOGIQUE : DETERMINER LE NIVEAU ---
   const getLevelFromXP = (xp: number): "debutant" | "intermediaire" | "avance" => {
     if (xp >= 600) return "avance";
     if (xp >= 300) return "intermediaire";
@@ -42,14 +42,11 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     if (savedXP) setTotalXP(parseInt(savedXP));
   }, []);
 
-  // --- CORRECTION : Chargement dynamique à l'ouverture ---
   useEffect(() => {
     if (isOpen) {
-      const savedXP = localStorage.getItem("future_foundation_xp");
-      const currentXP = savedXP ? parseInt(savedXP) : 0;
+      const currentXP = parseInt(localStorage.getItem("future_foundation_xp") || "0");
+      setTotalXP(currentXP);
       const targetLevel = getLevelFromXP(currentXP);
-      
-      // On ne recharge que si aucune question n'est chargée ou si le niveau a changé
       loadNewSession(targetLevel);
     }
   }, [isOpen]);
@@ -57,8 +54,19 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   const loadNewSession = (lvl: "debutant" | "intermediaire" | "avance") => {
     const all = QUIZ_DATABASE[lvl] || [];
     if (all.length === 0) return;
-    const shuffled = [...all].sort(() => Math.random() - 0.5);
+
+    // --- LOGIQUE ANTI-REPETITION ---
+    let available = all.filter(q => !usedQuestionIds.includes(q.q));
+    if (available.length < 5) {
+      available = all;
+      setUsedQuestionIds([]);
+    }
+
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
     const selectedQuestions = shuffled.slice(0, 5);
+
+    // Mémoriser les questions pour ne pas les revoir tout de suite (max 15)
+    setUsedQuestionIds(prev => [...prev, ...selectedQuestions.map(q => q.q)].slice(-15));
 
     setCurrentQuestions(selectedQuestions);
     setStep(0);
@@ -66,7 +74,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
     setIsFinished(false);
     setSelected(null);
     setHasAnswered(false);
-    setLevel(lvl); // Mise à jour du niveau actuel
+    setLevel(lvl);
     setNewBadge(null);
   };
 
@@ -103,6 +111,10 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
       setTotalXP(updatedTotalXP);
       localStorage.setItem("future_foundation_xp", updatedTotalXP.toString());
+      
+      // Mise à jour immédiate du niveau pour le bouton REJOUER
+      setLevel(getLevelFromXP(updatedTotalXP));
+
       window.dispatchEvent(new Event("storage"));
       setIsFinished(true);
     }
@@ -111,8 +123,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
   const shareScore = () => {
     const currentUrl = window.location.origin;
     const currentBadgeName = [...BADGE_LEVELS].reverse().find(b => totalXP >= b.xp)?.name;
-    const text = `🔥 J'ai cumulé ${score * 10} points d'intelligence financière sur Future Foundation BDI ! Mon grade : ${currentBadgeName} 🧠\n\nPeux-tu me battre ? Fais le test ici : ${currentUrl}`;
-    
+    const text = `🔥 J'ai cumulé ${score * 10} points sur Future Foundation BDI ! Grade : ${currentBadgeName} 🧠\n\nPeux-tu me battre ? : ${currentUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -136,7 +147,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                 </span>
                 <span className="bg-slate-100 px-3 py-1 rounded-full text-primary font-bold">Question {step + 1}/5</span>
               </div>
-              <h3 className="text-xl md:text-2xl font-black text-primary">{currentQuestions[step]?.q}</h3>
+              <h3 className="text-xl md:text-2xl font-black text-primary leading-tight">{currentQuestions[step]?.q}</h3>
               <div className="grid gap-3">
                 {currentQuestions[step]?.o.map((opt, i) => (
                   <button key={i} disabled={hasAnswered} onClick={() => handleAnswer(i)}
@@ -152,7 +163,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
               {hasAnswered && (
                 <div className="space-y-4">
                   <div className="p-4 bg-secondary/10 rounded-2xl border-l-4 border-secondary text-xs italic font-bold">💡 {currentQuestions[step].e}</div>
-                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black">
+                  <Button onClick={nextStep} className="w-full bg-primary text-white h-14 rounded-2xl font-black shadow-lg shadow-primary/20">
                     {step + 1 < currentQuestions.length ? "QUESTION SUIVANTE" : "VOIR MON SCORE"} 
                   </Button>
                 </div>
@@ -168,7 +179,10 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
                     className="space-y-4"
                   >
                     <div className="text-8xl animate-bounce">{newBadge.icon}</div>
-                    <h3 className="text-2xl font-black text-secondary uppercase tracking-tighter">Nouveau Grade !</h3>
+                    <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-2">
+                       <ChevronUp className="w-4 h-4" /> Niveau Supérieur Débloqué
+                    </div>
+                    <h3 className="text-2xl font-black text-secondary uppercase tracking-tighter leading-none">Nouveau Grade !</h3>
                     <p className="text-lg font-bold text-primary italic">"{newBadge.name}"</p>
                   </motion.div>
                 ) : (
@@ -181,6 +195,7 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
               <div className="bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
                 <p className="text-5xl font-black text-primary">+{score * 10} XP</p>
+                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">Total cumulé : {totalXP} XP</p>
               </div>
 
               <div className="flex flex-col gap-3 pt-4">
@@ -194,13 +209,13 @@ const FinanceQuiz = ({ isOpen: externalIsOpen, onClose: externalOnClose }: Finan
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={() => loadNewSession(getLevelFromXP(totalXP))} 
+                    onClick={() => loadNewSession(level)} // 'level' est déjà mis à jour par nextStep
                     variant="outline" 
-                    className="flex-1 rounded-2xl h-12 font-black"
+                    className="flex-1 rounded-2xl h-12 font-black border-2 border-slate-200 hover:bg-slate-50"
                   >
-                    REJOUER
+                    REJOUER ({level.toUpperCase()})
                   </Button>
-                  <Button onClick={handleClose} variant="ghost" className="flex-1 font-black">QUITTER</Button>
+                  <Button onClick={handleClose} variant="ghost" className="flex-1 font-black text-slate-400">QUITTER</Button>
                 </div>
               </div>
             </div>

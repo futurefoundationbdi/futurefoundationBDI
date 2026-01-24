@@ -8,9 +8,8 @@ interface QuizFloatingButtonProps {
 const QuizFloatingButton = ({ onClick }: QuizFloatingButtonProps) => {
   return (
     <motion.div
-      // On utilise bottom-[20px] pour s'aligner exactement sur le chatbot
-      // Mobile: right-[85px] | PC: md:right-[110px]
-      className="fixed bottom-[20px] right-[85px] z-[999] md:bottom-[20px] md:right-[110px]"
+      // On descend à 12px (environ bottom-3) pour un alignement au ras du chatbot
+      className="fixed bottom-[12px] right-[85px] z-[999] md:bottom-[15px] md:right-[115px]"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.1 }}
@@ -18,7 +17,6 @@ const QuizFloatingButton = ({ onClick }: QuizFloatingButtonProps) => {
     >
       <button
         onClick={onClick}
-        // Taille XL pour ordinateur (md:w-[65px]) et standard pour mobile (w-[50px])
         className="relative w-[50px] h-[50px] md:w-[65px] md:h-[65px] flex items-center justify-center bg-secondary text-primary rounded-full shadow-lg border-2 md:border-4 border-white group transition-all"
       >
         <span className="absolute inset-0 rounded-full bg-secondary animate-ping opacity-25"></span>

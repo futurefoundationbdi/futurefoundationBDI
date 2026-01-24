@@ -21,7 +21,7 @@ const DonationModal = ({ isOpen, onClose }: DonationModalProps) => {
   const isInvalid = amount !== "" && parseFloat(amount) < minAmount;
 
   // REMPLACE par le lien Stripe réel créé par Kercie
-  const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/votre_lien_partenaire";
+  const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_3cl8wP6bDg4Lr3pma3u00";
 
   const handleWhatsAppConfirm = () => {
     const WHATSAPP_NUMBER = "25779186635";

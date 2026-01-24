@@ -1,134 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Future Runner - Offline</title>
+    <title>Visionnaire Leap - The Future Foundation</title>
     <style>
-        body { margin: 0; background: #0f172a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        body { margin: 0; background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; touch-action: none; }
         #game-ui { position: absolute; width: 100%; text-align: center; top: 20px; z-index: 10; pointer-events: none; }
-        #score { font-size: 40px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
+        #impact-index { font-size: 32px; font-weight: 900; color: #f1c40f; }
+        #label { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
         canvas { display: block; }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
-        button { background: #f1c40f; color: #0f172a; border: none; padding: 15px 40px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: transform 0.2s; }
-        button:active { transform: scale(0.9); }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 20px; text-align: center; }
+        .btn-play { background: #f1c40f; color: #0f172a; border: none; padding: 18px 45px; font-size: 22px; font-weight: bold; border-radius: 50px; cursor: pointer; }
+        .mentor-active { border: 4px solid #3498db; box-shadow: 0 0 20px #3498db; }
     </style>
 </head>
 <body>
     <div id="game-ui">
-        <div id="score">0</div>
-        <p id="hint">Appuyez pour sauter les dettes !</p>
+        <div id="label">Indice d'Impact</div>
+        <div id="impact-index">0</div>
     </div>
 
     <div id="start-screen" class="overlay">
-        <h1 style="font-size: 40px; margin-bottom: 10px;">FUTURE RUNNER</h1>
-        <p style="margin-bottom: 30px; opacity: 0.8;">Évitez les dettes, accumulez la richesse.</p>
-        <button onclick="startGame()">JOUER</button>
+        <h1 style="font-size: 36px; color: #f1c40f;">VISIONNAIRE LEAP</h1>
+        <p style="max-width: 400px; line-height: 1.6;">Évitez l'<b>Ignorance</b> et les <b>Dettes</b>. Collectez la <b>Connaissance</b> pour bâtir le futur.</p>
+        <button class="btn-play" onclick="startGame()">COMMENCER L'ASCENSION</button>
     </div>
 
-    <canvas id="game"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('game');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('score');
+        const impactEl = document.getElementById('impact-index');
         
         let gameActive = false;
         let score = 0;
-        let gravity = 0.6;
-        let lift = -10;
-        let velocity = 0;
-        let playerY = 0;
-        let obstacles = [];
+        let speed = 5;
         let frame = 0;
+        let player = { y: 0, v: 0, size: 40, isInvincible: false };
+        let obstacles = [];
+        let bonuses = [];
+        const k = 0.5; // Facteur d'accélération logarithmique
 
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            playerY = canvas.height / 2;
+            player.y = canvas.height / 2;
         }
-
         window.addEventListener('resize', resize);
         resize();
 
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
             score = 0;
-            scoreEl.innerText = score;
+            speed = 5;
+            frame = 0;
             obstacles = [];
-            playerY = canvas.height / 2;
-            velocity = 0;
+            bonuses = [];
             gameActive = true;
-            animate();
+            loop();
         }
 
-        function jump() {
-            if (gameActive) velocity = lift;
-        }
-
-        window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+        function jump() { if (gameActive) player.v = -12; }
         window.addEventListener('touchstart', jump);
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
 
-        function animate() {
+        function loop() {
             if (!gameActive) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Physique & Vitesse Logarithmique : V(t) = Vi + k * ln(t+1)
+            speed = 5 + k * Math.log(frame / 60 + 1);
+            player.v += 0.7; // Gravité
+            player.y += player.v;
 
-            // Joueur (Pièce Future Foundation)
-            velocity += gravity;
-            playerY += velocity;
-
-            ctx.fillStyle = '#f1c40f';
-            ctx.beginPath();
-            ctx.arc(100, playerY, 20, 0, Math.PI * 2);
-            ctx.fill();
-            // Logo "F"
-            ctx.fillStyle = '#0f172a';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.fillText('F', 93, playerY + 7);
-
-            // Obstacles
-            if (frame % 100 === 0) {
-                let gap = 200;
-                let minH = 50;
-                let h = Math.random() * (canvas.height - gap - minH * 2) + minH;
-                obstacles.push({ x: canvas.width, top: h, bottom: canvas.height - h - gap });
+            // Dessin Héros (Simple silhouette pour le moment)
+            ctx.fillStyle = player.isInvincible ? '#3498db' : '#f1c40f';
+            ctx.fillRect(50, player.y, player.size, player.size);
+            if(player.isInvincible) {
+                ctx.strokeStyle = '#fff';
+                ctx.strokeRect(45, player.y - 5, player.size + 10, player.size + 10);
             }
 
+            // Génération Obstacles (Dettes, Ignorance)
+            if (frame % 120 === 0) {
+                const types = ["DETTE", "IGNORANCE", "MAUVAISE FOI"];
+                obstacles.push({
+                    x: canvas.width,
+                    y: Math.random() * (canvas.height - 100),
+                    text: types[Math.floor(Math.random() * types.length)]
+                });
+            }
+
+            // Génération Bonus (Mentor, Livres)
+            if (frame % 300 === 0) {
+                bonuses.push({ x: canvas.width, y: Math.random() * (canvas.height - 50), type: Math.random() > 0.9 ? 'MENTOR' : 'LIVRE' });
+            }
+
+            // Gestion Obstacles
             obstacles.forEach((obs, i) => {
-                obs.x -= 5;
-                
-                // Dessiner obstacles (Dettes)
-                ctx.fillStyle = '#1e293b';
-                ctx.fillRect(obs.x, 0, 50, obs.top);
-                ctx.fillRect(obs.x, canvas.height - obs.bottom, 50, obs.bottom);
+                obs.x -= speed;
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(obs.x, obs.y, 100, 40);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(obs.text, obs.x + 10, obs.y + 25);
 
-                // Collision
-                if (100 + 20 > obs.x && 100 - 20 < obs.x + 50) {
-                    if (playerY - 20 < obs.top || playerY + 20 > canvas.height - obs.bottom) {
-                        gameOver();
-                    }
-                }
-
-                if (obs.x === 50) {
-                    score++;
-                    scoreEl.innerText = score;
+                if (!player.isInvincible && 50 < obs.x + 100 && 50 + player.size > obs.x && player.y < obs.y + 40 && player.y + player.size > obs.y) {
+                    gameOver();
                 }
             });
 
-            if (playerY > canvas.height || playerY < 0) gameOver();
+            // Gestion Bonus
+            bonuses.forEach((b, i) => {
+                b.x -= speed;
+                ctx.fillStyle = b.type === 'MENTOR' ? '#3498db' : '#2ecc71';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 15, 0, Math.PI*2);
+                ctx.fill();
 
-            obstacles = obstacles.filter(obs => obs.x > -50);
+                if (50 < b.x + 15 && 50 + player.size > b.x - 15 && player.y < b.y + 15 && player.y + player.size > b.y - 15) {
+                    if(b.type === 'MENTOR') activateMentor();
+                    else score += 500;
+                    bonuses.splice(i, 1);
+                }
+            });
+
+            if (player.y > canvas.height || player.y < -50) gameOver();
+
+            score++;
+            impactEl.innerText = Math.floor(score);
             frame++;
-            requestAnimationFrame(animate);
+            requestAnimationFrame(loop);
+        }
+
+        function activateMentor() {
+            player.isInvincible = true;
+            setTimeout(() => { player.isInvincible = false; }, 5000);
         }
 
         function gameOver() {
             gameActive = false;
-            document.getElementById('start-screen').style.display = 'flex';
-            document.querySelector('#start-screen h1').innerText = "SCORE : " + score;
-            document.querySelector('button').innerText = "RÉESSAYER";
+            const screen = document.getElementById('start-screen');
+            screen.style.display = 'flex';
+            screen.innerHTML = `
+                <h1 style="color:#e74c3c">IMPACT ATTEINT : ${Math.floor(score)}</h1>
+                <p>Vous avez aidé virtuellement la communauté. Continuez d'apprendre !</p>
+                <button class="btn-play" onclick="location.reload()">REESSAYER</button>
+            `;
         }
     </script>
 </body>

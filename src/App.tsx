@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import Chatbot from "./components/Chatbot"; // Importation de ton nouveau composant
 
 // Utilisation de lazy pour charger les pages uniquement quand nécessaire
 const Index = lazy(() => import("./pages/Index"));
@@ -25,7 +26,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        {/* Suspense entoure les routes pour afficher le loader pendant le téléchargement des fichiers JS */}
+        {/* Suspense entoure les routes pour afficher le loader */}
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -37,6 +38,10 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        
+        {/* On place le Chatbot ici, à l'extérieur des Routes pour qu'il reste 
+            affiché même quand l'utilisateur change de page */}
+        <Chatbot />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

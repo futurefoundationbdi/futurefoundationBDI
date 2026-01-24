@@ -1,38 +1,29 @@
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
-
-createRoot(document.getElementById("root")!).render(<App />);
-
-// --- VERSION OPTIMISÉE POUR LES MISES À JOUR AUTOMATIQUES ---
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
+    // On ajoute ?v=${Date.now()} pour forcer le navigateur à ignorer son cache
     navigator.serviceWorker
-      .register("/sw.js")
+      .register(`/sw.js?v=${Date.now()}`)
       .then((registration) => {
-        console.log("🎮 Mode Jeu Hors-ligne activé !", registration.scope);
-
-        // Force la vérification d'une nouvelle version au chargement
+        console.log("SW enregistré");
+        
+        // Force la mise à jour immédiate si une nouvelle version existe
         registration.update();
 
-        // Détecte quand un nouveau fichier sw.js est trouvé
         registration.onupdatefound = () => {
           const installingWorker = registration.installing;
           if (installingWorker) {
             installingWorker.onstatechange = () => {
-              if (installingWorker.state === "installed") {
-                if (navigator.serviceWorker.controller) {
-                  // Une nouvelle version est prête : on recharge la page
-                  console.log("Mise à jour du jeu trouvée... Redémarrage !");
-                  window.location.reload();
-                }
+              if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+                // On vide manuellement les caches pour être sûr
+                caches.keys().then(names => {
+                  for (let name of names) caches.delete(name);
+                });
+                console.log("Nouvelle version installée. Redémarrage...");
+                window.location.reload();
               }
             };
           }
         };
       })
-      .catch((err) => {
-        console.log("❌ Échec de l'activation :", err);
-      });
   });
 }

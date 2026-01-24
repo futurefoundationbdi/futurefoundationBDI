@@ -8,12 +8,14 @@ interface QuizFloatingButtonProps {
 const QuizFloatingButton = ({ onClick }: QuizFloatingButtonProps) => {
   return (
     <motion.div
-      className="fixed bottom-6 right-6 z-[9999] md:bottom-10 md:right-10"
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-    >
+  // On passe de bottom-6 à bottom-24 pour laisser de la place au Chatbot
+  // Sur ordi (md), on passe de bottom-10 à bottom-32
+  className="fixed bottom-24 right-6 z-[999] md:bottom-32 md:right-10"
+  initial={{ scale: 0, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  whileHover={{ scale: 1.1 }}
+  whileTap={{ scale: 0.9 }}
+>
       <button
         onClick={onClick}
         className="relative p-4 md:p-5 bg-secondary text-primary rounded-full shadow-[0_10px_40px_rgba(241,196,15,0.5)] border-4 border-white group transition-all"

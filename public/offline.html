@@ -1,116 +1,135 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parcours de la Liberté Financière - Offline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Future Runner - Offline</title>
     <style>
-        :root { --primary: #1a365d; --secondary: #f1c40f; --accent: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; text-align: center; margin: 0; padding: 20px; }
-        .game-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 20px 0; background: #ddd; padding: 10px; border-radius: 8px; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: white; font-weight: bold; font-size: 12px; border-radius: 4px; position: relative; }
-        .cell.special { background: var(--secondary); color: var(--primary); }
-        .cell.danger { background: var(--accent); color: white; }
-        .pion { width: 20px; height: 20px; border-radius: 50%; position: absolute; border: 2px solid white; transition: all 0.3s ease; }
-        .pion-1 { background: #3498db; z-index: 2; }
-        .pion-2 { background: #e67e22; z-index: 1; }
-        .controls { display: flex; justify-content: space-around; align-items: center; margin-top: 20px; }
-        button { padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; background: var(--primary); color: white; }
+        body { margin: 0; background: #0f172a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        #game-ui { position: absolute; width: 100%; text-align: center; top: 20px; z-index: 10; pointer-events: none; }
+        #score { font-size: 40px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
+        canvas { display: block; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+        button { background: #f1c40f; color: #0f172a; border: none; padding: 15px 40px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: transform 0.2s; }
+        button:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>Mode Hors-Ligne</h1>
-        <p>Connexion perdue ? Atteignez la <strong>Liberté Financière</strong> !</p>
-        
-        <div id="status">Tour du Joueur 1</div>
-        <div class="board" id="board"></div>
-        
-        <div class="controls">
-            <div id="dice-result">🎲 ?</div>
-            <button onclick="playTurn()">Lancer le Dé</button>
-        </div>
+    <div id="game-ui">
+        <div id="score">0</div>
+        <p id="hint">Appuyez pour sauter les dettes !</p>
     </div>
 
+    <div id="start-screen" class="overlay">
+        <h1 style="font-size: 40px; margin-bottom: 10px;">FUTURE RUNNER</h1>
+        <p style="margin-bottom: 30px; opacity: 0.8;">Évitez les dettes, accumulez la richesse.</p>
+        <button onclick="startGame()">JOUER</button>
+    </div>
+
+    <canvas id="game"></canvas>
+
     <script>
-        // Configuration issue de votre document [cite: 1, 38, 39]
-        const totalCases = 38;
-        const specialCases = {
-            4: { title: "Achat Impulsif", effect: -2, type: 'danger' },
-            10: { title: "Budget Maîtrisé", effect: 2, type: 'special' },
-            14: { title: "Prison : Délinquance", effect: 'skip', type: 'danger' },
-            19: { title: "Investissement Juteux", effect: 2, type: 'special' },
-            23: { title: "Mauvaise Nouvelle", effect: -2, type: 'danger' },
-            30: { title: "Revenu Passif", effect: 'replay', type: 'special' },
-            33: { title: "Cercle Dépensier", effect: -2, type: 'danger' }
-        };
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        
+        let gameActive = false;
+        let score = 0;
+        let gravity = 0.6;
+        let lift = -10;
+        let velocity = 0;
+        let playerY = 0;
+        let obstacles = [];
+        let frame = 0;
 
-        let players = [
-            { pos: 1, skip: false, color: 'pion-1' },
-            { pos: 1, skip: false, color: 'pion-2' }
-        ];
-        let currentPlayer = 0;
-
-        // Génération du plateau
-        const boardDiv = document.getElementById('board');
-        for (let i = 1; i <= totalCases; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell ' + (specialCases[i]?.type || '');
-            cell.id = 'cell-' + i;
-            cell.innerText = i;
-            boardDiv.appendChild(cell);
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            playerY = canvas.height / 2;
         }
 
-        function updatePions() {
-            document.querySelectorAll('.pion').forEach(p => p.remove());
-            players.forEach((p, index) => {
-                const pion = document.createElement('div');
-                pion.className = `pion pion-${index+1}`;
-                document.getElementById('cell-' + p.pos).appendChild(pion);
-            });
+        window.addEventListener('resize', resize);
+        resize();
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            score = 0;
+            scoreEl.innerText = score;
+            obstacles = [];
+            playerY = canvas.height / 2;
+            velocity = 0;
+            gameActive = true;
+            animate();
         }
 
-        function playTurn() {
-            let p = players[currentPlayer];
-            if (p.skip) {
-                alert("Joueur " + (currentPlayer+1) + " sort de prison !");
-                p.skip = false;
-                nextTurn();
-                return;
+        function jump() {
+            if (gameActive) velocity = lift;
+        }
+
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+        window.addEventListener('touchstart', jump);
+
+        function animate() {
+            if (!gameActive) return;
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Joueur (Pièce Future Foundation)
+            velocity += gravity;
+            playerY += velocity;
+
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(100, playerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+            // Logo "F"
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.fillText('F', 93, playerY + 7);
+
+            // Obstacles
+            if (frame % 100 === 0) {
+                let gap = 200;
+                let minH = 50;
+                let h = Math.random() * (canvas.height - gap - minH * 2) + minH;
+                obstacles.push({ x: canvas.width, top: h, bottom: canvas.height - h - gap });
             }
 
-            const dice = Math.floor(Math.random() * 6) + 1;
-            document.getElementById('dice-result').innerText = "🎲 " + dice;
-            
-            p.pos = Math.min(totalCases, p.pos + dice);
-            
-            const effect = specialCases[p.pos];
-            if (effect) {
-                setTimeout(() => {
-                    alert("Case " + p.pos + " : " + effect.title);
-                    if (effect.effect === 'skip') p.skip = true;
-                    else if (typeof effect.effect === 'number') p.pos = Math.max(1, p.pos + effect.effect);
-                    updatePions();
-                    if (effect.effect !== 'replay') nextTurn();
-                }, 300);
-            } else {
-                updatePions();
-                if (p.pos === totalCases) {
-                    alert("JOUEUR " + (currentPlayer+1) + " A ATTEINT LA LIBERTÉ FINANCIÈRE !");
-                    location.reload();
-                } else {
-                    nextTurn();
+            obstacles.forEach((obs, i) => {
+                obs.x -= 5;
+                
+                // Dessiner obstacles (Dettes)
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(obs.x, 0, 50, obs.top);
+                ctx.fillRect(obs.x, canvas.height - obs.bottom, 50, obs.bottom);
+
+                // Collision
+                if (100 + 20 > obs.x && 100 - 20 < obs.x + 50) {
+                    if (playerY - 20 < obs.top || playerY + 20 > canvas.height - obs.bottom) {
+                        gameOver();
+                    }
                 }
-            }
+
+                if (obs.x === 50) {
+                    score++;
+                    scoreEl.innerText = score;
+                }
+            });
+
+            if (playerY > canvas.height || playerY < 0) gameOver();
+
+            obstacles = obstacles.filter(obs => obs.x > -50);
+            frame++;
+            requestAnimationFrame(animate);
         }
 
-        function nextTurn() {
-            currentPlayer = (currentPlayer === 0) ? 1 : 0;
-            document.getElementById('status').innerText = "Tour du Joueur " + (currentPlayer + 1);
+        function gameOver() {
+            gameActive = false;
+            document.getElementById('start-screen').style.display = 'flex';
+            document.querySelector('#start-screen h1').innerText = "SCORE : " + score;
+            document.querySelector('button').innerText = "RÉESSAYER";
         }
-
-        updatePions();
     </script>
 </body>
 </html>

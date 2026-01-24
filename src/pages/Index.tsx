@@ -11,15 +11,15 @@ import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import FinanceQuiz from "@/components/FinanceQuiz"; 
 import QuizFloatingButton from "@/components/QuizFloatingButton"; 
-import MascotGuide from "@/components/MascotGuide"; 
-import DonationModal from "@/components/DonationModal"; // Importation du modal de Don
-import AlliesModal from "@/components/AlliesModal"; // Importation du modal des Alliés
+// MascotGuide supprimé pour épurer l'interface
+import DonationModal from "@/components/DonationModal";
+import AlliesModal from "@/components/AlliesModal";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [isDonationOpen, setIsDonationOpen] = useState(false); // État pour le don
-  const [isAlliesOpen, setIsAlliesOpen] = useState(false);     // État pour les alliés
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
+  const [isAlliesOpen, setIsAlliesOpen] = useState(false);
 
   // Fonctions d'ouverture
   const openQuiz = () => setIsQuizOpen(true);
@@ -28,14 +28,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* 1. Navbar connectée (on peut aussi y lier le don si besoin) */}
       <Navbar onOpenQuiz={openQuiz} />
       
       <main>
         <HeroSection />
         <PartnersSection />
 
-        {/* 2. Dashboard connecté */}
         <WisdomDashboard onOpenQuiz={openQuiz} />
 
         <MissionSection />
@@ -102,7 +100,6 @@ const Index = () => {
         <ImpactSection />
         <TeamSection />
 
-        {/* 3. CTASection mise à jour avec les déclencheurs de modales */}
         <CTASection 
           onOpenDonation={openDonation} 
           onOpenAllies={openAllies} 
@@ -111,20 +108,16 @@ const Index = () => {
 
       <Footer />
 
-      {/* --- ÉLÉMENTS INTERACTIFS ET MODALES --- */}
-      <MascotGuide />
+      {/* --- ÉLÉMENTS INTERACTIFS --- */}
+      {/* MascotGuide a été retiré ici */}
       <QuizFloatingButton onClick={openQuiz} />
 
-      {/* Modal du Quiz */}
+      {/* Modales */}
       <FinanceQuiz isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
-
-      {/* Modal de Don */}
       <DonationModal isOpen={isDonationOpen} onClose={() => setIsDonationOpen(false)} />
-
-      {/* Modal des Alliés (basé sur le PDF) */}
       <AlliesModal isOpen={isAlliesOpen} onClose={() => setIsAlliesOpen(false)} />
 
-      {/* FENÊTRE MODALE PRÉFACE */}
+      {/* MODALE PRÉFACE */}
       <div 
         id="modal-preface" 
         className="fixed inset-0 z-[100] hidden bg-primary/40 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"

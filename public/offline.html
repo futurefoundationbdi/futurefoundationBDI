@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parcours de la Liberté Financière - Offline</title>
+    <style>
+        :root { --primary: #1a365d; --secondary: #f1c40f; --accent: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; text-align: center; margin: 0; padding: 20px; }
+        .game-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 20px 0; background: #ddd; padding: 10px; border-radius: 8px; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: white; font-weight: bold; font-size: 12px; border-radius: 4px; position: relative; }
+        .cell.special { background: var(--secondary); color: var(--primary); }
+        .cell.danger { background: var(--accent); color: white; }
+        .pion { width: 20px; height: 20px; border-radius: 50%; position: absolute; border: 2px solid white; transition: all 0.3s ease; }
+        .pion-1 { background: #3498db; z-index: 2; }
+        .pion-2 { background: #e67e22; z-index: 1; }
+        .controls { display: flex; justify-content: space-around; align-items: center; margin-top: 20px; }
+        button { padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Mode Hors-Ligne</h1>
+        <p>Connexion perdue ? Atteignez la <strong>Liberté Financière</strong> !</p>
+        
+        <div id="status">Tour du Joueur 1</div>
+        <div class="board" id="board"></div>
+        
+        <div class="controls">
+            <div id="dice-result">🎲 ?</div>
+            <button onclick="playTurn()">Lancer le Dé</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration issue de votre document [cite: 1, 38, 39]
+        const totalCases = 38;
+        const specialCases = {
+            4: { title: "Achat Impulsif", effect: -2, type: 'danger' },
+            10: { title: "Budget Maîtrisé", effect: 2, type: 'special' },
+            14: { title: "Prison : Délinquance", effect: 'skip', type: 'danger' },
+            19: { title: "Investissement Juteux", effect: 2, type: 'special' },
+            23: { title: "Mauvaise Nouvelle", effect: -2, type: 'danger' },
+            30: { title: "Revenu Passif", effect: 'replay', type: 'special' },
+            33: { title: "Cercle Dépensier", effect: -2, type: 'danger' }
+        };
+
+        let players = [
+            { pos: 1, skip: false, color: 'pion-1' },
+            { pos: 1, skip: false, color: 'pion-2' }
+        ];
+        let currentPlayer = 0;
+
+        // Génération du plateau
+        const boardDiv = document.getElementById('board');
+        for (let i = 1; i <= totalCases; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell ' + (specialCases[i]?.type || '');
+            cell.id = 'cell-' + i;
+            cell.innerText = i;
+            boardDiv.appendChild(cell);
+        }
+
+        function updatePions() {
+            document.querySelectorAll('.pion').forEach(p => p.remove());
+            players.forEach((p, index) => {
+                const pion = document.createElement('div');
+                pion.className = `pion pion-${index+1}`;
+                document.getElementById('cell-' + p.pos).appendChild(pion);
+            });
+        }
+
+        function playTurn() {
+            let p = players[currentPlayer];
+            if (p.skip) {
+                alert("Joueur " + (currentPlayer+1) + " sort de prison !");
+                p.skip = false;
+                nextTurn();
+                return;
+            }
+
+            const dice = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('dice-result').innerText = "🎲 " + dice;
+            
+            p.pos = Math.min(totalCases, p.pos + dice);
+            
+            const effect = specialCases[p.pos];
+            if (effect) {
+                setTimeout(() => {
+                    alert("Case " + p.pos + " : " + effect.title);
+                    if (effect.effect === 'skip') p.skip = true;
+                    else if (typeof effect.effect === 'number') p.pos = Math.max(1, p.pos + effect.effect);
+                    updatePions();
+                    if (effect.effect !== 'replay') nextTurn();
+                }, 300);
+            } else {
+                updatePions();
+                if (p.pos === totalCases) {
+                    alert("JOUEUR " + (currentPlayer+1) + " A ATTEINT LA LIBERTÉ FINANCIÈRE !");
+                    location.reload();
+                } else {
+                    nextTurn();
+                }
+            }
+        }
+
+        function nextTurn() {
+            currentPlayer = (currentPlayer === 0) ? 1 : 0;
+            document.getElementById('status').innerText = "Tour du Joueur " + (currentPlayer + 1);
+        }
+
+        updatePions();
+    </script>
+</body>
+</html>

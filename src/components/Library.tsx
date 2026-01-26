@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Types pour la gestion des avis et modes
+type ReadingMode = 'normal' | 'sepia' | 'night';
+
 const contents = {
   reads: [
-    { id: 1, title: "Père Riche Père Pauvre (Synthèse)", author: "Robert Kiyosaki", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400", fileUrl: "/books/pere-riche.pdf", type: "pdf" },
-    { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", fileUrl: "/books/psychologie-argent.pdf", type: "pdf" },
-    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf.pdf", type: "pdf" },
-    { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "https://images.unsplash.com/photo-1592492159418-39f319320569?w=400", fileUrl: "/books/napoleon-hill.pdf", type: "pdf" }
+    { id: 1, title: "Père Riche Père Pauvre (Synthèse)", author: "Robert Kiyosaki", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400", fileUrl: "/books/pere-riche.pdf", type: "pdf", review: "Une base solide pour changer sa vision de l'argent." },
+    { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", fileUrl: "/books/psychologie-argent.pdf", type: "pdf", review: "Excellent pour comprendre nos comportements irrationnels." },
+    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf", type: "pdf", review: "Des principes millénaires toujours d'actualité." },
+    { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "https://images.unsplash.com/photo-1592492159418-39f319320569?w=400", fileUrl: "/books/napoleon-hill.pdf", type: "pdf", review: "Le classique absolu sur la force de la pensée." }
   ],
   audios: [
     { id: 3, title: "L'Investissement Intelligent", source: "NoteBookLM", duration: "12 min", audioSrc: "/audio/invest.mp3", type: "audio" },
@@ -25,15 +28,22 @@ export default function Library() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBookId, setCurrentBookId] = useState<number | null>(null);
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
-  const [showWarning, setShowWarning] = useState(false);
+  const [showAdvice, setShowAdvice] = useState(false);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
+  const [readMode, setReadMode] = useState<ReadingMode>('normal');
+  
+  // Nouvel état pour les notes des utilisateurs
+  const [ratings, setRatings] = useState<Record<number, number>>({});
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Charger le temps et les notes au démarrage
   useEffect(() => {
     const savedTime = localStorage.getItem('future_library_time');
+    const savedRatings = localStorage.getItem('future_library_ratings');
     const today = new Date().toDateString();
+    
     if (localStorage.getItem('future_library_date') !== today) {
       localStorage.setItem('future_library_time', (45 * 60).toString());
       localStorage.setItem('future_library_date', today);
@@ -41,7 +51,18 @@ export default function Library() {
     } else if (savedTime) {
       setTimeLeft(parseInt(savedTime));
     }
+
+    if (savedRatings) {
+      setRatings(JSON.parse(savedRatings));
+    }
   }, []);
+
+  // Sauvegarder les notes quand elles changent
+  const handleRate = (id: number, score: number) => {
+    const newRatings = { ...ratings, [id]: score };
+    setRatings(newRatings);
+    localStorage.setItem('future_library_ratings', JSON.stringify(newRatings));
+  };
 
   useEffect(() => {
     if (isPlaying && timeLeft > 0) {
@@ -73,7 +94,6 @@ export default function Library() {
       setCurrentBookId(item.id);
       setIsPlaying(true);
 
-      // Si c'est un PDF, on déclenche l'ouverture après 2 secondes de maintien
       if (item.type === 'pdf') {
         pressTimerRef.current = setTimeout(() => {
           setViewingFile(item.fileUrl);
@@ -81,8 +101,8 @@ export default function Library() {
         }, 2000);
       }
     } else {
-      setShowWarning(true);
-      setTimeout(() => setShowWarning(false), 3000);
+      setShowAdvice(true);
+      setTimeout(() => setShowAdvice(false), 4000);
     }
   };
 
@@ -91,15 +111,22 @@ export default function Library() {
     if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
   };
 
+  const getFilterStyle = () => {
+    switch(readMode) {
+      case 'sepia': return 'sepia(0.8) contrast(0.9) brightness(0.9)';
+      case 'night': return 'invert(0.9) hue-rotate(180deg) brightness(0.8)';
+      default: return 'none';
+    }
+  };
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
 
   return (
     <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14]">
       
-      {/* --- FOND GLOWING SKY --- */}
+      {/* --- FOND AURORA --- */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse duration-[10s] opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
-        <div className="absolute top-[10%] right-[-20%] w-[100%] h-[60%] bg-cyan-500/10 blur-[100px] rounded-full animate-pulse duration-[15s] opacity-30"></div>
+        <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
       </div>
 
@@ -111,117 +138,127 @@ export default function Library() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
           <div className="text-center md:text-left">
             <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-white to-emerald-400 uppercase italic tracking-tighter mb-2">
-              Espace de Lecture
+              Future Library
             </h1>
-            <p className="text-emerald-400/70 font-black tracking-[0.4em] uppercase text-[10px]">
-              La dimension du focus profond
-            </p>
+            <div className="flex items-center gap-4 justify-center md:justify-start">
+              <p className="text-emerald-400/70 font-black tracking-[0.4em] uppercase text-[10px]">Espace de Focus</p>
+              <div className="flex gap-2">
+                <button onClick={() => setActiveTab('reads')} className={`text-[10px] font-bold uppercase transition-all ${activeTab === 'reads' ? 'text-white' : 'text-white/20'}`}>Livres</button>
+                <button onClick={() => setActiveTab('audios')} className={`text-[10px] font-bold uppercase transition-all ${activeTab === 'audios' ? 'text-white' : 'text-white/20'}`}>Audio</button>
+              </div>
+            </div>
           </div>
-
           <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[160px]">
-            <span className="text-[9px] block text-emerald-400 uppercase font-black tracking-widest mb-1">Concentration</span>
             <span className="text-4xl font-mono font-black text-white">{formatTime(timeLeft)}</span>
           </div>
         </div>
 
-        {/* Ambiance et Mode */}
-        <div className="flex flex-col items-center gap-8 mb-12">
-            {activeTab === 'reads' && (
-              <div className="flex flex-col items-center animate-in fade-in slide-in-from-top-4">
-                <span className="text-white/40 text-[9px] font-black uppercase tracking-[0.2em] mb-3 italic">✨ Ouverture après 2s de focus</span>
-                <div className="flex gap-2 bg-black/40 p-1.5 rounded-full border border-white/5 backdrop-blur-md">
-                  {ambiances.map((amb) => (
-                    <button
-                      key={amb.id}
-                      onClick={() => setSelectedAmbiance(amb)}
-                      className={`px-5 py-2 rounded-full text-[10px] font-bold transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      {amb.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-4 p-1.5 bg-white/5 rounded-2xl border border-white/10">
-                <button onClick={() => setActiveTab('reads')} className={`px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${activeTab === 'reads' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}>📖 Lectures</button>
-                <button onClick={() => setActiveTab('audios')} className={`px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${activeTab === 'audios' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}>🎙️ Livres Audio</button>
-            </div>
-        </div>
-
-        {/* Grille */}
-        <div className="relative group/grid">
-          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto md:overflow-visible pb-12 md:pb-0 snap-x snap-mandatory custom-scrollbar">
-            {timeLeft <= 0 ? (
-              <div className="w-full col-span-full py-24 text-center border border-emerald-500/20 rounded-[3rem] bg-black/40">
-                <p className="text-2xl font-black text-emerald-500 uppercase italic mb-2">Portail Clos</p>
-              </div>
-            ) : (
-              [...contents.reads, ...contents.audios]
-                .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
-                .map(item => (
-                  <div key={item.id} className="min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center group relative bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 border-white/5 opacity-80 hover:opacity-100 hover:border-white/20">
-                    <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[4/5] shadow-2xl">
-                      <img src={item.cover} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-[1500ms]" alt="" />
-                      {currentBookId === item.id && isPlaying && (
-                        <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[4px] flex flex-col items-center justify-center animate-pulse">
-                           <div className="w-12 h-12 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                           <span className="text-[10px] font-black uppercase text-white tracking-widest">Immersion...</span>
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-xl mb-2 text-white italic group-hover:text-emerald-400 line-clamp-1">{item.title}</h3>
-                    <p className="text-slate-500 font-black text-[9px] uppercase tracking-widest mb-8 border-l border-emerald-500/40 pl-3">
-                      {activeTab === 'reads' ? (item as any).author : 'NoteBookLM Original'}
-                    </p>
-                    <button 
-                      onMouseDown={() => handleActionStart(item)}
-                      onMouseUp={handleActionEnd}
-                      onMouseLeave={handleActionEnd}
-                      onTouchStart={() => handleActionStart(item)}
-                      onTouchEnd={handleActionEnd}
-                      className="w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] transition-all bg-emerald-500 text-black hover:bg-white active:scale-95 shadow-lg"
-                    >
-                      {activeTab === 'reads' ? 'Maintenir pour Lire' : 'Maintenir pour Écouter'}
-                    </button>
+        {/* Grille de livres */}
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto pb-12 custom-scrollbar">
+          {[...contents.reads, ...contents.audios]
+            .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
+            .map(item => (
+              <div key={item.id} className="min-w-[85vw] md:min-w-0 bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border border-white/5 flex flex-col h-full group">
+                <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[4/5] shadow-2xl">
+                  <img src={item.cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+                  
+                  {/* SYSTEME DE RATING FLOTTANT */}
+                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full flex gap-1 border border-white/10 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button 
+                        key={star} 
+                        onClick={(e) => { e.stopPropagation(); handleRate(item.id, star); }}
+                        className={`text-xs transition-colors ${ (ratings[item.id] || 0) >= star ? 'text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-white/20'}`}
+                      >
+                        ★
+                      </button>
+                    ))}
                   </div>
-                ))
-            )}
-          </div>
+
+                  {currentBookId === item.id && isPlaying && (
+                    <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[4px] flex items-center justify-center animate-pulse">
+                       <div className="w-12 h-12 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className="font-bold text-xl text-white italic line-clamp-1">{item.title}</h3>
+                  {ratings[item.id] && (
+                    <span className="text-[10px] font-bold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      {ratings[item.id]} ★
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-emerald-500/60 font-black text-[9px] uppercase tracking-widest mb-4">{(item as any).author || item.source}</p>
+                
+                {/* SECTION AVIS */}
+                <div className="flex-grow bg-white/2 p-4 rounded-xl mb-6 border border-white/5">
+                  <span className="text-[8px] font-black uppercase text-white/30 block mb-2 tracking-widest">Avis de la Fondation</span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                    "{ (item as any).review || "Un catalyseur essentiel pour votre développement stratégique." }"
+                  </p>
+                </div>
+
+                <button 
+                  onMouseDown={() => handleActionStart(item)}
+                  onMouseUp={handleActionEnd}
+                  onMouseLeave={handleActionEnd}
+                  onTouchStart={() => handleActionStart(item)}
+                  onTouchEnd={handleActionEnd}
+                  className="w-full py-4 rounded-2xl font-black uppercase text-[9px] bg-emerald-500 text-black hover:bg-white transition-all shadow-lg active:scale-95"
+                >
+                  {activeTab === 'reads' ? 'Maintenir pour Lire' : 'Maintenir pour Écouter'}
+                </button>
+              </div>
+            ))}
         </div>
       </div>
 
-      {/* --- LECTEUR IMMERSIF (MODAL) --- */}
+      {/* --- LECTEUR IMMERSIF --- */}
       {viewingFile && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-10 animate-in fade-in zoom-in duration-500">
-          <div className="absolute inset-0 bg-[#050b14]/90 backdrop-blur-2xl" onClick={() => setViewingFile(null)} />
-          <div className="relative w-full max-w-5xl h-[90vh] bg-black/40 border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(16,185,129,0.1)]">
-            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 animate-pulse">Lecture Immersive Active</span>
-              <button onClick={() => setViewingFile(null)} className="bg-emerald-500 text-black px-6 py-2 rounded-full text-[10px] font-black hover:bg-white transition-colors uppercase tracking-widest">Fermer</button>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in zoom-in duration-500">
+          <div className="absolute inset-0 bg-[#050b14]/98 backdrop-blur-3xl" />
+          <div className="relative w-full max-w-6xl h-full md:h-[92vh] bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/2 gap-4">
+              <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
+                {(['normal', 'sepia', 'night'] as const).map(mode => (
+                  <button 
+                    key={mode}
+                    onClick={() => setReadMode(mode)} 
+                    className={`px-5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${readMode === mode ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
+                  >
+                    {mode === 'normal' ? 'Lumière' : mode === 'sepia' ? 'Confort' : 'Nuit'}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setViewingFile(null)} className="bg-white/5 text-white/60 border border-white/10 px-6 py-2 rounded-full text-[10px] font-black hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest">Fermer la dimension</button>
             </div>
-            {/* Lecteur optimisé avec paramètres d'affichage direct */}
-            <iframe 
-              src={`${viewingFile}#toolbar=0&navpanes=0&view=FitH`} 
-              className="w-full h-full border-none" 
-              title="Lecteur"
-              loading="lazy"
-            />
+            <div className="w-full h-full relative bg-[#f2f2f2]">
+               <iframe 
+                src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`}
+                className="w-full h-full border-none transition-all duration-700" 
+                style={{ filter: getFilterStyle() }}
+                title="Liseuse"
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {showWarning && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] bg-red-600/90 backdrop-blur-md text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest animate-in fade-in zoom-in duration-300">
-          ⚠️ Terminez d'abord votre immersion en cours
+      {/* --- CONSEIL BIENVEILLANT --- */}
+      {showAdvice && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-[0_0_30px_rgba(16,185,129,0.4)] animate-in slide-in-from-bottom-10 duration-500 flex items-center gap-3">
+          <span className="text-lg">💡</span>
+          <span>Le savoir s'ancre mieux dans la patience. Un livre à la fois.</span>
         </div>
       )}
 
       <style>{`
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
         .custom-scrollbar::-webkit-scrollbar { height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); border-radius: 10px; }
-        @media (max-width: 768px) { .custom-scrollbar { scrollbar-width: none; } .custom-scrollbar::-webkit-scrollbar { display: none; } }
+        .group:hover .line-clamp-1 { -webkit-line-clamp: unset; }
       `}</style>
     </div>
   );

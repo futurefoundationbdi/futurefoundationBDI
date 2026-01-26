@@ -74,15 +74,15 @@ export default function Library() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
 
   return (
-    <div className="relative min-h-screen text-slate-100 p-6 font-sans overflow-hidden bg-[#020617]">
+    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#020617] w-full">
       
       {/* Background stylisé (Blobs de lumière) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-yellow-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-yellow-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       {/* Alerte Anti-Zapping */}
       {showWarning && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#eab308] text-[#020617] px-8 py-4 rounded-2xl shadow-[0_20px_50px_rgba(234,179,8,0.3)] border border-yellow-300 animate-in fade-in zoom-in duration-300 text-sm font-black uppercase tracking-tight text-center">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-[#eab308] text-[#020617] px-8 py-4 rounded-2xl shadow-[0_20px_50px_rgba(234,179,8,0.3)] border border-yellow-300 animate-in fade-in zoom-in duration-300 text-sm font-black uppercase tracking-tight text-center w-[90%] md:w-auto">
           ⚠️ Visionnaire, finissez d'abord votre lecture actuelle.
         </div>
       )}
@@ -90,26 +90,26 @@ export default function Library() {
       <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
-          <div>
-            <h1 className="text-4xl font-black text-yellow-500 uppercase italic tracking-tighter mb-2">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8 bg-slate-900/40 p-8 md:p-10 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+          <div className="text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-black text-yellow-500 uppercase italic tracking-tighter mb-3">
               Bibliothèque 45'
             </h1>
-            <p className="text-slate-400 font-medium">
+            <p className="text-slate-400 font-medium max-w-md">
               "La discipline est le pont entre les objectifs et l'accomplissement."
             </p>
           </div>
           
-          <div className={`relative p-1 rounded-3xl bg-gradient-to-br ${timeLeft > 300 ? 'from-yellow-500 to-yellow-700' : 'from-red-500 to-red-700'}`}>
-              <div className="bg-[#0f172a] px-8 py-4 rounded-[1.4rem] text-center min-w-[160px]">
+          <div className={`relative p-1 rounded-3xl bg-gradient-to-br ${timeLeft > 300 ? 'from-yellow-500 to-yellow-700' : 'from-red-500 to-red-700'} shadow-2xl transform md:scale-110`}>
+              <div className="bg-[#0f172a] px-8 py-4 rounded-[1.4rem] text-center min-w-[180px]">
                   <span className="text-[10px] block text-slate-500 uppercase font-black tracking-[0.2em] mb-1">Focus Quotidien</span>
-                  <span className="text-4xl font-mono font-black text-white">{formatTime(timeLeft)}</span>
+                  <span className="text-4xl font-mono font-black text-white tracking-widest">{formatTime(timeLeft)}</span>
               </div>
           </div>
         </div>
 
         {/* Onglets de navigation */}
-        <div className="flex gap-2 mb-10 bg-slate-900/50 p-1.5 rounded-2xl w-fit border border-white/5">
+        <div className="flex gap-2 mb-12 bg-slate-900/50 p-1.5 rounded-2xl w-fit border border-white/5 mx-auto md:mx-0">
           <button 
             onClick={() => setActiveTab('reads')} 
             className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === 'reads' ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' : 'text-slate-400 hover:text-white'}`}
@@ -125,12 +125,12 @@ export default function Library() {
         </div>
 
         {/* Grille de livres */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {timeLeft <= 0 ? (
             <div className="col-span-full py-24 text-center bg-slate-900/40 backdrop-blur-md rounded-[3rem] border border-dashed border-slate-700">
               <h2 className="text-6xl mb-6">🎯</h2>
-              <p className="text-2xl font-bold text-yellow-500">Esprit rassasié pour aujourd'hui !</p>
-              <p className="text-slate-400 mt-2">Votre cerveau traite ces informations. Revenez dans 24h.</p>
+              <p className="text-2xl font-bold text-yellow-500 uppercase tracking-wider">Esprit rassasié !</p>
+              <p className="text-slate-400 mt-2 max-w-sm mx-auto font-medium">Votre cerveau traite ces informations. Revenez dans 24h pour votre prochaine dose.</p>
             </div>
           ) : (
             [...contents.reads, ...contents.audios]
@@ -138,23 +138,26 @@ export default function Library() {
               .map(item => (
                 <div 
                   key={item.id} 
-                  className={`group relative bg-slate-900/40 backdrop-blur-sm p-5 rounded-[2.5rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-yellow-500 ring-4 ring-yellow-500/10' : 'border-white/5 opacity-80'}`}
+                  className={`group relative bg-slate-900/40 backdrop-blur-sm p-6 rounded-[2.5rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-yellow-500 ring-4 ring-yellow-500/10' : 'border-white/5 opacity-80'}`}
                 >
-                  <div className="relative overflow-hidden rounded-[2rem] mb-6 shadow-2xl">
+                  <div className="relative overflow-hidden rounded-[2rem] mb-6 shadow-2xl aspect-[3/4]">
                     <img 
                       src={item.cover || 'https://via.placeholder.com/400x600'} 
-                      className="w-full h-64 object-cover transform group-hover:scale-110 transition-transform duration-700" 
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" 
                       alt={item.title} 
                     />
                     {currentBookId === item.id && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
-                        <span className="bg-yellow-500 text-black text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter">Lecture en cours</span>
+                        <div className="flex flex-col items-center gap-2">
+                           <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                           <span className="bg-yellow-500 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">En cours</span>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  <h3 className="font-bold text-xl leading-tight mb-2 h-14 overflow-hidden">{item.title}</h3>
-                  <p className="text-sm text-slate-500 mb-8 uppercase tracking-widest font-semibold">
+                  <h3 className="font-bold text-xl leading-tight mb-2 h-14 overflow-hidden group-hover:text-yellow-500 transition-colors">{item.title}</h3>
+                  <p className="text-sm text-slate-500 mb-8 uppercase tracking-[0.2em] font-black italic">
                     {activeTab === 'reads' ? (item as any).author : 'NoteBookLM Deep Dive'}
                   </p>
                   
@@ -162,9 +165,11 @@ export default function Library() {
                     onMouseDown={() => handleAction(item.id)}
                     onMouseUp={() => setIsPlaying(false)}
                     onMouseLeave={() => setIsPlaying(false)}
-                    className={`w-full py-5 rounded-[1.5rem] font-black uppercase tracking-[0.15em] text-xs transition-all duration-300 ${
+                    onTouchStart={() => handleAction(item.id)}
+                    onTouchEnd={() => setIsPlaying(false)}
+                    className={`w-full py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs transition-all duration-300 library-button ${
                       currentBookId === item.id || currentBookId === null 
-                      ? 'bg-yellow-500 text-black hover:shadow-[0_0_40px_rgba(234,179,8,0.4)] hover:-translate-y-1' 
+                      ? 'bg-yellow-500 text-black hover:shadow-[0_0_40px_rgba(234,179,8,0.5)] active:scale-95' 
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
                     }`}
                   >
@@ -175,7 +180,7 @@ export default function Library() {
           )}
         </div>
         
-        <p className="text-center mt-20 text-slate-600 text-[10px] uppercase tracking-[0.3em] font-black">
+        <p className="text-center mt-24 text-slate-600 text-[10px] uppercase tracking-[0.5em] font-black opacity-50">
           Système de Rétention Cognitive • The Future Foundation
         </p>
       </div>

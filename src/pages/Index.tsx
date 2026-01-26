@@ -12,7 +12,6 @@ import Library from "@/components/Library";
 import Footer from "@/components/Footer";
 import FinanceQuiz from "@/components/FinanceQuiz"; 
 import QuizFloatingButton from "@/components/QuizFloatingButton"; 
-// MascotGuide supprimé pour épurer l'interface
 import DonationModal from "@/components/DonationModal";
 import AlliesModal from "@/components/AlliesModal";
 import { Button } from "@/components/ui/button";
@@ -105,12 +104,16 @@ const Index = () => {
           onOpenDonation={openDonation} 
           onOpenAllies={openAllies} 
         />
+
+        {/* --- NOUVELLE SECTION BIBLIOTHÈQUE --- */}
+        {/* On la place en bas, juste avant le footer comme souhaité */}
+        <Library />
+
       </main>
 
       <Footer />
 
       {/* --- ÉLÉMENTS INTERACTIFS --- */}
-      {/* MascotGuide a été retiré ici */}
       <QuizFloatingButton onClick={openQuiz} />
 
       {/* Modales */}

@@ -55,7 +55,6 @@ export default function Library() {
 
   useEffect(() => {
     if (audioRef.current) {
-      // Le son d'ambiance ne joue que pour les lectures
       if (isPlaying && activeTab === 'reads' && selectedAmbiance.url) {
         audioRef.current.play().catch(() => {});
       } else {
@@ -82,10 +81,8 @@ export default function Library() {
       
       {/* --- FOND GLOWING SKY (AURORA BOREALIS) --- */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Voiles d'aurores vert émeraude */}
         <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse duration-[10s] opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
         <div className="absolute top-[10%] right-[-20%] w-[100%] h-[60%] bg-cyan-500/10 blur-[100px] rounded-full animate-pulse duration-[15s] opacity-30"></div>
-        {/* Texture étoilée */}
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
       </div>
 
@@ -104,7 +101,7 @@ export default function Library() {
             </p>
           </div>
 
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[160px] shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[160px]">
             <span className="text-[9px] block text-emerald-400 uppercase font-black tracking-widest mb-1">Concentration</span>
             <span className="text-4xl font-mono font-black text-white">{formatTime(timeLeft)}</span>
           </div>
@@ -135,11 +132,11 @@ export default function Library() {
             </div>
         </div>
 
-        {/* --- GRILLE SCROLLABLE (Max 2 lignes visibles) --- */}
+        {/* --- GRILLE OPTIMISÉE (FLEX HORIZONTAL SUR MOBILE / GRID SUR PC) --- */}
         <div className="relative group/grid">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-h-[65vh] md:max-h-[75vh] overflow-y-auto pr-4 custom-scrollbar scroll-smooth">
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto md:overflow-visible pb-12 md:pb-0 snap-x snap-mandatory custom-scrollbar scroll-smooth">
             {timeLeft <= 0 ? (
-              <div className="col-span-full py-24 text-center border border-emerald-500/20 rounded-[3rem] bg-black/40">
+              <div className="w-full col-span-full py-24 text-center border border-emerald-500/20 rounded-[3rem] bg-black/40">
                 <p className="text-2xl font-black text-emerald-500 uppercase italic mb-2">Portail Clos</p>
                 <p className="text-slate-400 text-sm">Votre esprit se repose. Revenez dans 24h.</p>
               </div>
@@ -147,7 +144,7 @@ export default function Library() {
               [...contents.reads, ...contents.audios]
                 .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
                 .map(item => (
-                  <div key={item.id} className={`group relative bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20' : 'border-white/5 opacity-80 hover:opacity-100 hover:border-white/20'}`}>
+                  <div key={item.id} className="min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center group relative bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 border-white/5 opacity-80 hover:opacity-100 hover:border-white/20">
                     <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[4/5] shadow-2xl">
                       <img src={item.cover} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-[1500ms]" alt="" />
                       {currentBookId === item.id && (
@@ -156,7 +153,7 @@ export default function Library() {
                         </div>
                       )}
                     </div>
-                    <h3 className="font-bold text-xl mb-2 text-white italic transition-colors group-hover:text-emerald-400">{item.title}</h3>
+                    <h3 className="font-bold text-xl mb-2 text-white italic group-hover:text-emerald-400 line-clamp-1">{item.title}</h3>
                     <p className="text-slate-500 font-black text-[9px] uppercase tracking-widest mb-8 border-l border-emerald-500/40 pl-3">
                       {activeTab === 'reads' ? (item as any).author : 'NoteBookLM'}
                     </p>
@@ -175,14 +172,16 @@ export default function Library() {
             )}
           </div>
           
-          {/* Indicateur de défilement (Scroll Hint) */}
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-40 animate-bounce flex flex-col items-center">
-             <span className="text-[8px] font-black uppercase tracking-widest text-emerald-400 mb-1">Explorer</span>
-             <div className="w-px h-6 bg-gradient-to-b from-emerald-500 to-transparent"></div>
+          {/* Indicateur visuel pour Mobile (Uniquement mobile) */}
+          <div className="md:hidden flex flex-col items-center mt-4 animate-pulse">
+              <span className="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-500/60 mb-2">Glisser pour explorer</span>
+              <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div className="w-1/2 h-full bg-emerald-500 animate-[shimmer_2s_infinite]"></div>
+              </div>
           </div>
         </div>
 
-        <p className="text-center mt-32 text-white/10 text-[8px] uppercase tracking-[0.6em] font-black">
+        <p className="text-center mt-24 text-white/10 text-[8px] uppercase tracking-[0.6em] font-black">
           The Future Foundation • Sanctuaire de Connaissance
         </p>
       </div>
@@ -193,22 +192,26 @@ export default function Library() {
         </div>
       )}
 
-      {/* Style pour la scrollbar personnalisée */}
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 10px;
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(16, 185, 129, 0.2);
           border-radius: 10px;
-          border: 1px solid rgba(16, 185, 129, 0.1);
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(16, 185, 129, 0.5);
+        @media (max-width: 768px) {
+          .custom-scrollbar {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+          .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
         }
       `}</style>
     </div>

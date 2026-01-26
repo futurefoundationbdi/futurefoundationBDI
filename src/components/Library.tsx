@@ -4,7 +4,7 @@ const contents = {
   reads: [
     { id: 1, title: "Père Riche Père Pauvre (Synthèse)", author: "Robert Kiyosaki", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400", fileUrl: "/books/pere-riche.pdf", type: "pdf" },
     { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", fileUrl: "/books/psychologie-argent.pdf", type: "pdf" },
-    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf", type: "pdf" },
+    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf.pdf", type: "pdf" },
     { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "https://images.unsplash.com/photo-1592492159418-39f319320569?w=400", fileUrl: "/books/napoleon-hill.pdf", type: "pdf" }
   ],
   audios: [

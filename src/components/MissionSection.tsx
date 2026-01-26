@@ -6,7 +6,7 @@ const MissionSection = () => {
       icon: Target,
       title: "Notre Vision",
       description:
-        "Bâtir une génération de jeunes visionnaires, capables de prendre en main leur avenir et de contribuer au développement de leur communauté.",
+        "Former des Jeunes sages qui deviendront des leaders capables; de contribuer au développement de leur communauté et de prendre en main leur avenir.",
     },
     {
       icon: Heart,

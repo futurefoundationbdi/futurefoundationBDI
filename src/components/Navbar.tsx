@@ -27,7 +27,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
     { label: "Programmes", href: "#programmes" },
     { label: "Équipe", href: "#equipe" },
     { label: "Impact", href: "#impact" },
-    {label: "Library", href: "#Library" },
+    {label: "Library", href: "#bibliotheque" },
   ];
 
   useEffect(() => {

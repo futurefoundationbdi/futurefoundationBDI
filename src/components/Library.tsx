@@ -3,7 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 const contents = {
   reads: [
     { id: 1, title: "Père Riche Père Pauvre (Synthèse)", author: "Robert Kiyosaki", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400", type: "pdf" },
-    { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", type: "pdf" }
+    { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", type: "pdf" },
+    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?w=400", type: "pdf" },
+    { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "https://images.unsplash.com/photo-1592492159418-39f319320569?w=400", type: "pdf" }
   ],
   audios: [
     { id: 3, title: "L'Investissement Intelligent", source: "NoteBookLM", duration: "12 min", audioSrc: "/audio/invest.mp3", type: "audio" },
@@ -15,7 +17,6 @@ const ambiances = [
   { id: 'none', name: '🔇 Silence', url: '' },
   { id: 'nature', name: '🍃 Forêt & Oiseaux', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3' },
   { id: 'rain', name: '🌧️ Pluie Fine', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { id: 'travel', name: '✈️ Voyage (Zen)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
 ];
 
 export default function Library() {
@@ -23,10 +24,8 @@ export default function Library() {
   const [activeTab, setActiveTab] = useState<'reads' | 'audios'>('reads');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBookId, setCurrentBookId] = useState<number | null>(null);
-  const [showWarning, setShowWarning] = useState(false);
-  
-  // États pour l'ambiance sonore
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
+  const [showWarning, setShowWarning] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -54,11 +53,11 @@ export default function Library() {
     }
   }, [isPlaying, timeLeft]);
 
-  // Gestion de la musique d'ambiance (uniquement pour les lectures)
   useEffect(() => {
     if (audioRef.current) {
+      // Le son d'ambiance ne joue que pour les lectures
       if (isPlaying && activeTab === 'reads' && selectedAmbiance.url) {
-        audioRef.current.play().catch(() => console.log("Interaction requise pour le son"));
+        audioRef.current.play().catch(() => {});
       } else {
         audioRef.current.pause();
       }
@@ -79,20 +78,15 @@ export default function Library() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
 
   return (
-    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-black">
+    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14]">
       
-      {/* --- DÉCORATION : LA GRILLE DORÉE EN MOUVEMENT --- */}
+      {/* --- FOND GLOWING SKY (AURORA BOREALIS) --- */}
       <div className="absolute inset-0 pointer-events-none">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{ 
-            backgroundImage: `linear-gradient(to right, #eab308 1px, transparent 1px), linear-gradient(to bottom, #eab308 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-            transform: 'perspective(500px) rotateX(60deg) translateY(-100px)',
-            maskImage: 'linear-gradient(to bottom, transparent, black)'
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+        {/* Voiles d'aurores vert émeraude */}
+        <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse duration-[10s] opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
+        <div className="absolute top-[10%] right-[-20%] w-[100%] h-[60%] bg-cyan-500/10 blur-[100px] rounded-full animate-pulse duration-[15s] opacity-30"></div>
+        {/* Texture étoilée */}
+        <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
       </div>
 
       <audio ref={audioRef} src={selectedAmbiance.url} loop />
@@ -100,110 +94,123 @@ export default function Library() {
       <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
           <div className="text-center md:text-left">
-            <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-600 uppercase italic tracking-tighter mb-2">
+            <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-white to-emerald-400 uppercase italic tracking-tighter mb-2">
               Espace de Lecture
             </h1>
-            <p className="text-yellow-500/80 font-bold tracking-[0.4em] uppercase text-[10px]">
-              Franchissez le seuil de la connaissance
+            <p className="text-emerald-400/70 font-black tracking-[0.4em] uppercase text-[10px]">
+              La dimension du focus profond
             </p>
           </div>
 
-          <div className="bg-yellow-600/5 border border-yellow-500/30 p-6 rounded-[2rem] backdrop-blur-xl shadow-[0_0_50px_rgba(234,179,8,0.1)]">
-            <span className="text-[10px] block text-yellow-500/70 font-black uppercase tracking-widest mb-1 text-center">Temps de Focus</span>
-            <span className="text-5xl font-mono font-black text-white">{formatTime(timeLeft)}</span>
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[160px] shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+            <span className="text-[9px] block text-emerald-400 uppercase font-black tracking-widest mb-1">Concentration</span>
+            <span className="text-4xl font-mono font-black text-white">{formatTime(timeLeft)}</span>
           </div>
         </div>
 
-        {/* --- SÉLECTEUR D'AMBIANCE (Uniquement Lectures) --- */}
-        {activeTab === 'reads' && (
-          <div className="mb-12 flex flex-col items-center animate-in fade-in zoom-in duration-700">
-            <span className="text-yellow-500/50 text-[9px] font-black uppercase tracking-[0.3em] mb-4 italic">
-              ✨ Meilleure expérience avec des écouteurs
-            </span>
-            <div className="flex flex-wrap justify-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md">
-              {ambiances.map((amb) => (
-                <button
-                  key={amb.id}
-                  onClick={() => setSelectedAmbiance(amb)}
-                  className={`px-5 py-2 rounded-xl text-[11px] font-bold transition-all ${selectedAmbiance.id === amb.id ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'hover:bg-white/10 text-slate-400'}`}
-                >
-                  {amb.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Tabs */}
-        <div className="flex gap-4 mb-16 justify-center">
-          <button 
-            onClick={() => setActiveTab('reads')} 
-            className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${activeTab === 'reads' ? 'bg-yellow-500 text-black shadow-[0_0_40px_rgba(234,179,8,0.3)]' : 'bg-white/5 text-slate-500 border border-white/5'}`}
-          >
-            📖 Lectures
-          </button>
-          <button 
-            onClick={() => setActiveTab('audios')} 
-            className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${activeTab === 'audios' ? 'bg-yellow-500 text-black shadow-[0_0_40px_rgba(234,179,8,0.3)]' : 'bg-white/5 text-slate-500 border border-white/5'}`}
-          >
-            🎙️ Livres Audio
-          </button>
-        </div>
-
-        {/* Grid Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-          {timeLeft <= 0 ? (
-            <div className="col-span-full py-24 text-center border border-yellow-500/20 rounded-[3rem] bg-yellow-500/5 backdrop-blur-md">
-              <p className="text-3xl font-black text-yellow-500 uppercase italic mb-2">Esprit saturé</p>
-              <p className="text-slate-400 font-medium">Revenez dans 24h pour franchir à nouveau le seuil.</p>
-            </div>
-          ) : (
-            [...contents.reads, ...contents.audios]
-              .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
-              .map(item => (
-                <div key={item.id} className={`group relative bg-gradient-to-b from-white/5 to-transparent p-6 rounded-[2.5rem] border transition-all duration-700 ${currentBookId === item.id ? 'border-yellow-500 shadow-2xl shadow-yellow-500/20' : 'border-white/10 opacity-70 hover:opacity-100'}`}>
-                  <div className="relative overflow-hidden rounded-[2rem] mb-6 aspect-[4/5] shadow-2xl">
-                    <img src={item.cover} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-[2000ms]" alt="" />
-                    {currentBookId === item.id && (
-                      <div className="absolute inset-0 bg-yellow-500/10 backdrop-blur-[3px] flex items-center justify-center">
-                         <div className="flex flex-col items-center gap-3">
-                           <div className="w-12 h-12 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-                           <span className="text-yellow-500 font-black text-[9px] uppercase tracking-[0.3em] bg-black px-4 py-2 rounded-full">Immersion Active</span>
-                         </div>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="font-bold text-xl mb-2 text-white italic group-hover:text-yellow-500 transition-colors">{item.title}</h3>
-                  <p className="text-slate-500 font-black text-[10px] uppercase tracking-widest mb-8">
-                    {activeTab === 'reads' ? (item as any).author : 'NoteBookLM Original'}
-                  </p>
-                  <button 
-                    onMouseDown={() => handleAction(item.id)}
-                    onMouseUp={() => setIsPlaying(false)}
-                    onMouseLeave={() => setIsPlaying(false)}
-                    onTouchStart={() => handleAction(item.id)}
-                    onTouchEnd={() => setIsPlaying(false)}
-                    className="w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all bg-white text-black hover:bg-yellow-500 hover:shadow-xl active:scale-95"
-                  >
-                    {activeTab === 'reads' ? 'Maintenir pour Lire' : 'Maintenir pour Écouter'}
-                  </button>
+        {/* Ambiance et Mode */}
+        <div className="flex flex-col items-center gap-8 mb-12">
+            {activeTab === 'reads' && (
+              <div className="flex flex-col items-center animate-in fade-in slide-in-from-top-4">
+                <span className="text-white/40 text-[9px] font-black uppercase tracking-[0.2em] mb-3 italic">✨ Meilleure expérience avec des écouteurs</span>
+                <div className="flex gap-2 bg-black/40 p-1.5 rounded-full border border-white/5 backdrop-blur-md">
+                  {ambiances.map((amb) => (
+                    <button
+                      key={amb.id}
+                      onClick={() => setSelectedAmbiance(amb)}
+                      className={`px-5 py-2 rounded-full text-[10px] font-bold transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      {amb.name}
+                    </button>
+                  ))}
                 </div>
-              ))
-          )}
+              </div>
+            )}
+
+            <div className="flex gap-4 p-1.5 bg-white/5 rounded-2xl border border-white/10">
+                <button onClick={() => setActiveTab('reads')} className={`px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${activeTab === 'reads' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}>📖 Lectures</button>
+                <button onClick={() => setActiveTab('audios')} className={`px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${activeTab === 'audios' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}>🎙️ Livres Audio</button>
+            </div>
         </div>
-        
-        <p className="text-center mt-32 text-yellow-500/20 text-[9px] uppercase tracking-[0.6em] font-black">
-          The Future Foundation • Sanctuaire Digital
+
+        {/* --- GRILLE SCROLLABLE (Max 2 lignes visibles) --- */}
+        <div className="relative group/grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-h-[65vh] md:max-h-[75vh] overflow-y-auto pr-4 custom-scrollbar scroll-smooth">
+            {timeLeft <= 0 ? (
+              <div className="col-span-full py-24 text-center border border-emerald-500/20 rounded-[3rem] bg-black/40">
+                <p className="text-2xl font-black text-emerald-500 uppercase italic mb-2">Portail Clos</p>
+                <p className="text-slate-400 text-sm">Votre esprit se repose. Revenez dans 24h.</p>
+              </div>
+            ) : (
+              [...contents.reads, ...contents.audios]
+                .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
+                .map(item => (
+                  <div key={item.id} className={`group relative bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20' : 'border-white/5 opacity-80 hover:opacity-100 hover:border-white/20'}`}>
+                    <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[4/5] shadow-2xl">
+                      <img src={item.cover} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-[1500ms]" alt="" />
+                      {currentBookId === item.id && (
+                        <div className="absolute inset-0 bg-emerald-500/10 backdrop-blur-[4px] flex items-center justify-center">
+                           <div className="w-12 h-12 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-xl mb-2 text-white italic transition-colors group-hover:text-emerald-400">{item.title}</h3>
+                    <p className="text-slate-500 font-black text-[9px] uppercase tracking-widest mb-8 border-l border-emerald-500/40 pl-3">
+                      {activeTab === 'reads' ? (item as any).author : 'NoteBookLM'}
+                    </p>
+                    <button 
+                      onMouseDown={() => handleAction(item.id)}
+                      onMouseUp={() => setIsPlaying(false)}
+                      onMouseLeave={() => setIsPlaying(false)}
+                      onTouchStart={() => handleAction(item.id)}
+                      onTouchEnd={() => setIsPlaying(false)}
+                      className="w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] transition-all bg-emerald-500 text-black hover:bg-white active:scale-95 shadow-lg"
+                    >
+                      {activeTab === 'reads' ? 'Maintenir pour Lire' : 'Maintenir pour Écouter'}
+                    </button>
+                  </div>
+                ))
+            )}
+          </div>
+          
+          {/* Indicateur de défilement (Scroll Hint) */}
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-40 animate-bounce flex flex-col items-center">
+             <span className="text-[8px] font-black uppercase tracking-widest text-emerald-400 mb-1">Explorer</span>
+             <div className="w-px h-6 bg-gradient-to-b from-emerald-500 to-transparent"></div>
+          </div>
+        </div>
+
+        <p className="text-center mt-32 text-white/10 text-[8px] uppercase tracking-[0.6em] font-black">
+          The Future Foundation • Sanctuaire de Connaissance
         </p>
       </div>
 
       {showWarning && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] bg-red-600 text-white px-10 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] bg-red-600/90 backdrop-blur-md text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl animate-in fade-in zoom-in duration-300 border border-red-400">
           ⚠️ Terminez d'abord votre immersion en cours
         </div>
       )}
+
+      {/* Style pour la scrollbar personnalisée */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.2);
+          border-radius: 10px;
+          border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.5);
+        }
+      `}</style>
     </div>
   );
 }

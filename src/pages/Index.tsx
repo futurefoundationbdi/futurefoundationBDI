@@ -8,7 +8,7 @@ import ProgramsSection from "@/components/ProgramsSection";
 import ImpactSection from "@/components/ImpactSection";
 import TeamSection from "@/components/TeamSection";
 import CTASection from "@/components/CTASection";
-import library from "@/components/library";
+import Library from "@/components/Library";
 import Footer from "@/components/Footer";
 import FinanceQuiz from "@/components/FinanceQuiz"; 
 import QuizFloatingButton from "@/components/QuizFloatingButton"; 

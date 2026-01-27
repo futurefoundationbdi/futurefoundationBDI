@@ -20,6 +20,7 @@ const ambiances = [
   { id: 'none', name: '🔇 Silence', url: '' },
   { id: 'nature', name: '🍃 Nature', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3' },
   { id: 'rain', name: '🌧️ Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'ocean', name: '🌊 Océan', url: '/audio/ocean.mp3' },
 ];
 
 export default function Library() {
@@ -28,10 +29,10 @@ export default function Library() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBookId, setCurrentBookId] = useState<number | null>(null);
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
+  const [volume, setVolume] = useState(0.5);
   const [showAdvice, setShowAdvice] = useState(false);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
   const [readMode, setReadMode] = useState<ReadingMode>('normal');
-  
   const [ratings, setRatings] = useState<Record<number, number>>({});
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -74,24 +75,23 @@ export default function Library() {
     }
   }, [isPlaying, timeLeft]);
 
-  // GESTION DU SON AMBIANT
+  // GESTION DU SON ET DU VOLUME
   useEffect(() => {
     if (audioRef.current) {
+      audioRef.current.volume = volume;
       if (viewingFile && selectedAmbiance.url) {
         audioRef.current.play().catch(() => {});
       } else {
         audioRef.current.pause();
       }
     }
-  }, [viewingFile, selectedAmbiance]);
+  }, [viewingFile, selectedAmbiance, volume]);
 
   const handleActionStart = (item: any) => {
     if (timeLeft <= 0) return;
-    
     if (currentBookId === null || currentBookId === item.id) {
       setCurrentBookId(item.id);
       setIsPlaying(true);
-
       if (item.type === 'pdf') {
         pressTimerRef.current = setTimeout(() => {
           setViewingFile(item.fileUrl);
@@ -122,7 +122,6 @@ export default function Library() {
   return (
     <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14] scroll-mt-24">
       
-      {/* FOND AURORA */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
@@ -206,54 +205,53 @@ export default function Library() {
             ))}
         </div>
 
-        {/* --- DISCLAIMER --- */}
+        {/* Disclaimer */}
         <div className="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/10 backdrop-blur-sm text-center">
           <p className="text-[10px] text-slate-400 italic mb-2">Note : Meilleure expérience avec des écouteurs 🎧</p>
           <p className="text-[9px] md:text-[10px] text-slate-500 leading-relaxed max-w-4xl mx-auto">
-            Dans le cadre de sa mission d'intérêt général, <span className="text-emerald-400 font-bold">The Future Foundation</span> propose des ressources éducatives et des synthèses d'œuvres fondatrices. Nous respectons les droits de propriété intellectuelle. Contact : <span className="text-emerald-400 font-bold italic">futurefoundation.bdi@gmail.com</span>.
+            The Future Foundation © 2026. Contact : <span className="text-emerald-400 font-bold italic">futurefoundation.bdi@gmail.com</span>.
           </p>
         </div>
       </div>
 
-      {/* --- LECTEUR IMMERSIF AMÉLIORÉ --- */}
+      {/* LECTEUR IMMERSIF */}
       {viewingFile && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in zoom-in duration-500">
           <div className="absolute inset-0 bg-[#050b14]/98 backdrop-blur-3xl" />
-          <div className="relative w-full max-w-6xl h-full md:h-[92vh] bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
+          <div className="relative w-full max-w-6xl h-full md:h-[92vh] bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)]">
             
-            {/* Toolbar du Lecteur */}
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/2 gap-4">
               
-              {/* Modes visuels */}
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
                 {(['normal', 'sepia', 'night'] as const).map(mode => (
-                  <button 
-                    key={mode}
-                    onClick={() => setReadMode(mode)} 
-                    className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${readMode === mode ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
-                  >
+                  <button key={mode} onClick={() => setReadMode(mode)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>
                     {mode === 'normal' ? 'Clair' : mode === 'sepia' ? 'Sepia' : 'Nuit'}
                   </button>
                 ))}
               </div>
 
-              {/* SÉLECTEUR D'AMBIANCE SONORE */}
               <div className="flex gap-2 bg-emerald-500/10 p-1 rounded-full border border-emerald-500/20">
                 {ambiances.map(amb => (
-                  <button 
-                    key={amb.id}
-                    onClick={() => setSelectedAmbiance(amb)} 
-                    className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}
-                  >
+                  <button key={amb.id} onClick={() => setSelectedAmbiance(amb)} className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}>
                     {amb.name}
                   </button>
                 ))}
               </div>
 
+              {/* VOLUME SLIDER */}
+              <div className="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-full border border-white/10 min-w-[120px]">
+                <span className="text-[10px] opacity-50">🔈</span>
+                <input 
+                  type="range" min="0" max="1" step="0.05" 
+                  value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                />
+                <span className="text-[10px] opacity-50">🔊</span>
+              </div>
+
               <button onClick={() => setViewingFile(null)} className="bg-white/5 text-white/60 border border-white/10 px-6 py-2 rounded-full text-[9px] font-black hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest">Fermer</button>
             </div>
 
-            {/* Iframe du PDF */}
             <div className="w-full h-full relative bg-[#f2f2f2]">
                <iframe 
                 src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`}
@@ -267,8 +265,8 @@ export default function Library() {
       )}
 
       {showAdvice && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg animate-in slide-in-from-bottom-10 duration-500 flex items-center gap-3">
-          <span>💡 Le savoir s'ancre mieux dans la patience. Un livre à la fois.</span>
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg animate-in slide-in-from-bottom-10 duration-500">
+          💡 Le savoir s'ancre mieux dans la patience. Un livre à la fois.
         </div>
       )}
 

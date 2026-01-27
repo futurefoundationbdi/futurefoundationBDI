@@ -211,7 +211,7 @@ export default function Library() {
         <div className="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/10 backdrop-blur-sm text-center">
           <p className="text-[10px] text-slate-400 italic mb-2">Note : Meilleure expérience avec des écouteurs 🎧</p>
           <p className="text-[9px] md:text-[10px] text-slate-500 leading-relaxed max-w-4xl mx-auto">
-            The Future Foundation © 2026. Contact : <span className="text-emerald-400 font-bold italic">futurefoundation.bdi@gmail.com</span>.
+            Dans le cadre de sa mission d'intérêt général, The Future Foundation propose des ressources éducatives et des synthèses d'œuvres fondatrices du développement personnel. Nous nous efforçons de respecter les droits de propriété intellectuelle. Si vous êtes ayant-droit d'une œuvre présente sur ce site et que vous souhaitez en restreindre l'accès, merci de nous contacter à [votre email]. : <span className="text-emerald-400 font-bold italic">futurefoundation.bdi@gmail.com</span>.
           </p>
         </div>
       </div>

@@ -19,8 +19,8 @@ const contents = {
 const ambiances = [
   { id: 'none', name: '🔇 Silence', url: '' },
   { id: 'nature', name: '🍃 Nature', url: '/audio/nature.mp3' },
-  { id: 'rain', name: '🌧️ Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { id: 'ocean', name: '🌊 Océan', url: '/audio/ocean.mp3' },
+  { id: 'rain', name: '🌧️ Pluie', url: '/audio/rain.mp3' },
+  { id: 'ocean', name: '🌊 Océan', url: '/audio/waves.mp3' },
 ];
 
 export default function Library() {

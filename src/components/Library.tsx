@@ -13,8 +13,8 @@ const contents = {
     { id: 8, title: "L'Art d'avoir toujours raison", author: "Arthur Schopenhauer", cover: "/covers/à lire.webp", fileUrl: "/books/Lart davoir toujours raison.pdf", type: "pdf", review: "Ce livre est un outil puissant pour apprendre à détecter les manipulations de langage et s'imposer dans les négociations." }
   ],
   audios: [
-    { id: 3, title: "L'Investissement Intelligent", source: "NoteBookLM", duration: "12 min", audioSrc: "/audio/invest.mp3", type: "audio" },
-    { id: 4, title: "Discipline & Succès", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/discipline.mp3", type: "audio" }
+    { id: 3, title: "L'Investissement Intelligent", source: "NoteBookLM", duration: "12 min", audioSrc: "/audio/invest.mp3", type: "audio", cover: "/covers/invest.webp" },
+    { id: 4, title: "Discipline & Succès", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/discipline.mp3", type: "audio", cover: "/covers/discipline.webp" }
   ]
 };
 
@@ -30,6 +30,7 @@ export default function Library() {
   const [activeTab, setActiveTab] = useState<'reads' | 'audios'>('reads');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBookId, setCurrentBookId] = useState<number | null>(null);
+  const [confirmItem, setConfirmItem] = useState<any>(null); // Pour la validation intentionnelle
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
   const [volume, setVolume] = useState(0.5);
   const [showAdvice, setShowAdvice] = useState(false);
@@ -43,14 +44,17 @@ export default function Library() {
   useEffect(() => {
     const savedTime = localStorage.getItem('future_library_time');
     const savedRatings = localStorage.getItem('future_library_ratings');
+    const savedBookId = localStorage.getItem('future_library_book_id'); // Récupération du livre verrouillé
     const today = new Date().toDateString();
     
     if (localStorage.getItem('future_library_date') !== today) {
       localStorage.setItem('future_library_time', (45 * 60).toString());
       localStorage.setItem('future_library_date', today);
+      localStorage.removeItem('future_library_book_id'); // Reset quotidien
       setTimeLeft(45 * 60);
-    } else if (savedTime) {
-      setTimeLeft(parseInt(savedTime));
+    } else {
+      if (savedTime) setTimeLeft(parseInt(savedTime));
+      if (savedBookId) setCurrentBookId(parseInt(savedBookId));
     }
 
     if (savedRatings) {
@@ -77,7 +81,6 @@ export default function Library() {
     }
   }, [isPlaying, timeLeft]);
 
-  // GESTION DU SON ET DU VOLUME
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -89,10 +92,18 @@ export default function Library() {
     }
   }, [viewingFile, selectedAmbiance, volume]);
 
+  // LOGIQUE DE DÉMARRAGE AVEC VALIDATION
   const handleActionStart = (item: any) => {
     if (timeLeft <= 0) return;
-    if (currentBookId === null || currentBookId === item.id) {
-      setCurrentBookId(item.id);
+
+    // Si c'est le premier choix : on demande confirmation
+    if (currentBookId === null) {
+      setConfirmItem(item);
+      return;
+    }
+
+    // Si c'est déjà le livre verrouillé : on lance le timer de 2s
+    if (currentBookId === item.id) {
       setIsPlaying(true);
       if (item.type === 'pdf') {
         pressTimerRef.current = setTimeout(() => {
@@ -101,8 +112,18 @@ export default function Library() {
         }, 2000);
       }
     } else {
+      // Si l'utilisateur essaie de changer de livre
       setShowAdvice(true);
       setTimeout(() => setShowAdvice(false), 4000);
+    }
+  };
+
+  const confirmChoice = () => {
+    if (confirmItem) {
+      setCurrentBookId(confirmItem.id);
+      localStorage.setItem('future_library_book_id', confirmItem.id.toString());
+      setViewingFile(confirmItem.fileUrl);
+      setConfirmItem(null);
     }
   };
 
@@ -124,6 +145,7 @@ export default function Library() {
   return (
     <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14] scroll-mt-24">
       
+      {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
@@ -134,20 +156,20 @@ export default function Library() {
       <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl shadow-2xl">
           <div className="text-center md:text-left">
             <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-white to-emerald-400 uppercase italic tracking-tighter mb-2">
               Future Library
             </h1>
             <div className="flex items-center gap-4 justify-center md:justify-start">
               <p className="text-emerald-400/70 font-black tracking-[0.4em] uppercase text-[10px]">Espace de Focus</p>
-              <div className="flex gap-2">
-                <button onClick={() => setActiveTab('reads')} className={`text-[10px] font-bold uppercase transition-all ${activeTab === 'reads' ? 'text-white' : 'text-white/20'}`}>Livres</button>
-                <button onClick={() => setActiveTab('audios')} className={`text-[10px] font-bold uppercase transition-all ${activeTab === 'audios' ? 'text-white' : 'text-white/20'}`}>Audio</button>
+              <div className="flex gap-4 border-l border-white/10 ml-2 pl-4">
+                <button onClick={() => setActiveTab('reads')} className={`text-[10px] font-bold uppercase transition-all hover:text-white ${activeTab === 'reads' ? 'text-emerald-400 scale-110' : 'text-white/20'}`}>Livres</button>
+                <button onClick={() => setActiveTab('audios')} className={`text-[10px] font-bold uppercase transition-all hover:text-white ${activeTab === 'audios' ? 'text-emerald-400 scale-110' : 'text-white/20'}`}>Audio</button>
               </div>
             </div>
           </div>
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[160px]">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[160px] shadow-[0_0_20px_rgba(16,185,129,0.1)]">
             <span className="text-4xl font-mono font-black text-white">{formatTime(timeLeft)}</span>
           </div>
         </div>
@@ -157,9 +179,18 @@ export default function Library() {
           {[...contents.reads, ...contents.audios]
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
             .map(item => (
-              <div key={item.id} className="min-w-[85vw] md:min-w-0 bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border border-white/5 flex flex-col h-full group">
-                <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[4/5] shadow-2xl">
-                  <img src={item.cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+              <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 flex flex-col h-full group ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-white/5'}`}>
+                
+                {/* Book Cover Container - FIXED IMAGE RATIO & SIZE */}
+                <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] shadow-2xl bg-slate-900">
+                  {/* Blurred Background for small images */}
+                  <img src={item.cover} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 scale-110" alt="" />
+                  {/* Main Image */}
+                  <img 
+                    src={item.cover} 
+                    className="relative w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" 
+                    alt={item.title} 
+                  />
                   
                   <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full flex gap-1 border border-white/10 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -186,10 +217,10 @@ export default function Library() {
                 
                 <p className="text-emerald-500/60 font-black text-[9px] uppercase tracking-widest mb-4">{(item as any).author || item.source}</p>
                 
-                <div className="flex-grow bg-white/2 p-4 rounded-xl mb-6 border border-white/5">
+                <div className="flex-grow bg-white/2 p-4 rounded-xl mb-6 border border-white/5 group-hover:bg-white/[0.04] transition-colors">
                   <span className="text-[8px] font-black uppercase text-white/30 block mb-2 tracking-widest">Avis de la Fondation</span>
                   <p className="text-[11px] text-slate-400 leading-relaxed italic line-clamp-3">
-                    "{ (item as any).review }"
+                    "{ (item as any).review || "Un incontournable pour votre croissance personnelle." }"
                   </p>
                 </div>
 
@@ -199,9 +230,9 @@ export default function Library() {
                   onMouseLeave={handleActionEnd}
                   onTouchStart={() => handleActionStart(item)}
                   onTouchEnd={handleActionEnd}
-                  className="w-full py-4 rounded-2xl font-black uppercase text-[9px] bg-emerald-500 text-black hover:bg-white transition-all shadow-lg active:scale-95"
+                  className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all shadow-lg active:scale-95 ${currentBookId !== null && currentBookId !== item.id ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black hover:bg-white'}`}
                 >
-                  {activeTab === 'reads' ? 'Maintenir pour Lire' : 'Maintenir pour Écouter'}
+                  {currentBookId === item.id ? (activeTab === 'reads' ? 'Maintenir pour ouvrir' : 'Maintenir pour écouter') : (currentBookId === null ? 'Choisir ce livre' : 'Focus en cours...')}
                 </button>
               </div>
             ))}
@@ -211,10 +242,33 @@ export default function Library() {
         <div className="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/10 backdrop-blur-sm text-center">
           <p className="text-[10px] text-slate-400 italic mb-2">Note : Meilleure expérience avec des écouteurs 🎧</p>
           <p className="text-[9px] md:text-[10px] text-slate-500 leading-relaxed max-w-4xl mx-auto">
-            Note : Ces ressources sont proposées à des fins strictement éducatives. The Future Foundation respecte le droit d'auteur ; pour toute demande de retrait ou de rectification, merci de nous contacter directement: <span className="text-emerald-400 font-bold italic">futurefoundation.bdi@gmail.com</span>.
+            Note : Ces ressources sont proposées à des fins strictement éducatives. The Future Foundation respecte le droit d'auteur ; pour toute demande de retrait ou de rectification, merci de nous contacter directement: <span className="text-emerald-400 font-bold italic">thefuturefoundationbdi@gmail.com</span>.
           </p>
         </div>
       </div>
+
+      {/* --- MODAL DE CONFIRMATION (DISCIPLINE) --- */}
+      {confirmItem && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-[#050b14]/90 backdrop-blur-md" onClick={() => setConfirmItem(null)} />
+          <div className="relative bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center shadow-[0_0_50px_rgba(16,185,129,0.1)] animate-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">📖</div>
+            <h3 className="text-xl font-black text-white mb-2 uppercase italic tracking-tighter">Confirmer la lecture ?</h3>
+            <p className="text-slate-400 text-[11px] leading-relaxed mb-8 italic">
+              "Un esprit discipliné ne papillonne pas." <br/><br/>
+              En ouvrant <strong>{confirmItem.title}</strong>, ce choix sera verrouillé pour toute votre session de focus. Soyez intentionnel.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button onClick={confirmChoice} className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-[10px] rounded-xl hover:bg-white transition-all">
+                Accepter et Commencer
+              </button>
+              <button onClick={() => setConfirmItem(null)} className="w-full py-4 bg-white/5 text-white/40 font-black uppercase text-[10px] rounded-xl hover:text-white transition-all">
+                Changer d'avis
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LECTEUR IMMERSIF */}
       {viewingFile && (
@@ -223,7 +277,6 @@ export default function Library() {
           <div className="relative w-full max-w-6xl h-full md:h-[92vh] bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)]">
             
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/2 gap-4">
-              
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
                 {(['normal', 'sepia', 'night'] as const).map(mode => (
                   <button key={mode} onClick={() => setReadMode(mode)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>
@@ -240,7 +293,6 @@ export default function Library() {
                 ))}
               </div>
 
-              {/* VOLUME SLIDER */}
               <div className="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-full border border-white/10 min-w-[120px]">
                 <span className="text-[10px] opacity-50">🔈</span>
                 <input 

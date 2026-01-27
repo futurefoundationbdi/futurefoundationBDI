@@ -119,7 +119,6 @@ export default function Library() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
 
   return (
-    /* AJOUT DE scroll-mt-24 ICI POUR RÉGLER LE PROBLÈME DE LA NAVBAR */
     <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14] scroll-mt-24">
       
       {/* --- FOND AURORA --- */}
@@ -210,6 +209,13 @@ export default function Library() {
                 </button>
               </div>
             ))}
+        </div>
+
+        {/* --- DISCLAIMER --- */}
+        <div className="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/10 backdrop-blur-sm">
+          <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed text-center italic">
+            Dans le cadre de sa mission d'intérêt général, <span className="text-emerald-400 font-bold text-white/80">The Future Foundation</span> propose des ressources éducatives et des synthèses d'œuvres fondatrices du développement personnel. Nous nous efforçons de respecter les droits de propriété intellectuelle. Si vous êtes ayant-droit d'une œuvre présente sur ce site et que vous souhaitez en restreindre l'accès, merci de nous contacter à <span className="text-emerald-400 underline decoration-emerald-500/30 underline-offset-4 font-bold">futurefoundation.bdi@gmail.com</span>.
+          </p>
         </div>
       </div>
 

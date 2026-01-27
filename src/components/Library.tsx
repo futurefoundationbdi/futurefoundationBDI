@@ -5,10 +5,10 @@ type ReadingMode = 'normal' | 'sepia' | 'night';
 
 const contents = {
   reads: [
-    { id: 1, title: "Père Riche Père Pauvre (Synthèse)", author: "Robert Kiyosaki", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400", fileUrl: "/books/pere-riche.pdf", type: "pdf", review: "Une base solide pour changer sa vision de l'argent." },
-    { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", fileUrl: "/books/psychologie-argent.pdf", type: "pdf", review: "Excellent pour comprendre nos comportements irrationnels." },
+    { id: 1, title: "Le jeu de la Vie et comment le jouer", author: "Florence Scovel Shinn", cover: "/covers/J de la vie.webp", fileUrl: "/books/Le jeu de la Vie et comment le jouer.pdf", type: "pdf", review: "Commencez dès aujourd’hui à croire en vous et laissez-vous guider avec bonheur dans tous les domaines de votre vie!" },
+    { id: 2, title: "La Science de la Grandeur", author: "Wallace D. Wattles", cover: "/covers/S de la G.webp", fileUrl: "/books/La science de la Grandeur.pdf", type: "pdf", review: "Apprenez comment croire en la grandeur de votre propre esprit et comment agir avec grandeur." },
     { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf", type: "pdf", review: "Des principes millénaires toujours d'actualité." },
-    { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "https://images.unsplash.com/photo-1592492159418-39f319320569?w=400", fileUrl: "/books/napoleon-hill.pdf", type: "pdf", review: "Le classique absolu sur la force de la pensée." }
+    { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "/covers/R et DR.webp", fileUrl: "/books/Réfléchissez et devenez riche.pdf", type: "pdf", review: "Le classique absolu sur la force de la pensée." }
   ],
   audios: [
     { id: 3, title: "L'Investissement Intelligent", source: "NoteBookLM", duration: "12 min", audioSrc: "/audio/invest.mp3", type: "audio" },

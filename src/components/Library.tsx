@@ -18,8 +18,8 @@ const contents = {
 
 const ambiances = [
   { id: 'none', name: '🔇 Silence', url: '' },
-  { id: 'nature', name: '🍃 Forêt & Oiseaux', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-  { id: 'rain', name: '🌧️ Pluie Fine', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'nature', name: '🍃 Nature', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+  { id: 'rain', name: '🌧️ Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
 ];
 
 export default function Library() {
@@ -74,15 +74,16 @@ export default function Library() {
     }
   }, [isPlaying, timeLeft]);
 
+  // GESTION DU SON AMBIANT
   useEffect(() => {
     if (audioRef.current) {
-      if (isPlaying && activeTab === 'reads' && selectedAmbiance.url) {
+      if (viewingFile && selectedAmbiance.url) {
         audioRef.current.play().catch(() => {});
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isPlaying, selectedAmbiance, activeTab]);
+  }, [viewingFile, selectedAmbiance]);
 
   const handleActionStart = (item: any) => {
     if (timeLeft <= 0) return;
@@ -121,7 +122,7 @@ export default function Library() {
   return (
     <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14] scroll-mt-24">
       
-      {/* --- FOND AURORA --- */}
+      {/* FOND AURORA */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[70%] bg-emerald-500/15 blur-[120px] rounded-full animate-pulse opacity-50 shadow-[inset_0_0_100px_rgba(16,185,129,0.2)]"></div>
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
@@ -159,13 +160,12 @@ export default function Library() {
                 <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[4/5] shadow-2xl">
                   <img src={item.cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
                   
-                  {/* SYSTEME DE RATING FLOTTANT */}
                   <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full flex gap-1 border border-white/10 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button 
                         key={star} 
                         onClick={(e) => { e.stopPropagation(); handleRate(item.id, star); }}
-                        className={`text-xs transition-colors ${ (ratings[item.id] || 0) >= star ? 'text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'text-white/20'}`}
+                        className={`text-xs transition-colors ${ (ratings[item.id] || 0) >= star ? 'text-yellow-400' : 'text-white/20'}`}
                       >
                         ★
                       </button>
@@ -181,19 +181,14 @@ export default function Library() {
                 
                 <div className="flex justify-between items-start mb-1">
                   <h3 className="font-bold text-xl text-white italic line-clamp-1">{item.title}</h3>
-                  {ratings[item.id] && (
-                    <span className="text-[10px] font-bold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      {ratings[item.id]} ★
-                    </span>
-                  )}
                 </div>
                 
                 <p className="text-emerald-500/60 font-black text-[9px] uppercase tracking-widest mb-4">{(item as any).author || item.source}</p>
                 
                 <div className="flex-grow bg-white/2 p-4 rounded-xl mb-6 border border-white/5">
                   <span className="text-[8px] font-black uppercase text-white/30 block mb-2 tracking-widest">Avis de la Fondation</span>
-                  <p className="text-[11px] text-slate-400 leading-relaxed italic">
-                    "{ (item as any).review || "Un catalyseur essentiel pour votre développement stratégique." }"
+                  <p className="text-[11px] text-slate-400 leading-relaxed italic line-clamp-3">
+                    "{ (item as any).review }"
                   </p>
                 </div>
 
@@ -212,32 +207,53 @@ export default function Library() {
         </div>
 
         {/* --- DISCLAIMER --- */}
-        <div className="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/10 backdrop-blur-sm">
-          <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed text-center italic">
-            Dans le cadre de sa mission d'intérêt général, <span className="text-emerald-400 font-bold text-white/80">The Future Foundation</span> propose des ressources éducatives et des synthèses d'œuvres fondatrices du développement personnel. Nous nous efforçons de respecter les droits de propriété intellectuelle. Si vous êtes ayant-droit d'une œuvre présente sur ce site et que vous souhaitez en restreindre l'accès, merci de nous contacter à <span className="text-emerald-400 underline decoration-emerald-500/30 underline-offset-4 font-bold">futurefoundation.bdi@gmail.com</span>.
+        <div className="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/10 backdrop-blur-sm text-center">
+          <p className="text-[10px] text-slate-400 italic mb-2">Note : Meilleure expérience avec des écouteurs 🎧</p>
+          <p className="text-[9px] md:text-[10px] text-slate-500 leading-relaxed max-w-4xl mx-auto">
+            Dans le cadre de sa mission d'intérêt général, <span className="text-emerald-400 font-bold">The Future Foundation</span> propose des ressources éducatives et des synthèses d'œuvres fondatrices. Nous respectons les droits de propriété intellectuelle. Contact : <span className="text-emerald-400 font-bold italic">futurefoundation.bdi@gmail.com</span>.
           </p>
         </div>
       </div>
 
-      {/* --- LECTEUR IMMERSIF --- */}
+      {/* --- LECTEUR IMMERSIF AMÉLIORÉ --- */}
       {viewingFile && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in zoom-in duration-500">
           <div className="absolute inset-0 bg-[#050b14]/98 backdrop-blur-3xl" />
           <div className="relative w-full max-w-6xl h-full md:h-[92vh] bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
+            
+            {/* Toolbar du Lecteur */}
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/2 gap-4">
+              
+              {/* Modes visuels */}
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
                 {(['normal', 'sepia', 'night'] as const).map(mode => (
                   <button 
                     key={mode}
                     onClick={() => setReadMode(mode)} 
-                    className={`px-5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${readMode === mode ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
+                    className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${readMode === mode ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
                   >
-                    {mode === 'normal' ? 'Lumière' : mode === 'sepia' ? 'Confort' : 'Nuit'}
+                    {mode === 'normal' ? 'Clair' : mode === 'sepia' ? 'Sepia' : 'Nuit'}
                   </button>
                 ))}
               </div>
-              <button onClick={() => setViewingFile(null)} className="bg-white/5 text-white/60 border border-white/10 px-6 py-2 rounded-full text-[10px] font-black hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest">Fermer la dimension</button>
+
+              {/* SÉLECTEUR D'AMBIANCE SONORE */}
+              <div className="flex gap-2 bg-emerald-500/10 p-1 rounded-full border border-emerald-500/20">
+                {ambiances.map(amb => (
+                  <button 
+                    key={amb.id}
+                    onClick={() => setSelectedAmbiance(amb)} 
+                    className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}
+                  >
+                    {amb.name}
+                  </button>
+                ))}
+              </div>
+
+              <button onClick={() => setViewingFile(null)} className="bg-white/5 text-white/60 border border-white/10 px-6 py-2 rounded-full text-[9px] font-black hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest">Fermer</button>
             </div>
+
+            {/* Iframe du PDF */}
             <div className="w-full h-full relative bg-[#f2f2f2]">
                <iframe 
                 src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`}
@@ -250,18 +266,15 @@ export default function Library() {
         </div>
       )}
 
-      {/* --- CONSEIL BIENVEILLANT --- */}
       {showAdvice && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-[0_0_30px_rgba(16,185,129,0.4)] animate-in slide-in-from-bottom-10 duration-500 flex items-center gap-3">
-          <span className="text-lg">💡</span>
-          <span>Le savoir s'ancre mieux dans la patience. Un livre à la fois.</span>
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg animate-in slide-in-from-bottom-10 duration-500 flex items-center gap-3">
+          <span>💡 Le savoir s'ancre mieux dans la patience. Un livre à la fois.</span>
         </div>
       )}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); border-radius: 10px; }
-        .group:hover .line-clamp-1 { -webkit-line-clamp: unset; }
       `}</style>
     </div>
   );

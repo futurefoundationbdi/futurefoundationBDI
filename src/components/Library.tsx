@@ -7,7 +7,7 @@ const contents = {
   reads: [
     { id: 1, title: "Père Riche Père Pauvre (Synthèse)", author: "Robert Kiyosaki", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400", fileUrl: "/books/pere-riche.pdf", type: "pdf", review: "Une base solide pour changer sa vision de l'argent." },
     { id: 2, title: "La Psychologie de l'Argent", author: "Morgan Housel", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400", fileUrl: "/books/psychologie-argent.pdf", type: "pdf", review: "Excellent pour comprendre nos comportements irrationnels." },
-    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf.pdf", type: "pdf", review: "Des principes millénaires toujours d'actualité." },
+    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf", type: "pdf", review: "Des principes millénaires toujours d'actualité." },
     { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "https://images.unsplash.com/photo-1592492159418-39f319320569?w=400", fileUrl: "/books/napoleon-hill.pdf", type: "pdf", review: "Le classique absolu sur la force de la pensée." }
   ],
   audios: [
@@ -32,13 +32,11 @@ export default function Library() {
   const [viewingFile, setViewingFile] = useState<string | null>(null);
   const [readMode, setReadMode] = useState<ReadingMode>('normal');
   
-  // Nouvel état pour les notes des utilisateurs
   const [ratings, setRatings] = useState<Record<number, number>>({});
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Charger le temps et les notes au démarrage
   useEffect(() => {
     const savedTime = localStorage.getItem('future_library_time');
     const savedRatings = localStorage.getItem('future_library_ratings');
@@ -57,7 +55,6 @@ export default function Library() {
     }
   }, []);
 
-  // Sauvegarder les notes quand elles changent
   const handleRate = (id: number, score: number) => {
     const newRatings = { ...ratings, [id]: score };
     setRatings(newRatings);
@@ -122,7 +119,8 @@ export default function Library() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
 
   return (
-    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14]">
+    /* AJOUT DE scroll-mt-24 ICI POUR RÉGLER LE PROBLÈME DE LA NAVBAR */
+    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans overflow-hidden bg-[#050b14] scroll-mt-24">
       
       {/* --- FOND AURORA --- */}
       <div className="absolute inset-0 pointer-events-none">
@@ -193,7 +191,6 @@ export default function Library() {
                 
                 <p className="text-emerald-500/60 font-black text-[9px] uppercase tracking-widest mb-4">{(item as any).author || item.source}</p>
                 
-                {/* SECTION AVIS */}
                 <div className="flex-grow bg-white/2 p-4 rounded-xl mb-6 border border-white/5">
                   <span className="text-[8px] font-black uppercase text-white/30 block mb-2 tracking-widest">Avis de la Fondation</span>
                   <p className="text-[11px] text-slate-400 leading-relaxed italic">

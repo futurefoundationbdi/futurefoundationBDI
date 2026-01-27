@@ -18,7 +18,7 @@ const contents = {
 
 const ambiances = [
   { id: 'none', name: '🔇 Silence', url: '' },
-  { id: 'nature', name: '🍃 Nature', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+  { id: 'nature', name: '🍃 Nature', url: '/audio/nature.mp3' },
   { id: 'rain', name: '🌧️ Pluie', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
   { id: 'ocean', name: '🌊 Océan', url: '/audio/ocean.mp3' },
 ];

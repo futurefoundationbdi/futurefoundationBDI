@@ -50,7 +50,6 @@ export default function Library() {
   const [volume, setVolume] = useState(0.5);
   const [showAdvice, setShowAdvice] = useState(false);
   
-  // MISE À JOUR : Persistance du fichier en cours de lecture
   const [viewingFile, setViewingFile] = useState<string | null>(() => {
     return localStorage.getItem('future_library_viewing_url');
   });
@@ -63,7 +62,6 @@ export default function Library() {
   const bookAudioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // MISE À JOUR : Effet pour sauvegarder viewingFile
   useEffect(() => {
     if (viewingFile) {
       localStorage.setItem('future_library_viewing_url', viewingFile);
@@ -212,45 +210,77 @@ export default function Library() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 
-        /* MISE À JOUR : Aurora Borealis & Étoiles Filantes */
+        /* MISE À JOUR : EFFET DIMENSION AURORE PROFOND */
         .aurora-bg {
-          background: #050b14;
+          background: #020617;
           position: relative;
           overflow: hidden;
         }
-        .aurora-bg::before {
-          content: "";
-          position: absolute;
-          top: -50%; left: -50%; width: 200%; height: 200%;
-          background: radial-gradient(circle at center, rgba(16, 185, 129, 0.07) 0%, transparent 40%),
-                      radial-gradient(circle at 20% 30%, rgba(52, 211, 153, 0.1) 0%, transparent 30%);
-          animation: aurora-move 20s infinite alternate-reverse;
+
+        .aurora-container {
+          position: fixed;
+          inset: 0;
           z-index: 0;
+          pointer-events: none;
         }
-        @keyframes aurora-move {
-          from { transform: rotate(0deg) scale(1); }
-          to { transform: rotate(5deg) scale(1.1); }
-        }
-        .star {
+
+        .aurora-layer {
           position: absolute;
-          width: 2px; height: 2px;
-          background: white;
+          width: 150%;
+          height: 150%;
+          top: -25%;
+          left: -25%;
+          background: radial-gradient(circle at 50% 50%, 
+            rgba(16, 185, 129, 0.15) 0%, 
+            rgba(6, 78, 59, 0.08) 25%, 
+            transparent 50%);
+          filter: blur(70px);
+          animation: aurora-flow 25s infinite alternate ease-in-out;
+        }
+
+        .aurora-layer-2 {
+          background: radial-gradient(circle at 30% 70%, 
+            rgba(52, 211, 153, 0.1) 0%, 
+            rgba(2, 44, 34, 0.05) 30%, 
+            transparent 60%);
+          animation: aurora-flow 35s infinite alternate-reverse ease-in-out;
+          filter: blur(90px);
+        }
+
+        @keyframes aurora-flow {
+          0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+          100% { transform: translate(8%, 12%) rotate(15deg) scale(1.2); }
+        }
+
+        /* ÉTOILES FILANTES RÉELLES */
+        .shooting-star-v2 {
+          position: absolute;
+          width: 120px;
+          height: 2px;
+          background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent);
+          transform: rotate(-45deg);
+          animation: shoot-v2 8s infinite ease-out;
           opacity: 0;
-          animation: shooting-star 10s linear infinite;
           z-index: 1;
         }
-        @keyframes shooting-star {
-          0% { transform: translateX(0) translateY(0) rotate(-45deg) scale(0); opacity: 0; }
-          5% { opacity: 1; transform: translateX(0) translateY(0) rotate(-45deg) scale(1); }
-          15% { transform: translateX(300px) translateY(300px) rotate(-45deg) scale(0); opacity: 0; }
-          100% { transform: translateX(300px) translateY(300px) rotate(-45deg) scale(0); opacity: 0; }
+
+        @keyframes shoot-v2 {
+          0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 0; }
+          10% { opacity: 1; }
+          30% { transform: translateX(-800px) translateY(800px) rotate(-45deg); opacity: 0; }
+          100% { transform: translateX(-800px) translateY(800px) rotate(-45deg); opacity: 0; }
         }
       `}</style>
 
-      {/* Étoiles filantes positionnées */}
-      <div className="star" style={{top: '10%', left: '20%', animationDelay: '0s'}} />
-      <div className="star" style={{top: '30%', left: '70%', animationDelay: '4s'}} />
-      <div className="star" style={{top: '15%', left: '50%', animationDelay: '8s'}} />
+      {/* BACKGROUND IMMERSIF */}
+      <div className="aurora-container">
+        <div className="aurora-layer"></div>
+        <div className="aurora-layer aurora-layer-2"></div>
+        {/* Étoiles filantes positionnées */}
+        <div className="shooting-star-v2" style={{top: '0', right: '10%', animationDelay: '0s'}} />
+        <div className="shooting-star-v2" style={{top: '20%', right: '30%', animationDelay: '4s'}} />
+        <div className="shooting-star-v2" style={{top: '5%', right: '60%', animationDelay: '2s'}} />
+      </div>
 
       <audio ref={ambianceRef} src={selectedAmbiance.url} loop autoPlay={!!viewingFile} />
       <audio 
@@ -265,41 +295,41 @@ export default function Library() {
       />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/40 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           <div>
-            <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 uppercase italic">Future Library</h1>
-            <div className="flex gap-4 mt-4 bg-white/5 p-1.5 rounded-full w-fit border border-white/5">
-              <button onClick={() => setActiveTab('reads')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'reads' ? 'bg-emerald-500 text-black' : 'text-white/40 hover:text-white'}`}>📚 Livres</button>
-              <button onClick={() => setActiveTab('audios')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'audios' ? 'bg-emerald-500 text-black' : 'text-white/40 hover:text-white'}`}>🎧 Audio</button>
+            <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-emerald-500 to-teal-500 uppercase italic">Future Library</h1>
+            <div className="flex gap-4 mt-4 bg-white/5 p-1.5 rounded-full w-fit border border-white/10">
+              <button onClick={() => setActiveTab('reads')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'reads' ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-white/40 hover:text-white'}`}>📚 Livres</button>
+              <button onClick={() => setActiveTab('audios')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'audios' ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-white/40 hover:text-white'}`}>🎧 Audio</button>
             </div>
           </div>
 
           <div className={`transition-all duration-500 ${activeTab === 'reads' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-            <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[140px]">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[1.8rem] text-center min-w-[140px] shadow-inner">
               <span className="text-4xl font-mono font-black text-white">{Math.floor(timeLeft / 60)}m {timeLeft % 60}s</span>
             </div>
           </div>
         </div>
 
-        <div key={activeTab} className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div key={activeTab} className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto pb-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
           {[...contents.reads, ...contents.audios]
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
             .map(item => {
               const isLocked = activeTab === 'reads' && currentBookId !== null && currentBookId !== item.id && contents.reads.some(r => r.id === currentBookId);
               return (
-                <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.1)]' : 'border-white/5'}`}>
-                  <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
+                <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-white/[0.03] backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 hover:bg-white/[0.07] ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.15)]' : 'border-white/10'}`}>
+                  <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/40">
                     {item.type === 'pdf' ? (
                       <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
                     ) : (
                       <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${currentBookId === item.id && isAudioPlaying ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
                         <img src={item.cover} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-12 h-12 bg-[#050b14] rounded-full border-4 border-white/10" />
+                          <div className="w-12 h-12 bg-[#020617] rounded-full border-4 border-white/10" />
                         </div>
                       </div>
                     )}
-                    {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
+                    {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/30 backdrop-blur-sm flex items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
                   </div>
                   <h3 className="font-bold text-xl text-white italic line-clamp-1">{item.title}</h3>
                   <p className="text-emerald-500/60 text-[9px] font-black uppercase tracking-widest mb-4">{(item as any).author || (item as any).source}</p>
@@ -327,9 +357,9 @@ export default function Library() {
                   <button 
                     onMouseDown={() => handleActionStart(item)}
                     onMouseUp={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
-                    onTouchStart={() => handleActionStart(item)} // Ajout tactiles
+                    onTouchStart={() => handleActionStart(item)} 
                     onTouchEnd={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
-                    className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all duration-300 ${isLocked ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]'}`}
+                    className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all duration-300 ${isLocked ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]'}`}
                   >
                     {item.type === 'audio' ? (currentBookId === item.id && viewingFile ? 'En lecture' : 'Écouter') : (isLocked ? 'Verrouillé' : (currentBookId === item.id ? 'Maintenir pour ouvrir' : 'Choisir'))}
                   </button>
@@ -340,18 +370,18 @@ export default function Library() {
       </div>
 
       {confirmItem && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md bg-[#050b14]/90 animate-in fade-in duration-300">
-          <div className="bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center shadow-2xl">
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-xl bg-black/60 animate-in fade-in duration-300">
+          <div className="bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center shadow-[0_0_100px_rgba(16,185,129,0.2)] scale-110">
             <h3 className="text-xl font-black text-white mb-2 uppercase italic">{confirmItem.type === 'audio' ? 'Écouter cet audio ?' : 'Confirmer ce livre ?'}</h3>
             <p className="text-slate-400 text-[11px] mb-8 italic">{confirmItem.type === 'audio' ? 'L\'audio va démarrer maintenant.' : 'Ce choix sera verrouillé pour votre session.'}</p>
-            <button onClick={confirmChoice} className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-[10px] rounded-xl mb-3 hover:scale-[1.02] transition-transform">Confirmer</button>
+            <button onClick={confirmChoice} className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-[10px] rounded-xl mb-3 hover:scale-[1.02] transition-transform shadow-[0_10px_20px_rgba(16,185,129,0.3)]">Confirmer</button>
             <button onClick={() => setConfirmItem(null)} className="w-full py-4 text-white/40 text-[10px] font-bold hover:text-white transition-colors">Annuler</button>
           </div>
         </div>
       )}
 
       {viewingFile && activeTab === 'reads' && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in zoom-in duration-500 bg-[#020617]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/5 gap-4">
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
@@ -401,7 +431,7 @@ export default function Library() {
         </div>
       )}
 
-      {showAdvice && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase shadow-2xl animate-bounce">💡 Un livre à la fois pour un esprit discipliné.</div>}
+      {showAdvice && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-8 py-4 rounded-full font-black text-[10px] uppercase shadow-[0_10px_40px_rgba(16,185,129,0.5)] animate-bounce">💡 Un livre à la fois pour un esprit discipliné.</div>}
     </div>
   );
 }

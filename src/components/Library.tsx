@@ -33,7 +33,7 @@ export default function Library() {
   const [currentBookId, setCurrentBookId] = useState<number | null>(null);
   const [confirmItem, setConfirmItem] = useState<any>(null); 
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(0.5); // État pour le volume
   const [showAdvice, setShowAdvice] = useState(false);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
   const [readMode, setReadMode] = useState<ReadingMode>('normal');
@@ -43,6 +43,13 @@ export default function Library() {
   const ambianceRef = useRef<HTMLAudioElement | null>(null);
   const bookAudioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mise à jour du volume de l'ambiance
+  useEffect(() => {
+    if (ambianceRef.current) {
+      ambianceRef.current.volume = volume;
+    }
+  }, [volume]);
 
   // PROTECTION ANTI-COPIE
   useEffect(() => {
@@ -136,7 +143,6 @@ export default function Library() {
   };
 
   return (
-    /* AJOUT DE L'ID ET DU SCROLL MARGIN ICI */
     <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans bg-[#050b14] select-none overflow-x-hidden scroll-mt-20">
       <style>{`
         .cd-rotate { animation: spin 6s linear infinite; }
@@ -177,9 +183,10 @@ export default function Library() {
             .map(item => (
               <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all ${currentBookId === item.id ? 'border-emerald-500/40' : 'border-white/5'}`}>
                 
-                <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-square flex items-center justify-center bg-slate-900/50">
+                {/* CORRECTIF ZOOM COUVERTURE : aspect-[3/4] + object-contain */}
+                <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
                   {item.type === 'pdf' ? (
-                    <img src={item.cover} className="w-full h-full object-cover" alt="" />
+                    <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
                   ) : (
                     <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${currentBookId === item.id && isAudioPlaying ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
                       <img src={item.cover} className="w-full h-full object-cover" alt="" />
@@ -194,7 +201,6 @@ export default function Library() {
                 <h3 className="font-bold text-xl text-white italic">{item.title}</h3>
                 <p className="text-emerald-500/60 text-[9px] font-black uppercase tracking-widest mb-4">{(item as any).author || (item as any).source}</p>
 
-                {/* Lecteur Audio Intégré sur la carte */}
                 {activeTab === 'audios' && currentBookId === item.id && viewingFile && (
                   <div className="bg-white/5 p-4 rounded-2xl mb-4 border border-white/10">
                     <div className="flex justify-between text-[10px] font-mono text-emerald-400 mb-2">
@@ -239,27 +245,46 @@ export default function Library() {
         </div>
       )}
 
-      {/* Liseuse PDF avec Ambiances intégrées */}
+      {/* Liseuse PDF avec Ambiances et VOLUME */}
       {viewingFile && activeTab === 'reads' && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/5 gap-4">
+              
+              {/* Modes de lecture */}
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
                 {['normal', 'sepia', 'night'].map(mode => (
                   <button key={mode} onClick={() => setReadMode(mode as any)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>{mode}</button>
                 ))}
               </div>
               
-              <div className="flex gap-2 items-center bg-emerald-500/10 p-1 rounded-full border border-emerald-500/20">
-                {ambiances.map(amb => (
-                  <button 
-                    key={amb.id} 
-                    onClick={() => setSelectedAmbiance(amb)}
-                    className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}
-                  >
-                    {amb.name}
-                  </button>
-                ))}
+              {/* Ambiances + Curseur Volume */}
+              <div className="flex items-center gap-4 bg-emerald-500/10 p-1 pr-4 rounded-full border border-emerald-500/20">
+                <div className="flex gap-1">
+                  {ambiances.map(amb => (
+                    <button 
+                      key={amb.id} 
+                      onClick={() => setSelectedAmbiance(amb)}
+                      className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}
+                    >
+                      {amb.name}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Touche de Volume */}
+                <div className="flex items-center gap-2 border-l border-emerald-500/20 pl-4">
+                  <span className="text-[10px]">🔊</span>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1" 
+                    step="0.01" 
+                    value={volume} 
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="w-16 md:w-24 accent-emerald-500 h-1 bg-white/10 rounded-full appearance-none cursor-pointer"
+                  />
+                </div>
               </div>
 
               <button onClick={() => setViewingFile(null)} className="bg-red-500/20 text-red-500 px-6 py-2 rounded-full text-[9px] font-black uppercase">Fermer</button>

@@ -25,7 +25,6 @@ const ambiances = [
 ];
 
 export default function Library() {
-  // ANTI-TRICHE : Récupération du temps et du livre depuis le localStorage au chargement
   const [timeLeft, setTimeLeft] = useState(() => {
     const saved = localStorage.getItem('future_library_time');
     return saved ? parseInt(saved) : 45 * 60;
@@ -53,23 +52,17 @@ export default function Library() {
   const bookAudioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Mise à jour du volume de l'ambiance
   useEffect(() => {
     if (ambianceRef.current) {
       ambianceRef.current.volume = volume;
     }
   }, [volume]);
 
-  // PROTECTION ANTI-COPIE & RACCOURCIS
+  // PROTECTION ANTI-COPIE & RESTRICTIONS
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Bloque F12, Ctrl+Shift+I, Ctrl+U (source), Ctrl+P (print), Ctrl+S (save)
-      if (e.keyCode === 123 || 
-         (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
-         (e.ctrlKey && e.keyCode === 85) || 
-         (e.ctrlKey && e.keyCode === 80) || 
-         (e.ctrlKey && e.keyCode === 83)) {
+      if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73) || (e.ctrlKey && e.keyCode === 85) || (e.ctrlKey && e.keyCode === 80) || (e.ctrlKey && e.keyCode === 83)) {
         e.preventDefault();
       }
     };
@@ -81,7 +74,30 @@ export default function Library() {
     };
   }, []);
 
-  // Gestion du temps avec sauvegarde persistante
+  // GESTION DU MODE ARRIÈRE-PLAN ET ÉCRAN DE VERROUILLAGE (MediaSession)
+  useEffect(() => {
+    if ('mediaSession' in navigator && currentBookId) {
+      const allItems = [...contents.reads, ...contents.audios];
+      const activeItem = allItems.find(item => item.id === currentBookId);
+      
+      if (activeItem) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: activeItem.title,
+          artist: (activeItem as any).author || (activeItem as any).source,
+          artwork: [
+            { src: activeItem.cover, sizes: '512x512', type: 'image/webp' }
+          ]
+        });
+
+        navigator.mediaSession.setActionHandler('play', togglePlay);
+        navigator.mediaSession.setActionHandler('pause', togglePlay);
+        navigator.mediaSession.setActionHandler('seekbackward', () => seek(-10));
+        navigator.mediaSession.setActionHandler('seekforward', () => seek(10));
+      }
+    }
+  }, [currentBookId, isAudioPlaying]);
+
+  // Gestion du temps persistante
   useEffect(() => {
     if ((isAudioPlaying || viewingFile) && timeLeft > 0) {
       const timer = setInterval(() => {
@@ -95,12 +111,15 @@ export default function Library() {
     }
   }, [isAudioPlaying, viewingFile, timeLeft]);
 
-  // Fonctions Audio
   const togglePlay = () => {
     if (bookAudioRef.current) {
-      if (isAudioPlaying) bookAudioRef.current.pause();
-      else bookAudioRef.current.play();
-      setIsAudioPlaying(!isAudioPlaying);
+      if (bookAudioRef.current.paused) {
+        bookAudioRef.current.play();
+        setIsAudioPlaying(true);
+      } else {
+        bookAudioRef.current.pause();
+        setIsAudioPlaying(false);
+      }
     }
   };
 
@@ -164,11 +183,9 @@ export default function Library() {
         .cd-rotate { animation: spin 6s linear infinite; }
         .cd-pause { animation-play-state: paused; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        /* Blocage de la sélection de texte */
         * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
       `}</style>
 
-      {/* Audios système */}
       <audio ref={ambianceRef} src={selectedAmbiance.url} loop autoPlay={!!viewingFile} />
       <audio 
         ref={bookAudioRef} 
@@ -177,10 +194,10 @@ export default function Library() {
         onTimeUpdate={updateProgress}
         onPlay={() => setIsAudioPlaying(true)}
         onPause={() => setIsAudioPlaying(false)}
+        playsInline // Important pour mobile
       />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
           <div>
             <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 uppercase italic">Future Library</h1>
@@ -194,7 +211,6 @@ export default function Library() {
           </div>
         </div>
 
-        {/* Grille */}
         <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto pb-12">
           {[...contents.reads, ...contents.audios]
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
@@ -250,7 +266,6 @@ export default function Library() {
         </div>
       </div>
 
-      {/* Modal Confirmation */}
       {confirmItem && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md bg-[#050b14]/90">
           <div className="bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center">
@@ -262,7 +277,6 @@ export default function Library() {
         </div>
       )}
 
-      {/* Liseuse PDF avec Ambiances et VOLUME */}
       {viewingFile && activeTab === 'reads' && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
@@ -272,42 +286,21 @@ export default function Library() {
                   <button key={mode} onClick={() => setReadMode(mode as any)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>{mode}</button>
                 ))}
               </div>
-              
               <div className="flex items-center gap-4 bg-emerald-500/10 p-1 pr-4 rounded-full border border-emerald-500/20">
                 <div className="flex gap-1">
                   {ambiances.map(amb => (
-                    <button 
-                      key={amb.id} 
-                      onClick={() => setSelectedAmbiance(amb)}
-                      className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}
-                    >
-                      {amb.name}
-                    </button>
+                    <button key={amb.id} onClick={() => setSelectedAmbiance(amb)} className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}>{amb.name}</button>
                   ))}
                 </div>
-                
                 <div className="flex items-center gap-2 border-l border-emerald-500/20 pl-4">
                   <span className="text-[10px]">🔊</span>
-                  <input 
-                    type="range" 
-                    min="0" max="1" step="0.01" 
-                    value={volume} 
-                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-16 md:w-24 accent-emerald-500 h-1 bg-white/10 rounded-full appearance-none cursor-pointer"
-                  />
+                  <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 md:w-24 accent-emerald-500 h-1 bg-white/10 rounded-full appearance-none cursor-pointer" />
                 </div>
               </div>
-
               <button onClick={() => setViewingFile(null)} className="bg-red-500/20 text-red-500 px-6 py-2 rounded-full text-[9px] font-black uppercase">Fermer</button>
             </div>
-
             <div className="w-full h-full relative bg-white">
-              <iframe 
-                src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`} 
-                className="w-full h-full border-none" 
-                style={{ filter: getFilterStyle() }} 
-              />
-              {/* Couches de protection invisibles sur l'iframe */}
+              <iframe src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`} className="w-full h-full border-none" style={{ filter: getFilterStyle() }} />
               <div className="absolute top-0 right-0 w-24 h-24 bg-transparent z-[210]" />
               <div className="absolute inset-0 bg-transparent z-[205] pointer-events-none" />
             </div>

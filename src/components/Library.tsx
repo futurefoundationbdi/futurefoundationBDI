@@ -44,7 +44,7 @@ export default function Library() {
   const bookAudioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // PROTECTION ANTI-COPIE (Inchangé)
+  // PROTECTION ANTI-COPIE
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -136,7 +136,8 @@ export default function Library() {
   };
 
   return (
-    <div className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans bg-[#050b14] select-none overflow-x-hidden">
+    /* AJOUT DE L'ID ET DU SCROLL MARGIN ICI */
+    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans bg-[#050b14] select-none overflow-x-hidden scroll-mt-20">
       <style>{`
         .cd-rotate { animation: spin 6s linear infinite; }
         .cd-pause { animation-play-state: paused; }
@@ -243,14 +244,12 @@ export default function Library() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/5 gap-4">
-              {/* Modes de lecture */}
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
                 {['normal', 'sepia', 'night'].map(mode => (
                   <button key={mode} onClick={() => setReadMode(mode as any)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>{mode}</button>
                 ))}
               </div>
               
-              {/* SÉLECTEUR D'AMBIANCE (Seulement pour les livres) */}
               <div className="flex gap-2 items-center bg-emerald-500/10 p-1 rounded-full border border-emerald-500/20">
                 {ambiances.map(amb => (
                   <button 
@@ -272,7 +271,6 @@ export default function Library() {
                 className="w-full h-full border-none" 
                 style={{ filter: getFilterStyle() }} 
               />
-              {/* Protections */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-transparent z-[210]" />
               <div className="absolute inset-0 bg-transparent z-[205] pointer-events-none" />
             </div>

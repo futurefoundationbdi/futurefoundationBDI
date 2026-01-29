@@ -27,6 +27,14 @@ const ambiances = [
 export default function Library() {
   const [timeLeft, setTimeLeft] = useState(() => {
     const saved = localStorage.getItem('future_library_time');
+    const lastDate = localStorage.getItem('future_library_last_date');
+    const now = Date.now();
+
+    // Si plus de 24h se sont écoulées, on remet à 45 min
+    if (lastDate && now - parseInt(lastDate) > 24 * 60 * 60 * 1000) {
+      localStorage.setItem('future_library_last_date', now.toString());
+      return 45 * 60;
+    }
     return saved ? parseInt(saved) : 45 * 60;
   });
 
@@ -95,18 +103,22 @@ export default function Library() {
   }, [currentBookId, isAudioPlaying]);
   
   useEffect(() => {
+    // Le chrono ne tourne QUE si on est en train de lire un livre (viewingFile n'est pas nul)
     const isReadingBook = viewingFile && activeTab === 'reads';
+    
     if (isReadingBook && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           const newTime = prev - 1;
           localStorage.setItem('future_library_time', newTime.toString());
+          // On met à jour la date pour le calcul des 24h
+          localStorage.setItem('future_library_last_date', Date.now().toString());
           return newTime;
         });
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [viewingFile, activeTab, timeLeft]);
+  }, [viewingFile, activeTab, timeLeft]); // Le timer se coupera dès que viewingFile changera
 
   const togglePlay = () => {
     if (bookAudioRef.current) {
@@ -141,14 +153,15 @@ export default function Library() {
   const handleActionStart = (item: any) => {
     if (item.type === 'pdf' && timeLeft <= 0) return;
     
-    // Pour l'audio, on autorise toujours la confirmation
     if (item.type === 'audio') {
       setConfirmItem(item); 
       return; 
     }
 
-    // Pour les PDF
-    if (currentBookId === null) {
+    // On vérifie si un livre (PDF) est déjà verrouillé
+    const isAPdfLocked = currentBookId !== null && contents.reads.some(r => r.id === currentBookId);
+
+    if (!isAPdfLocked) {
       setConfirmItem(item);
     } else if (currentBookId === item.id) {
       setIsPressing(true);

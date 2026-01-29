@@ -56,7 +56,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
                 className="h-8 w-8 md:h-11 md:w-11 rounded-full object-cover border border-border shrink-0" 
               />
               <span className="font-black text-[10px] sm:text-xs md:text-sm text-foreground uppercase tracking-tighter leading-tight">
-                The Future Foundation BDI
+                The Future Generation BDI
               </span>
             </a>
 

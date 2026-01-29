@@ -146,7 +146,7 @@ const TeamSection = () => {
               </div>
               
               <div className="p-3 bg-primary text-white text-center text-[9px] font-bold tracking-widest uppercase">
-                The Future Foundation BDI
+                The Future Generation BDI
               </div>
             </div>
           </div>

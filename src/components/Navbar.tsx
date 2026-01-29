@@ -19,7 +19,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [xp, setXp] = useState(0);
 
-  // Définition des liens de navigation
+  // Définition des liens de navigation - href corrigé pour correspondre à l'ID de la section
   const navLinks = [
     { label: "Accueil", href: "#" },
     { label: "Mission", href: "#mission" },
@@ -27,7 +27,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
     { label: "Programmes", href: "#programmes" },
     { label: "Équipe", href: "#equipe" },
     { label: "Impact", href: "#impact" },
-    {label: "Library", href: "#bibliotheque" },
+    { label: "Library", href: "#bibliotheque" },
   ];
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
                 className="h-8 w-8 md:h-11 md:w-11 rounded-full object-cover border border-border shrink-0" 
               />
               <span className="font-black text-[10px] sm:text-xs md:text-sm text-foreground uppercase tracking-tighter leading-tight">
-                The Future Generation BDI
+                The Future Foundation BDI
               </span>
             </a>
 

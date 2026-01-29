@@ -25,15 +25,24 @@ const ambiances = [
 ];
 
 export default function Library() {
-  const [timeLeft, setTimeLeft] = useState(45 * 60);
+  // ANTI-TRICHE : Récupération du temps et du livre depuis le localStorage au chargement
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const saved = localStorage.getItem('future_library_time');
+    return saved ? parseInt(saved) : 45 * 60;
+  });
+
+  const [currentBookId, setCurrentBookId] = useState<number | null>(() => {
+    const saved = localStorage.getItem('future_library_book_id');
+    return saved ? parseInt(saved) : null;
+  });
+
   const [activeTab, setActiveTab] = useState<'reads' | 'audios'>('reads');
   const [isPressing, setIsPressing] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
-  const [currentBookId, setCurrentBookId] = useState<number | null>(null);
   const [confirmItem, setConfirmItem] = useState<any>(null); 
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
-  const [volume, setVolume] = useState(0.5); // État pour le volume
+  const [volume, setVolume] = useState(0.5);
   const [showAdvice, setShowAdvice] = useState(false);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
   const [readMode, setReadMode] = useState<ReadingMode>('normal');
@@ -51,11 +60,18 @@ export default function Library() {
     }
   }, [volume]);
 
-  // PROTECTION ANTI-COPIE
+  // PROTECTION ANTI-COPIE & RACCOURCIS
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73) || (e.ctrlKey && e.keyCode === 85) || (e.ctrlKey && e.keyCode === 80) || (e.ctrlKey && e.keyCode === 83)) e.preventDefault();
+      // Bloque F12, Ctrl+Shift+I, Ctrl+U (source), Ctrl+P (print), Ctrl+S (save)
+      if (e.keyCode === 123 || 
+         (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+         (e.ctrlKey && e.keyCode === 85) || 
+         (e.ctrlKey && e.keyCode === 80) || 
+         (e.ctrlKey && e.keyCode === 83)) {
+        e.preventDefault();
+      }
     };
     window.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('keydown', handleKeyDown);
@@ -65,7 +81,7 @@ export default function Library() {
     };
   }, []);
 
-  // Gestion du temps
+  // Gestion du temps avec sauvegarde persistante
   useEffect(() => {
     if ((isAudioPlaying || viewingFile) && timeLeft > 0) {
       const timer = setInterval(() => {
@@ -148,6 +164,8 @@ export default function Library() {
         .cd-rotate { animation: spin 6s linear infinite; }
         .cd-pause { animation-play-state: paused; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Blocage de la sélection de texte */
+        * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
       `}</style>
 
       {/* Audios système */}
@@ -183,7 +201,6 @@ export default function Library() {
             .map(item => (
               <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all ${currentBookId === item.id ? 'border-emerald-500/40' : 'border-white/5'}`}>
                 
-                {/* CORRECTIF ZOOM COUVERTURE : aspect-[3/4] + object-contain */}
                 <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
                   {item.type === 'pdf' ? (
                     <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
@@ -250,15 +267,12 @@ export default function Library() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/5 gap-4">
-              
-              {/* Modes de lecture */}
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
                 {['normal', 'sepia', 'night'].map(mode => (
                   <button key={mode} onClick={() => setReadMode(mode as any)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>{mode}</button>
                 ))}
               </div>
               
-              {/* Ambiances + Curseur Volume */}
               <div className="flex items-center gap-4 bg-emerald-500/10 p-1 pr-4 rounded-full border border-emerald-500/20">
                 <div className="flex gap-1">
                   {ambiances.map(amb => (
@@ -272,14 +286,11 @@ export default function Library() {
                   ))}
                 </div>
                 
-                {/* Touche de Volume */}
                 <div className="flex items-center gap-2 border-l border-emerald-500/20 pl-4">
                   <span className="text-[10px]">🔊</span>
                   <input 
                     type="range" 
-                    min="0" 
-                    max="1" 
-                    step="0.01" 
+                    min="0" max="1" step="0.01" 
                     value={volume} 
                     onChange={(e) => setVolume(parseFloat(e.target.value))}
                     className="w-16 md:w-24 accent-emerald-500 h-1 bg-white/10 rounded-full appearance-none cursor-pointer"
@@ -296,6 +307,7 @@ export default function Library() {
                 className="w-full h-full border-none" 
                 style={{ filter: getFilterStyle() }} 
               />
+              {/* Couches de protection invisibles sur l'iframe */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-transparent z-[210]" />
               <div className="absolute inset-0 bg-transparent z-[205] pointer-events-none" />
             </div>

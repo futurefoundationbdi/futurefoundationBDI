@@ -15,7 +15,7 @@ const contents = {
     { id: 3, title: "La chèvre de ma mère: Les secrets de la prospérité financière-Ricardo Kaniama", source: "NoteBookLM", duration: "15 min", audioSrc: "/audio/lachevre.mp3", type: "audio", cover: "/covers/La chèvre.webp" },
     { id: 4, title: "MARIÉS ET APRÈS-Dr Myles Munroe ?", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/marriageetapres.mp3", type: "audio", cover: "/covers/MARIÉS ET APRÈS _.webp" },
     { id: 4, title: "L'échelle magique vers le succès-Napoleon Hill", source: "AUDIBLE", duration: "1h 09 min", audioSrc: "/audio/xxxx", type: "audio", cover: "/covers/echelle.webp" },
-    { id: 4, title: "L'effet Cumulé-Darren Hardy", source: "NoteBookLM", duration: "15 min", audioSrc: "/audio/effet.mp3", type: "audio", cover: "/covers/effet.webp" }
+    { id: 4, title: "L'effet Cumulé-Darren Hardy", source: "NoteBookLM", duration: "13 min", audioSrc: "/audio/effet.mp3", type: "audio", cover: "/covers/effet.webp" }
   ]
 };
 

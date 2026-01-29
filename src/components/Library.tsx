@@ -6,16 +6,16 @@ const contents = {
   reads: [
     { id: 1, title: "Le jeu de la Vie et comment le jouer", author: "Florence Scovel Shinn", cover: "/covers/J de la vie.webp", fileUrl: "/books/Le jeu de la Vie et comment le jouer.pdf", type: "pdf", review: "Commencez dès aujourd’hui à croire en vous et laissez-vous guider avec bonheur dans tous les domaines de votre vie!" },
     { id: 2, title: "La Science de la Grandeur", author: "Wallace D. Wattles", cover: "/covers/S de la G.webp", fileUrl: "/books/La science de la Grandeur.pdf", type: "pdf", review: "Apprenez comment croire en la grandeur de votre propre esprit et comment agir avec grandeur." },
-    { id: 5, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf", type: "pdf", review: "Des principes millénaires toujours d'actualité." },
-    { id: 6, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "/covers/R et DR.webp", fileUrl: "/books/Réfléchissez et devenez riche.pdf", type: "pdf", review: "Le classique absolu sur la force de la pensée." },
-    { id: 7, title: "La Science de l'Enrechissement", author: "Wallace D. Wattles", cover: "/covers/la S de l'E.webp", fileUrl: "/books/La science de l'Enrichissement.pdf", type: "pdf", review:"Le fondement de la mentalité d'abondance."},
-    { id: 8, title: "L'Art d'avoir toujours raison", author: "Arthur Schopenhauer", cover: "/covers/à lire.webp", fileUrl: "/books/Lart davoir toujours raison.pdf", type: "pdf", review: "Outil puissant pour détecter les manipulations." }
+    { id: 3, title: "L'Homme le plus riche de Babylone", author: "George S. Clason", cover: "/covers/riche.webp", fileUrl: "/books/homme-riche.pdf", type: "pdf", review: "Des principes millénaires toujours d'actualité." },
+    { id: 4, title: "Réfléchissez et devenez riche", author: "Napoleon Hill", cover: "/covers/R et DR.webp", fileUrl: "/books/Réfléchissez et devenez riche.pdf", type: "pdf", review: "Le classique absolu sur la force de la pensée." },
+    { id: 5, title: "La Science de l'Enrechissement", author: "Wallace D. Wattles", cover: "/covers/la S de l'E.webp", fileUrl: "/books/La science de l'Enrichissement.pdf", type: "pdf", review:"Le fondement de la mentalité d'abondance."},
+    { id: 6, title: "L'Art d'avoir toujours raison", author: "Arthur Schopenhauer", cover: "/covers/à lire.webp", fileUrl: "/books/Lart davoir toujours raison.pdf", type: "pdf", review: "Outil puissant pour détecter les manipulations." }
   ],
   audios: [
-    { id: 3, title: "La chèvre de ma mère: Les secrets de la prospérité financière-Ricardo Kaniama", source: "NoteBookLM", duration: "15 min", audioSrc: "/audio/lachevre.mp3", type: "audio", cover: "/covers/La chèvre.webp" },
-    { id: 4, title: "MARIÉS ET APRÈS-Dr Myles Munroe ?", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/marriageetapres.mp3", type: "audio", cover: "/covers/MARIÉS ET APRÈS _.webp" },
-    { id: 4, title: "L'échelle magique vers le succès-Napoleon Hill", source: "AUDIBLE", duration: "1h 09 min", audioSrc: "/audio/xxxx", type: "audio", cover: "/covers/echelle.webp" },
-    { id: 4, title: "L'effet Cumulé-Darren Hardy", source: "NoteBookLM", duration: "13 min", audioSrc: "/audio/effet.mp3", type: "audio", cover: "/covers/effet.webp" }
+    { id: 7, title: "La chèvre de ma mère: Les secrets de la prospérité financière-Ricardo Kaniama", source: "NoteBookLM", duration: "15 min", audioSrc: "/audio/lachevre.mp3", type: "audio", cover: "/covers/La chèvre.webp" },
+    { id: 8, title: "MARIÉS ET APRÈS-Dr Myles Munroe ?", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/marriageetapres.mp3", type: "audio", cover: "/covers/MARIÉS ET APRÈS _.webp" },
+    { id: 9, title: "L'échelle magique vers le succès-Napoleon Hill", source: "AUDIBLE", duration: "1h 09 min", audioSrc: "/audio/xxxx", type: "audio", cover: "/covers/echelle.webp" },
+    { id: 10, title: "L'effet Cumulé-Darren Hardy", source: "NoteBookLM", duration: "13 min", audioSrc: "/audio/effet.mp3", type: "audio", cover: "/covers/effet.webp" }
   ]
 };
 

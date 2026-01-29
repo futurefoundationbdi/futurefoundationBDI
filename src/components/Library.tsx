@@ -13,7 +13,8 @@ const contents = {
   ],
   audios: [
     { id: 3, title: "La chèvre de ma mère: Les secrets de la prospérité financière", source: "NoteBookLM", duration: "15 min", audioSrc: "/audio/lachevre.mp3", type: "audio", cover: "/covers/La chèvre.webp" },
-    { id: 4, title: "MARIÉS ET APRÈS ?", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/marriageetapres.mp3", type: "audio", cover: "/covers/MARIÉS ET APRÈS _.webp" }
+    { id: 4, title: "MARIÉS ET APRÈS ?", source: "NoteBookLM", duration: "08 min", audioSrc: "/audio/marriageetapres.mp3", type: "audio", cover: "/covers/MARIÉS ET APRÈS _.webp" },
+    { id: 4, title: "MARIÉS ET APRÈS ?", source: "AUDIBLE", duration: "1h 09 min", audioSrc: "/audio/xxxx", type: "audio", cover: "/covers/echelle.webp" }
   ]
 };
 

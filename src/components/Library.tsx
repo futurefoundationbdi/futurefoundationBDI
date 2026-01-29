@@ -141,21 +141,22 @@ export default function Library() {
   const handleActionStart = (item: any) => {
     if (item.type === 'pdf' && timeLeft <= 0) return;
     
-    // LOGIQUE FLEXIBLE : Si c'est un audio OU si aucun livre n'est choisi
-    if (item.type === 'audio' || currentBookId === null) {
+    // Pour l'audio, on autorise toujours la confirmation
+    if (item.type === 'audio') {
       setConfirmItem(item); 
       return; 
     }
 
-    // Si c'est le livre déjà choisi (PDF)
-    if (currentBookId === item.id) {
+    // Pour les PDF
+    if (currentBookId === null) {
+      setConfirmItem(item);
+    } else if (currentBookId === item.id) {
       setIsPressing(true);
       pressTimerRef.current = setTimeout(() => {
-        setViewingFile(item.type === 'pdf' ? item.fileUrl : item.audioSrc);
+        setViewingFile(item.fileUrl);
         setIsPressing(false);
       }, 2000);
     } else {
-      // Bloqué pour les autres PDF
       setShowAdvice(true);
       setTimeout(() => setShowAdvice(false), 4000);
     }
@@ -163,18 +164,19 @@ export default function Library() {
 
   const confirmChoice = () => {
     if (confirmItem) {
-      // Pour les audios, on change juste le fichier actuel sans forcément verrouiller définitivement l'ID global si on veut rester flexible
-      setCurrentBookId(confirmItem.id);
       if (confirmItem.type === 'pdf') {
+        setCurrentBookId(confirmItem.id);
         localStorage.setItem('future_library_book_id', confirmItem.id.toString());
+        setViewingFile(confirmItem.fileUrl);
+      } else {
+        // Audio : On change sans verrouiller le currentBookId global du PDF
+        // Mais on l'utilise pour savoir quel CD tourne
+        setCurrentBookId(confirmItem.id); 
+        setViewingFile(confirmItem.audioSrc);
+        setIsAudioPlaying(false);
+        setAudioProgress(0);
       }
-      setViewingFile(confirmItem.type === 'pdf' ? confirmItem.fileUrl : confirmItem.audioSrc);
       setConfirmItem(null);
-      // Reset audio si on change
-      if (confirmItem.type === 'audio' && bookAudioRef.current) {
-          setIsAudioPlaying(false);
-          setAudioProgress(0);
-      }
     }
   };
 
@@ -198,7 +200,7 @@ export default function Library() {
       <audio ref={ambianceRef} src={selectedAmbiance.url} loop autoPlay={!!viewingFile} />
       <audio 
         ref={bookAudioRef} 
-        key={viewingFile} // Force le rechargement de la balise quand on change d'audio
+        key={viewingFile}
         src={activeTab === 'audios' ? (viewingFile || '') : ''} 
         loop={isLooping}
         onTimeUpdate={updateProgress}
@@ -212,8 +214,8 @@ export default function Library() {
           <div>
             <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 uppercase italic">Future Library</h1>
             <div className="flex gap-4 mt-4 bg-white/5 p-1.5 rounded-full w-fit border border-white/5">
-              <button onClick={() => setActiveTab('reads')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'reads' ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-white/40 hover:text-white'}`}>📚 Livres</button>
-              <button onClick={() => setActiveTab('audios')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'audios' ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-white/40 hover:text-white'}`}>🎧 Audio</button>
+              <button onClick={() => setActiveTab('reads')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'reads' ? 'bg-emerald-500 text-black' : 'text-white/40 hover:text-white'}`}>📚 Livres</button>
+              <button onClick={() => setActiveTab('audios')} className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase transition-all duration-300 ${activeTab === 'audios' ? 'bg-emerald-500 text-black' : 'text-white/40 hover:text-white'}`}>🎧 Audio</button>
             </div>
           </div>
 
@@ -227,59 +229,64 @@ export default function Library() {
         <div key={activeTab} className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {[...contents.reads, ...contents.audios]
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
-            .map(item => (
-              <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.1)]' : 'border-white/5'}`}>
-                
-                <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
-                  {item.type === 'pdf' ? (
-                    <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
-                  ) : (
-                    <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${currentBookId === item.id && isAudioPlaying ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
-                      <img src={item.cover} className="w-full h-full object-cover" alt="" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 bg-[#050b14] rounded-full border-4 border-white/10" />
+            .map(item => {
+              // LOGIQUE DE VERROUILLAGE : Uniquement si on est dans l'onglet Livres et qu'un autre livre est déjà choisi
+              const isLocked = activeTab === 'reads' && currentBookId !== null && currentBookId !== item.id && contents.reads.some(r => r.id === currentBookId);
+              
+              return (
+                <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.1)]' : 'border-white/5'}`}>
+                  
+                  <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
+                    {item.type === 'pdf' ? (
+                      <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
+                    ) : (
+                      <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${currentBookId === item.id && isAudioPlaying ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
+                        <img src={item.cover} className="w-full h-full object-cover" alt="" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-12 h-12 bg-[#050b14] rounded-full border-4 border-white/10" />
+                        </div>
+                      </div>
+                    )}
+                    {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
+                  </div>
+
+                  <h3 className="font-bold text-xl text-white italic line-clamp-1">{item.title}</h3>
+                  <p className="text-emerald-500/60 text-[9px] font-black uppercase tracking-widest mb-4">{(item as any).author || (item as any).source}</p>
+
+                  {activeTab === 'audios' && currentBookId === item.id && viewingFile && (
+                    <div className="bg-white/5 p-4 rounded-2xl mb-4 border border-white/10 animate-in zoom-in-95 duration-300">
+                      <div className="flex justify-between text-[10px] font-mono text-emerald-400 mb-2">
+                        <span>{audioTimeInfo.current}</span>
+                        <span>{audioTimeInfo.total}</span>
+                      </div>
+                      <div className="w-full h-1 bg-white/10 rounded-full mb-4 overflow-hidden">
+                        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${audioProgress}%` }} />
+                      </div>
+                      <div className="flex justify-center items-center gap-6">
+                        <button onClick={() => seek(-10)} className="text-white/40 hover:text-white text-xs transition-colors">-10s</button>
+                        <button onClick={togglePlay} className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-black hover:scale-110 transition-transform">
+                          {isAudioPlaying ? 'II' : '▶'}
+                        </button>
+                        <button onClick={() => seek(10)} className="text-white/40 hover:text-white text-xs transition-colors">+10s</button>
+                        <button onClick={() => setIsLooping(!isLooping)} className={`text-xs transition-colors ${isLooping ? 'text-emerald-400' : 'text-white/20'}`}>🔁</button>
                       </div>
                     </div>
                   )}
-                  {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
+
+                  <button 
+                    onMouseDown={() => handleActionStart(item)}
+                    onMouseUp={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
+                    className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all duration-300 ${isLocked ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]'}`}
+                  >
+                    {item.type === 'audio' ? (currentBookId === item.id && viewingFile ? 'En lecture' : 'Écouter') : (isLocked ? 'Verrouillé' : (currentBookId === item.id ? 'Maintenir pour ouvrir' : 'Choisir'))}
+                  </button>
                 </div>
-
-                <h3 className="font-bold text-xl text-white italic line-clamp-1">{item.title}</h3>
-                <p className="text-emerald-500/60 text-[9px] font-black uppercase tracking-widest mb-4">{(item as any).author || (item as any).source}</p>
-
-                {activeTab === 'audios' && currentBookId === item.id && viewingFile && (
-                  <div className="bg-white/5 p-4 rounded-2xl mb-4 border border-white/10 animate-in zoom-in-95 duration-300">
-                    <div className="flex justify-between text-[10px] font-mono text-emerald-400 mb-2">
-                      <span>{audioTimeInfo.current}</span>
-                      <span>{audioTimeInfo.total}</span>
-                    </div>
-                    <div className="w-full h-1 bg-white/10 rounded-full mb-4 overflow-hidden">
-                      <div className="h-full bg-emerald-500 transition-all" style={{ width: `${audioProgress}%` }} />
-                    </div>
-                    <div className="flex justify-center items-center gap-6">
-                      <button onClick={() => seek(-10)} className="text-white/40 hover:text-white text-xs transition-colors">-10s</button>
-                      <button onClick={togglePlay} className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-black hover:scale-110 transition-transform shadow-lg">
-                        {isAudioPlaying ? 'II' : '▶'}
-                      </button>
-                      <button onClick={() => seek(10)} className="text-white/40 hover:text-white text-xs transition-colors">+10s</button>
-                      <button onClick={() => setIsLooping(!isLooping)} className={`text-xs transition-colors ${isLooping ? 'text-emerald-400' : 'text-white/20'}`}>🔁</button>
-                    </div>
-                  </div>
-                )}
-
-                <button 
-                  onMouseDown={() => handleActionStart(item)}
-                  onMouseUp={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
-                  className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all duration-300 ${activeTab === 'reads' && currentBookId !== null && currentBookId !== item.id ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]'}`}
-                >
-                  {item.type === 'audio' ? (currentBookId === item.id && viewingFile ? 'En lecture' : 'Écouter') : (currentBookId === item.id ? 'Maintenir pour ouvrir' : (currentBookId === null ? 'Choisir' : 'Verrouillé'))}
-                </button>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
 
-      {/* Modal Confirmation */}
+      {/* Modals et Liseuse restent identiques */}
       {confirmItem && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md bg-[#050b14]/90 animate-in fade-in duration-300">
           <div className="bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center shadow-2xl">
@@ -291,7 +298,6 @@ export default function Library() {
         </div>
       )}
 
-      {/* Liseuse PDF */}
       {viewingFile && activeTab === 'reads' && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">

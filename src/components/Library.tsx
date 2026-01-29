@@ -80,7 +80,30 @@ export default function Library() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+  
+// GESTION DU MODE ARRIÈRE-PLAN ET ÉCRAN DE VERROUILLAGE
+useEffect(() => {
+  if ('mediaSession' in navigator && currentBookId) {
+    const activeBook = [...contents.reads, ...contents.audios].find(b => b.id === currentBookId);
+    
+    if (activeBook) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: activeBook.title,
+        artist: (activeBook as any).author || (activeBook as any).source,
+        artwork: [
+          { src: activeBook.cover, sizes: '512x512', type: 'image/webp' }
+        ]
+      });
 
+      // Contrôles sur l'écran de verrouillage
+      navigator.mediaSession.setActionHandler('play', togglePlay);
+      navigator.mediaSession.setActionHandler('pause', togglePlay);
+      navigator.mediaSession.setActionHandler('seekbackward', () => seek(-10));
+      navigator.mediaSession.setActionHandler('seekforward', () => seek(10));
+    }
+  }
+}, [currentBookId, isAudioPlaying]);
+  
   // Gestion du temps avec sauvegarde persistante
   useEffect(() => {
     if ((isAudioPlaying || viewingFile) && timeLeft > 0) {

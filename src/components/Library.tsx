@@ -29,8 +29,6 @@ export default function Library() {
     const saved = localStorage.getItem('future_library_time');
     const lastDate = localStorage.getItem('future_library_last_date');
     const now = Date.now();
-
-    // Si plus de 24h se sont écoulées, on remet à 45 min
     if (lastDate && now - parseInt(lastDate) > 24 * 60 * 60 * 1000) {
       localStorage.setItem('future_library_last_date', now.toString());
       return 45 * 60;
@@ -51,7 +49,12 @@ export default function Library() {
   const [selectedAmbiance, setSelectedAmbiance] = useState(ambiances[0]);
   const [volume, setVolume] = useState(0.5);
   const [showAdvice, setShowAdvice] = useState(false);
-  const [viewingFile, setViewingFile] = useState<string | null>(null);
+  
+  // MISE À JOUR : Persistance du fichier en cours de lecture
+  const [viewingFile, setViewingFile] = useState<string | null>(() => {
+    return localStorage.getItem('future_library_viewing_url');
+  });
+
   const [readMode, setReadMode] = useState<ReadingMode>('normal');
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioTimeInfo, setAudioTimeInfo] = useState({ current: '00:00', total: '00:00' });
@@ -59,6 +62,15 @@ export default function Library() {
   const ambianceRef = useRef<HTMLAudioElement | null>(null);
   const bookAudioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // MISE À JOUR : Effet pour sauvegarder viewingFile
+  useEffect(() => {
+    if (viewingFile) {
+      localStorage.setItem('future_library_viewing_url', viewingFile);
+    } else {
+      localStorage.removeItem('future_library_viewing_url');
+    }
+  }, [viewingFile]);
 
   useEffect(() => {
     if (ambianceRef.current) {
@@ -103,22 +115,19 @@ export default function Library() {
   }, [currentBookId, isAudioPlaying]);
   
   useEffect(() => {
-    // Le chrono ne tourne QUE si on est en train de lire un livre (viewingFile n'est pas nul)
     const isReadingBook = viewingFile && activeTab === 'reads';
-    
     if (isReadingBook && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           const newTime = prev - 1;
           localStorage.setItem('future_library_time', newTime.toString());
-          // On met à jour la date pour le calcul des 24h
           localStorage.setItem('future_library_last_date', Date.now().toString());
           return newTime;
         });
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [viewingFile, activeTab, timeLeft]); // Le timer se coupera dès que viewingFile changera
+  }, [viewingFile, activeTab, timeLeft]);
 
   const togglePlay = () => {
     if (bookAudioRef.current) {
@@ -152,15 +161,11 @@ export default function Library() {
 
   const handleActionStart = (item: any) => {
     if (item.type === 'pdf' && timeLeft <= 0) return;
-    
     if (item.type === 'audio') {
       setConfirmItem(item); 
       return; 
     }
-
-    // On vérifie si un livre (PDF) est déjà verrouillé
     const isAPdfLocked = currentBookId !== null && contents.reads.some(r => r.id === currentBookId);
-
     if (!isAPdfLocked) {
       setConfirmItem(item);
     } else if (currentBookId === item.id) {
@@ -182,8 +187,6 @@ export default function Library() {
         localStorage.setItem('future_library_book_id', confirmItem.id.toString());
         setViewingFile(confirmItem.fileUrl);
       } else {
-        // Audio : On change sans verrouiller le currentBookId global du PDF
-        // Mais on l'utilise pour savoir quel CD tourne
         setCurrentBookId(confirmItem.id); 
         setViewingFile(confirmItem.audioSrc);
         setIsAudioPlaying(false);
@@ -202,13 +205,52 @@ export default function Library() {
   };
 
   return (
-    <div id="bibliotheque" className="relative min-h-screen text-slate-100 p-6 md:p-12 font-sans bg-[#050b14] select-none overflow-x-hidden scroll-mt-20">
+    <div id="bibliotheque" className="aurora-bg relative min-h-screen text-slate-100 p-6 md:p-12 font-sans select-none overflow-x-hidden scroll-mt-20">
       <style>{`
         .cd-rotate { animation: spin 6s linear infinite; }
         .cd-pause { animation-play-state: paused; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+
+        /* MISE À JOUR : Aurora Borealis & Étoiles Filantes */
+        .aurora-bg {
+          background: #050b14;
+          position: relative;
+          overflow: hidden;
+        }
+        .aurora-bg::before {
+          content: "";
+          position: absolute;
+          top: -50%; left: -50%; width: 200%; height: 200%;
+          background: radial-gradient(circle at center, rgba(16, 185, 129, 0.07) 0%, transparent 40%),
+                      radial-gradient(circle at 20% 30%, rgba(52, 211, 153, 0.1) 0%, transparent 30%);
+          animation: aurora-move 20s infinite alternate-reverse;
+          z-index: 0;
+        }
+        @keyframes aurora-move {
+          from { transform: rotate(0deg) scale(1); }
+          to { transform: rotate(5deg) scale(1.1); }
+        }
+        .star {
+          position: absolute;
+          width: 2px; height: 2px;
+          background: white;
+          opacity: 0;
+          animation: shooting-star 10s linear infinite;
+          z-index: 1;
+        }
+        @keyframes shooting-star {
+          0% { transform: translateX(0) translateY(0) rotate(-45deg) scale(0); opacity: 0; }
+          5% { opacity: 1; transform: translateX(0) translateY(0) rotate(-45deg) scale(1); }
+          15% { transform: translateX(300px) translateY(300px) rotate(-45deg) scale(0); opacity: 0; }
+          100% { transform: translateX(300px) translateY(300px) rotate(-45deg) scale(0); opacity: 0; }
+        }
       `}</style>
+
+      {/* Étoiles filantes positionnées */}
+      <div className="star" style={{top: '10%', left: '20%', animationDelay: '0s'}} />
+      <div className="star" style={{top: '30%', left: '70%', animationDelay: '4s'}} />
+      <div className="star" style={{top: '15%', left: '50%', animationDelay: '8s'}} />
 
       <audio ref={ambianceRef} src={selectedAmbiance.url} loop autoPlay={!!viewingFile} />
       <audio 
@@ -243,12 +285,9 @@ export default function Library() {
           {[...contents.reads, ...contents.audios]
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
             .map(item => {
-              // LOGIQUE DE VERROUILLAGE : Uniquement si on est dans l'onglet Livres et qu'un autre livre est déjà choisi
               const isLocked = activeTab === 'reads' && currentBookId !== null && currentBookId !== item.id && contents.reads.some(r => r.id === currentBookId);
-              
               return (
                 <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.1)]' : 'border-white/5'}`}>
-                  
                   <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
                     {item.type === 'pdf' ? (
                       <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
@@ -262,7 +301,6 @@ export default function Library() {
                     )}
                     {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
                   </div>
-
                   <h3 className="font-bold text-xl text-white italic line-clamp-1">{item.title}</h3>
                   <p className="text-emerald-500/60 text-[9px] font-black uppercase tracking-widest mb-4">{(item as any).author || (item as any).source}</p>
 
@@ -289,6 +327,8 @@ export default function Library() {
                   <button 
                     onMouseDown={() => handleActionStart(item)}
                     onMouseUp={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
+                    onTouchStart={() => handleActionStart(item)} // Ajout tactiles
+                    onTouchEnd={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
                     className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all duration-300 ${isLocked ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]'}`}
                   >
                     {item.type === 'audio' ? (currentBookId === item.id && viewingFile ? 'En lecture' : 'Écouter') : (isLocked ? 'Verrouillé' : (currentBookId === item.id ? 'Maintenir pour ouvrir' : 'Choisir'))}
@@ -299,7 +339,6 @@ export default function Library() {
         </div>
       </div>
 
-      {/* Modals et Liseuse restent identiques */}
       {confirmItem && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md bg-[#050b14]/90 animate-in fade-in duration-300">
           <div className="bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center shadow-2xl">
@@ -349,10 +388,10 @@ export default function Library() {
               <button onClick={() => setViewingFile(null)} className="bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white px-6 py-2 rounded-full text-[9px] font-black uppercase transition-all">Fermer</button>
             </div>
 
-            <div className="w-full h-full relative bg-white">
+            <div className="w-full h-full relative bg-white overflow-auto touch-auto">
               <iframe 
-                src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`} 
-                className="w-full h-full border-none" 
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(window.location.origin + viewingFile)}&embedded=true`} 
+                className="w-full h-full border-none min-h-[500px]" 
                 style={{ filter: getFilterStyle() }} 
               />
               <div className="absolute top-0 right-0 w-24 h-24 bg-transparent z-[210]" />

@@ -19,7 +19,6 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [xp, setXp] = useState(0);
 
-  // Définition des liens de navigation - href corrigé pour correspondre à l'ID de la section
   const navLinks = [
     { label: "Accueil", href: "#" },
     { label: "Mission", href: "#mission" },
@@ -40,6 +39,27 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
     return () => window.removeEventListener("storage", updateXP);
   }, []);
 
+  // --- FONCTION DE DEFILEMENT OPTIMISÉE ---
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Si c'est un lien d'ancrage (commence par #)
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      
+      // Fermer le menu mobile immédiatement
+      setIsOpen(false);
+
+      if (href === "#") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        const targetId = href.replace("#", "");
+        const elem = document.getElementById(targetId);
+        if (elem) {
+          elem.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  };
+
   const rank = getRankInfo(xp);
 
   return (
@@ -49,7 +69,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
           <div className="flex items-center justify-between h-16 md:h-20">
             
             {/* Logo */}
-            <a href="#" className="flex items-center gap-2 md:gap-3 max-w-[60%] md:max-w-[40%]">
+            <a href="#" onClick={(e) => handleScroll(e, "#")} className="flex items-center gap-2 md:gap-3 max-w-[60%] md:max-w-[40%]">
               <img 
                 src="/futurelogo.jpg" 
                 alt="Logo" 
@@ -66,13 +86,13 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
                 <a 
                   key={link.label} 
                   href={link.href} 
+                  onClick={(e) => handleScroll(e, link.href)}
                   className="text-[12px] font-bold text-muted-foreground hover:text-primary transition-colors"
                 >
                   {link.label}
                 </a>
               ))}
               
-              {/* Quiz XP Desktop Highlight */}
               <button
                 onClick={onOpenQuiz}
                 className="text-[12px] font-black text-secondary bg-secondary/10 px-4 py-1.5 rounded-full border border-secondary/20 flex items-center gap-1.5 hover:bg-secondary/20 transition-all scale-100 hover:scale-105"
@@ -127,7 +147,7 @@ const Navbar = ({ onOpenQuiz }: NavbarProps) => {
                     key={link.label}
                     href={link.href} 
                     className="text-sm font-black py-3 px-6 rounded-xl hover:bg-slate-50 transition-colors"
-                    onClick={() => setIsOpen(false)}
+                    onClick={(e) => handleScroll(e, link.href)}
                   >
                     {link.label}
                   </a>

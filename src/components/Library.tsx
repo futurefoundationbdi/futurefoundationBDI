@@ -25,14 +25,13 @@ const ambiances = [
 ];
 
 export default function Library() {
+  // ANTI-TRICHE : Récupération du temps et du livre depuis le localStorage au chargement
   const [timeLeft, setTimeLeft] = useState(() => {
-    if (typeof window === 'undefined') return 45 * 60;
     const saved = localStorage.getItem('future_library_time');
     return saved ? parseInt(saved) : 45 * 60;
   });
 
   const [currentBookId, setCurrentBookId] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return null;
     const saved = localStorage.getItem('future_library_book_id');
     return saved ? parseInt(saved) : null;
   });
@@ -54,27 +53,23 @@ export default function Library() {
   const bookAudioRef = useRef<HTMLAudioElement | null>(null);
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // FIX MOBILE : Restaurer le fichier ouvert au rafraîchissement
+  // Mise à jour du volume de l'ambiance
   useEffect(() => {
-    if (currentBookId && !viewingFile) {
-      const allItems = [...contents.reads, ...contents.audios];
-      const item = allItems.find(i => i.id === currentBookId);
-      if (item) {
-        setViewingFile(item.type === 'pdf' ? item.fileUrl : item.audioSrc);
-        if (item.type === 'audio') setActiveTab('audios');
-      }
+    if (ambianceRef.current) {
+      ambianceRef.current.volume = volume;
     }
-  }, [currentBookId]);
-
-  useEffect(() => {
-    if (ambianceRef.current) ambianceRef.current.volume = volume;
   }, [volume]);
 
-  // PROTECTION ANTI-COPIE & RESTRICTIONS
+  // PROTECTION ANTI-COPIE & RACCOURCIS
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73) || (e.ctrlKey && e.keyCode === 85) || (e.ctrlKey && e.keyCode === 80) || (e.ctrlKey && e.keyCode === 83)) {
+      // Bloque F12, Ctrl+Shift+I, Ctrl+U (source), Ctrl+P (print), Ctrl+S (save)
+      if (e.keyCode === 123 || 
+         (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+         (e.ctrlKey && e.keyCode === 85) || 
+         (e.ctrlKey && e.keyCode === 80) || 
+         (e.ctrlKey && e.keyCode === 83)) {
         e.preventDefault();
       }
     };
@@ -86,23 +81,7 @@ export default function Library() {
     };
   }, []);
 
-  // GESTION DU MODE ARRIÈRE-PLAN (MediaSession)
-  useEffect(() => {
-    if ('mediaSession' in navigator && currentBookId) {
-      const activeItem = [...contents.reads, ...contents.audios].find(item => item.id === currentBookId);
-      if (activeItem) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: activeItem.title,
-          artist: (activeItem as any).author || (activeItem as any).source,
-          artwork: [{ src: activeItem.cover, sizes: '512x512', type: 'image/webp' }]
-        });
-        navigator.mediaSession.setActionHandler('play', togglePlay);
-        navigator.mediaSession.setActionHandler('pause', togglePlay);
-      }
-    }
-  }, [currentBookId, isAudioPlaying]);
-
-  // Gestion du temps persistante
+  // Gestion du temps avec sauvegarde persistante
   useEffect(() => {
     if ((isAudioPlaying || viewingFile) && timeLeft > 0) {
       const timer = setInterval(() => {
@@ -116,15 +95,12 @@ export default function Library() {
     }
   }, [isAudioPlaying, viewingFile, timeLeft]);
 
+  // Fonctions Audio
   const togglePlay = () => {
     if (bookAudioRef.current) {
-      if (bookAudioRef.current.paused) {
-        bookAudioRef.current.play();
-        setIsAudioPlaying(true);
-      } else {
-        bookAudioRef.current.pause();
-        setIsAudioPlaying(false);
-      }
+      if (isAudioPlaying) bookAudioRef.current.pause();
+      else bookAudioRef.current.play();
+      setIsAudioPlaying(!isAudioPlaying);
     }
   };
 
@@ -137,7 +113,10 @@ export default function Library() {
       const current = bookAudioRef.current.currentTime;
       const total = bookAudioRef.current.duration || 0;
       setAudioProgress((current / total) * 100);
-      setAudioTimeInfo({ current: formatAudioTime(current), total: formatAudioTime(total) });
+      setAudioTimeInfo({
+        current: formatAudioTime(current),
+        total: formatAudioTime(total)
+      });
     }
   };
 
@@ -155,16 +134,11 @@ export default function Library() {
       pressTimerRef.current = setTimeout(() => {
         setViewingFile(item.type === 'pdf' ? item.fileUrl : item.audioSrc);
         setIsPressing(false);
-      }, 1500); // 1.5s pour une meilleure réactivité mobile
+      }, 2000);
     } else {
       setShowAdvice(true);
       setTimeout(() => setShowAdvice(false), 4000);
     }
-  };
-
-  const handleActionEnd = () => {
-    setIsPressing(false);
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
   };
 
   const confirmChoice = () => {
@@ -190,9 +164,11 @@ export default function Library() {
         .cd-rotate { animation: spin 6s linear infinite; }
         .cd-pause { animation-play-state: paused; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        /* Blocage de la sélection de texte */
+        * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
       `}</style>
 
+      {/* Audios système */}
       <audio ref={ambianceRef} src={selectedAmbiance.url} loop autoPlay={!!viewingFile} />
       <audio 
         ref={bookAudioRef} 
@@ -201,10 +177,10 @@ export default function Library() {
         onTimeUpdate={updateProgress}
         onPlay={() => setIsAudioPlaying(true)}
         onPause={() => setIsAudioPlaying(false)}
-        playsInline 
       />
 
       <div className="max-w-6xl mx-auto relative z-10">
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 bg-black/30 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
           <div>
             <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-500 uppercase italic">Future Library</h1>
@@ -218,6 +194,7 @@ export default function Library() {
           </div>
         </div>
 
+        {/* Grille */}
         <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto pb-12">
           {[...contents.reads, ...contents.audios]
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
@@ -225,8 +202,17 @@ export default function Library() {
               <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-black/40 p-6 rounded-[2.2rem] border transition-all ${currentBookId === item.id ? 'border-emerald-500/40' : 'border-white/5'}`}>
                 
                 <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/20">
-                  <img src={item.cover} className={`w-full h-full object-contain p-2 drop-shadow-2xl ${item.type === 'audio' && isAudioPlaying && currentBookId === item.id ? 'cd-rotate' : ''}`} alt="" />
-                  {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
+                  {item.type === 'pdf' ? (
+                    <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
+                  ) : (
+                    <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${currentBookId === item.id && isAudioPlaying ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
+                      <img src={item.cover} className="w-full h-full object-cover" alt="" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-[#050b14] rounded-full border-4 border-white/10" />
+                      </div>
+                    </div>
+                  )}
+                  {isPressing && currentBookId === item.id && <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}
                 </div>
 
                 <h3 className="font-bold text-xl text-white italic">{item.title}</h3>
@@ -234,28 +220,37 @@ export default function Library() {
 
                 {activeTab === 'audios' && currentBookId === item.id && viewingFile && (
                   <div className="bg-white/5 p-4 rounded-2xl mb-4 border border-white/10">
-                    <div className="flex justify-between text-[10px] font-mono text-emerald-400 mb-2"><span>{audioTimeInfo.current}</span><span>{audioTimeInfo.total}</span></div>
-                    <div className="w-full h-1 bg-white/10 rounded-full mb-4 overflow-hidden"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${audioProgress}%` }} /></div>
+                    <div className="flex justify-between text-[10px] font-mono text-emerald-400 mb-2">
+                      <span>{audioTimeInfo.current}</span>
+                      <span>{audioTimeInfo.total}</span>
+                    </div>
+                    <div className="w-full h-1 bg-white/10 rounded-full mb-4 overflow-hidden">
+                      <div className="h-full bg-emerald-500 transition-all" style={{ width: `${audioProgress}%` }} />
+                    </div>
                     <div className="flex justify-center items-center gap-6">
-                      <button onClick={togglePlay} className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-black">{isAudioPlaying ? 'II' : '▶'}</button>
+                      <button onClick={() => seek(-10)} className="text-white/40 hover:text-white text-xs">-10s</button>
+                      <button onClick={togglePlay} className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-black">
+                        {isAudioPlaying ? 'II' : '▶'}
+                      </button>
+                      <button onClick={() => seek(10)} className="text-white/40 hover:text-white text-xs">+10s</button>
+                      <button onClick={() => setIsLooping(!isLooping)} className={`text-xs ${isLooping ? 'text-emerald-400' : 'text-white/20'}`}>🔁</button>
                     </div>
                   </div>
                 )}
 
                 <button 
                   onMouseDown={() => handleActionStart(item)}
-                  onMouseUp={handleActionEnd}
-                  onTouchStart={() => handleActionStart(item)}
-                  onTouchEnd={handleActionEnd}
+                  onMouseUp={() => { setIsPressing(false); if(pressTimerRef.current) clearTimeout(pressTimerRef.current); }}
                   className={`w-full py-4 rounded-2xl font-black uppercase text-[9px] transition-all ${currentBookId !== null && currentBookId !== item.id ? 'bg-white/5 text-white/20' : 'bg-emerald-500 text-black'}`}
                 >
-                  {currentBookId === item.id ? (viewingFile ? 'Ouvrir / En lecture' : 'Maintenir pour charger') : (currentBookId === null ? 'Choisir' : 'Verrouillé')}
+                  {currentBookId === item.id ? (activeTab === 'reads' ? 'Maintenir pour ouvrir' : (isAudioPlaying ? 'En lecture' : 'Maintenir pour charger')) : (currentBookId === null ? 'Choisir' : 'Verrouillé')}
                 </button>
               </div>
             ))}
         </div>
       </div>
 
+      {/* Modal Confirmation */}
       {confirmItem && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 backdrop-blur-md bg-[#050b14]/90">
           <div className="bg-[#0a121e] border border-emerald-500/30 p-8 rounded-[2.5rem] max-w-sm w-full text-center">
@@ -267,8 +262,9 @@ export default function Library() {
         </div>
       )}
 
+      {/* Liseuse PDF avec Ambiances et VOLUME */}
       {viewingFile && activeTab === 'reads' && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 bg-[#050b14]">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-500 bg-[#050b14]">
           <div className="relative w-full max-w-6xl h-full bg-black border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-white/5 flex flex-wrap justify-between items-center bg-white/5 gap-4">
               <div className="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10">
@@ -276,10 +272,42 @@ export default function Library() {
                   <button key={mode} onClick={() => setReadMode(mode as any)} className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase ${readMode === mode ? 'bg-white text-black' : 'text-white/40'}`}>{mode}</button>
                 ))}
               </div>
+              
+              <div className="flex items-center gap-4 bg-emerald-500/10 p-1 pr-4 rounded-full border border-emerald-500/20">
+                <div className="flex gap-1">
+                  {ambiances.map(amb => (
+                    <button 
+                      key={amb.id} 
+                      onClick={() => setSelectedAmbiance(amb)}
+                      className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase transition-all ${selectedAmbiance.id === amb.id ? 'bg-emerald-500 text-black' : 'text-emerald-500/50 hover:text-emerald-400'}`}
+                    >
+                      {amb.name}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="flex items-center gap-2 border-l border-emerald-500/20 pl-4">
+                  <span className="text-[10px]">🔊</span>
+                  <input 
+                    type="range" 
+                    min="0" max="1" step="0.01" 
+                    value={volume} 
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="w-16 md:w-24 accent-emerald-500 h-1 bg-white/10 rounded-full appearance-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
               <button onClick={() => setViewingFile(null)} className="bg-red-500/20 text-red-500 px-6 py-2 rounded-full text-[9px] font-black uppercase">Fermer</button>
             </div>
+
             <div className="w-full h-full relative bg-white">
-              <iframe src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`} className="w-full h-full border-none" style={{ filter: getFilterStyle() }} />
+              <iframe 
+                src={`https://docs.google.com/viewer?url=${window.location.origin}${viewingFile}&embedded=true`} 
+                className="w-full h-full border-none" 
+                style={{ filter: getFilterStyle() }} 
+              />
+              {/* Couches de protection invisibles sur l'iframe */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-transparent z-[210]" />
               <div className="absolute inset-0 bg-transparent z-[205] pointer-events-none" />
             </div>

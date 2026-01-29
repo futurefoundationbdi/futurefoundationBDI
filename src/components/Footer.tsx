@@ -11,15 +11,15 @@ const Footer = () => {
             <div className="flex items-center gap-3 mb-5">
               <img 
                 src="/futurelogo.jpg" 
-                alt="The Future Foundation BDI" 
+                alt="The Future Generation BDI" 
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border-2 border-secondary shrink-0" 
               />
               <span className="font-bold text-lg md:text-xl tracking-tight leading-tight uppercase">
-                The Future Foundation BDI
+                The Future Generation BDI
               </span>
             </div>
             <p className="text-primary-foreground/80 mb-6 max-w-md text-sm md:text-base leading-relaxed">
-              Organisation caritative dédiée à l'autonomisation des jeunes Burundais. 
+              Association caritative dédiée à l'autonomisation des jeunes Burundais. 
               La réussite de tous est notre priorité à travers l'éducation et l'intelligence financière.
             </p>
             <div className="flex gap-4">
@@ -94,14 +94,14 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-primary-foreground/10">
           <div className="bg-primary-foreground/5 p-6 rounded-2xl border border-primary-foreground/10 mb-8">
             <p className="text-[11px] md:text-xs text-primary-foreground/60 leading-relaxed text-center italic">
-              Dans le cadre de sa mission d'intérêt général, <span className="text-secondary font-bold">The Future Foundation BDI</span> propose des ressources éducatives et des synthèses d'œuvres fondatrices du développement personnel. Nous nous efforçons de respecter les droits de propriété intellectuelle. Si vous êtes ayant-droit d'une œuvre présente sur ce site et que vous souhaitez en restreindre l'accès, merci de nous contacter à <span className="text-secondary font-bold italic">thefuturefoundationbdi@gmail.com</span>.
+              Dans le cadre de sa mission d'intérêt général, <span className="text-secondary font-bold">The Future Generation BDI</span> propose des ressources éducatives et des synthèses d'œuvres fondatrices du développement personnel. Nous nous efforçons de respecter les droits de propriété intellectuelle. Si vous êtes ayant-droit d'une œuvre présente sur ce site et que vous souhaitez en restreindre l'accès, merci de nous contacter à <span className="text-secondary font-bold italic">thefuturefoundationbdi@gmail.com</span>.
             </p>
           </div>
 
           {/* Bottom Bar */}
           <div className="text-center">
             <p className="text-primary-foreground/60 text-[10px] md:text-sm tracking-wide">
-              © {new Date().getFullYear()} THE FUTURE FOUNDATION BDI. <br className="md:hidden" /> Tous droits réservés.
+              © {new Date().getFullYear()} THE FUTURE GENERATION BDI. <br className="md:hidden" /> Tous droits réservés.
             </p>
           </div>
         </div>

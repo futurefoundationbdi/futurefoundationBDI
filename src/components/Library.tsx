@@ -212,7 +212,6 @@ export default function Library() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 
-        /* EFFET AURORE DIMENSIONNELLE */
         .aurora-bg {
           background: radial-gradient(circle at top right, #051923, #020617);
           position: relative;
@@ -244,7 +243,6 @@ export default function Library() {
           100% { transform: rotate(-5deg) scale(1) translate(-2%, 5%); }
         }
 
-        /* ÉTOILES FILANTES RÉELLES */
         .shooting-star {
           position: absolute;
           left: 50%;
@@ -278,7 +276,6 @@ export default function Library() {
         }
       `}</style>
 
-      {/* Étoiles filantes positionnées de manière aléatoire */}
       <div className="shooting-star" style={{top: '10%', left: '-10%', animationDelay: '0s'}} />
       <div className="shooting-star" style={{top: '40%', left: '-20%', animationDelay: '4500ms'}} />
       <div className="shooting-star" style={{top: '20%', left: '10%', animationDelay: '8000ms'}} />
@@ -317,13 +314,17 @@ export default function Library() {
             .filter(item => item.type === (activeTab === 'reads' ? 'pdf' : 'audio'))
             .map(item => {
               const isLocked = activeTab === 'reads' && currentBookId !== null && currentBookId !== item.id && contents.reads.some(r => r.id === currentBookId);
+              
+              {/* LA LOGIQUE DE ROTATION CORRIGÉE ICI */}
+              const shouldRotate = activeTab === 'audios' && currentBookId === item.id && isAudioPlaying;
+
               return (
                 <div key={item.id} className={`min-w-[85vw] md:min-w-0 bg-white/[0.03] backdrop-blur-md p-6 rounded-[2.2rem] border transition-all duration-500 ${currentBookId === item.id ? 'border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.1)]' : 'border-white/10 hover:border-white/20'}`}>
                   <div className="relative overflow-hidden rounded-[1.8rem] mb-6 aspect-[3/4] flex items-center justify-center bg-black/40">
                     {item.type === 'pdf' ? (
                       <img src={item.cover} className="w-full h-full object-contain p-2 drop-shadow-2xl" alt="" />
                     ) : (
-                      <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${currentBookId === item.id && isAudioPlaying ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
+                      <div className={`relative w-4/5 aspect-square rounded-full border-4 border-white/10 shadow-2xl overflow-hidden ${shouldRotate ? 'cd-rotate' : 'cd-rotate cd-pause'}`}>
                         <img src={item.cover} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-12 h-12 bg-[#050b14] rounded-full border-4 border-white/10" />

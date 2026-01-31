@@ -70,7 +70,7 @@ const TeamSection = () => {
         {/* Header - Plus compact sur mobile */}
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-14">
           <span className="bg-secondary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Organigramme</span>
-          <h2 className="text-3xl md:text-6xl font-black text-primary mt-4 uppercase tracking-tighter leading-tight">Direction de la <span className="text-secondary italic">Fondation</span></h2>
+          <h2 className="text-3xl md:text-6xl font-black text-primary mt-4 uppercase tracking-tighter leading-tight">Direction de l' <span className="text-secondary italic">Association</span></h2>
           <p className="text-slate-400 text-[10px] mt-4 md:hidden font-black uppercase tracking-[0.2em] animate-pulse">
             ← Glissez pour voir l'équipe →
           </p>

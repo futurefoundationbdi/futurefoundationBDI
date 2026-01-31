@@ -152,7 +152,7 @@ const ImpactSection = () => {
                 </div>
                 
                 <div className="text-center sm:text-left">
-                  <p className="font-bold text-base md:text-xl text-white">The Future Foundation Vision</p>
+                  <p className="font-bold text-base md:text-xl text-white">The Future Generation Vision</p>
                   <p className="text-[10px] md:text-xs text-secondary font-black uppercase tracking-[0.2em] mt-1">
                     Mission Burundi • Horizon 2026
                   </p>

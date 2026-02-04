@@ -20,7 +20,7 @@ const Footer = () => {
             </div>
             <p className="text-primary-foreground/80 mb-6 max-w-md text-sm md:text-base leading-relaxed">
               Association caritative dédiée à l'autonomisation des jeunes Burundais. 
-              La réussite de tous est notre priorité à travers l'éducation et l'intelligence financière.
+              La réussite de tous est notre priorité à travers l'intelligence financière et le développement personnel.
             </p>
             <div className="flex gap-4">
               <a 

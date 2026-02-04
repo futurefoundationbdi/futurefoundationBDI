@@ -1,4 +1,5 @@
 import { useState } from "react"; 
+import { Link } from "react-router-dom"; // Import pour la navigation
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import WisdomDashboard from "@/components/WisdomDashboard";
@@ -106,8 +107,30 @@ const Index = () => {
         />
 
         {/* --- NOUVELLE SECTION BIBLIOTHÈQUE --- */}
-        {/* On la place en bas, juste avant le footer comme souhaité */}
         <Library />
+
+        {/* --- SECTION TRANSITION VERS L'AVATAR (NOUVEAU) --- */}
+        <section className="py-20 bg-gradient-to-b from-transparent to-emerald-500/5 border-t border-emerald-500/10">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-2xl mx-auto space-y-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 text-2xl animate-pulse">
+                ✨
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black text-primary uppercase italic tracking-tighter">
+                Incarne ton <span className="text-emerald-600">évolution</span>
+              </h2>
+              <p className="text-muted-foreground text-lg italic">
+                "Le savoir est une graine, l'action est sa croissance." <br/>
+                Crée ton avatar personnalisé et relève des défis pendant 31 jours.
+              </p>
+              <Link to="/mon-avatar">
+                <Button className="mt-4 px-10 py-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-black uppercase text-xs tracking-widest shadow-[0_20px_40px_rgba(16,185,129,0.2)] transition-all hover:scale-105">
+                  Initialiser mon Avatar
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
 
       </main>
 

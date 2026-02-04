@@ -52,23 +52,77 @@ const OUTFITS = [
 
 // --- COMPOSANT AVATAR (SVG MODULAIRE) ---
 const AvatarDisplay: React.FC<{ config: AvatarConfig }> = ({ config }) => {
-  // Calcul de la taille/évolution basée sur le niveau (0-10)
-  const baseScale = 0.8;
-  const levelScale = baseScale + (config.level / 10) * 0.2; // L'avatar grandit jusqu'à 20%
-  const healthOpacity = config.health / 100; // Opacité pour "faner" l'avatar
+  const levelScale = 0.8 + (config.level / 10) * 0.2;
 
-  // Position du corps pour simuler la croissance
-  const bodyYOffset = (1 - levelScale) * 100; // Plus l'avatar est grand, plus il descend
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      <svg 
+        viewBox="0 0 200 350" 
+        className="w-full h-full drop-shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-700"
+        style={{ transform: `scale(${levelScale})` }}
+      >
+        {/* OMBRE AU SOL */}
+        <ellipse cx="100" cy="330" rx="40" ry="10" fill="black" opacity="0.2" />
 
-  const getHairPath = (style: string) => {
-    switch (style) {
-      case 'short-spiky': return `M10 50 Q30 20 50 50 L40 70 L20 70 Z M60 50 Q80 20 100 50 L90 70 L70 70 Z`;
-      case 'long-wavy': return `M0 50 C20 0 80 0 100 50 C90 100 10 100 0 50 Z`;
-      case 'buzz-cut': return `M10 60 C10 20 90 20 90 60 Z`;
-      case 'braids': return `M10 50 C20 20 30 20 40 50 L30 100 Q20 120 10 100 Z M60 50 C70 20 80 20 90 50 L80 100 Q70 120 60 100 Z`;
-      default: return ''; // No hair
-    }
-  };
+        {/* CORPS TECH-FUTURISTE (Détails d'armure) */}
+        <g id="body">
+          {/* Tronc principal */}
+          <path d="M70 110 L130 110 L140 180 L125 240 L75 240 L60 180 Z" fill={config.outfit} />
+          {/* Détails d'armure (Lignes de lumière) */}
+          <path d="M85 110 L100 160 L115 110" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+          <path d="M70 180 L130 180" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="4" />
+          
+          {/* Épaules */}
+          <circle cx="65" cy="120" r="15" fill={config.outfit} />
+          <circle cx="135" cy="120" r="15" fill={config.outfit} />
+          
+          {/* Jambes avec muscles dessinés */}
+          <path d="M75 240 L65 320 L90 320 L95 240 Z" fill={config.outfit} brightness="0.8" />
+          <path d="M125 240 L135 320 L110 320 L105 240 Z" fill={config.outfit} brightness="0.8" />
+        </g>
+
+        {/* COU */}
+        <rect x="90" y="90" width="20" height="25" fill={config.skinColor} filter="brightness(0.9)" />
+
+        {/* TÊTE ET VISAGE */}
+        <g id="head">
+          <path d="M65 60 C65 20 135 20 135 60 C135 100 100 115 100 115 C100 115 65 100 65 60 Z" fill={config.skinColor} />
+          
+          {/* Yeux stylisés */}
+          <g opacity="0.8">
+            <ellipse cx="85" cy="65" rx="6" ry="3" fill="white" />
+            <circle cx="85" cy="65" r="2" fill="#333" />
+            <ellipse cx="115" cy="65" rx="6" ry="3" fill="white" />
+            <circle cx="115" cy="65" r="2" fill="#333" />
+          </g>
+
+          {/* Cheveux (Mise à jour des tracés pour éviter le bug visuel) */}
+          <path 
+            d={config.hairStyle === 'short-spiky' 
+              ? "M60 60 Q60 10 100 10 Q140 10 140 60 L130 50 Q100 30 70 50 Z" 
+              : config.hairStyle === 'long-wavy'
+              ? "M60 60 C40 40 40 120 60 130 M140 60 C160 40 160 120 140 130 M60 60 C60 10 140 10 140 60 Z"
+              : "M65 50 C65 25 135 25 135 50 Z"} 
+            fill={config.hairColor} 
+          />
+        </g>
+
+        {/* EFFET D'EVOLUTION (Aura dorée si niveau > 5) */}
+        {config.level > 5 && (
+          <g opacity="0.3">
+            <circle cx="100" cy="150" r="100" fill="url(#auraGradient)" />
+            <defs>
+              <radialGradient id="auraGradient">
+                <stop offset="60%" stopColor="transparent" />
+                <stop offset="100%" stopColor="#10b981" />
+              </radialGradient>
+            </defs>
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+};
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">

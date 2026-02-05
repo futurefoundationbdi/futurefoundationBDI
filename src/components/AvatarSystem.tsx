@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { QUEST_POOL } from '../data/SoloQuests'; // Importation depuis ton nouveau dossier
 
 const AVATAR_ARCHETYPES = [
   { id: 'f1', seed: 'Aneka', label: 'La Stratège', gender: 'F' },
@@ -20,7 +21,6 @@ interface AvatarSystemProps {
 }
 
 export default function AvatarSystem({ onBack }: AvatarSystemProps) {
-  // NAVIGATION STATES
   const [view, setView] = useState<'hall' | 'solo'>('hall'); 
   const [step, setStep] = useState(1);
   const [selectedId, setSelectedId] = useState('f1');
@@ -29,7 +29,6 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   const [timeLeft, setTimeLeft] = useState<string>("24:00:00");
   const [history, setHistory] = useState<any[]>([]);
 
-  // 1. CHARGEMENT
   useEffect(() => {
     const savedAvatar = localStorage.getItem('future_library_avatar');
     const savedHistory = localStorage.getItem('quest_history');
@@ -40,7 +39,6 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
     if (savedHistory) setHistory(JSON.parse(savedHistory));
   }, []);
 
-  // 2. CHRONO SOLO
   useEffect(() => {
     const timer = setInterval(() => {
       if (!avatarData || view !== 'solo' || step !== 2) return;
@@ -61,7 +59,35 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
     return () => clearInterval(timer);
   }, [avatarData, view, step]);
 
-  // 3. ACTIONS
+  // --- LOGIQUE DE SÉLECTION DES QUÊTES ---
+  const getDailyQuests = () => {
+    if (!avatarData) return [];
+    const allQuests = [...QUEST_POOL.mental, ...QUEST_POOL.physique, ...QUEST_POOL.discipline];
+    const level = avatarData.level;
+    
+    let count = 1;
+    if (level > 20) {
+      // Niveau 3 : 4 à 5 défis
+      count = (level % 2 === 0) ? 4 : 5;
+    } else if (level > 10) {
+      // Niveau 2 : 3 à 4 défis
+      count = (level % 2 === 0) ? 3 : 4;
+    } else {
+      // Niveau 1 : 1 à 2 défis
+      count = (level % 2 === 0) ? 1 : 2;
+    }
+
+    // Utilisation du level comme index de départ pour varier chaque jour sans répétition immédiate
+    const startIndex = (level * 3) % allQuests.length;
+    let selected = allQuests.slice(startIndex, startIndex + count);
+    
+    // Sécurité si slice dépasse la longueur du tableau
+    if (selected.length < count) {
+      selected = [...selected, ...allQuests.slice(0, count - selected.length)];
+    }
+    return selected;
+  };
+
   const handleCreate = () => {
     if (!userName.trim()) return alert("Hé ! Donne-nous ton nom.");
     const archetype = AVATAR_ARCHETYPES.find(a => a.id === selectedId);
@@ -80,7 +106,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   };
 
   const completeQuest = () => {
-    const messages = ["BIEN JOUÉ SPARTAN !", "SYSTÈME SATISFAIT.", "UN PAS DE PLUS VERS LA LÉGENDE.", "DISCIPLINE DE FER."];
+    const messages = ["BIEN JOUÉ SPARTAN !", "SYSTÈME SATISFAIT.", "DISCIPLINE DE FER."];
     const now = new Date();
     const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const dateString = now.toLocaleDateString();
@@ -116,7 +142,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
     const { missedDays, level } = avatarData;
     const grayscale = (missedDays / 7) * 100;
     const brightness = 1 - (missedDays * 0.12);
-    const glowLevel = Math.min(level * 2, 40); // L'aura augmente avec le niveau
+    const glowLevel = Math.min(level * 2, 40);
     
     let auraColor = 'rgba(6, 182, 212, 0.3)'; 
     if (level > 10) auraColor = 'rgba(59, 130, 246, 0.5)';
@@ -140,50 +166,40 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
         .hall-card:hover { border-color: #06b6d4; background: rgba(6, 182, 212, 0.05); transform: translateY(-5px); }
       `}</style>
 
-      {/* BACK BUTTON */}
       <button onClick={view === 'hall' ? onBack : () => setView('hall')} className="absolute top-8 left-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-cyan-400 transition-all z-50">
         ← {view === 'hall' ? 'Quitter' : 'Retour au Hall'}
       </button>
 
       <div className="max-w-6xl w-full">
-        
-        {/* --- VUE 1 : LE HALL DES CHASSEURS --- */}
         {view === 'hall' && (
           <div className="animate-in fade-in zoom-in-95 duration-700">
             <div className="text-center mb-16 space-y-4">
               <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase">Hall des <span className="text-cyan-500">Chasseurs</span></h2>
               <p className="text-white/30 text-xs font-bold tracking-[0.5em] uppercase text-center">Sélectionnez votre contrat de discipline</p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* SOLO */}
               <div onClick={() => setView('solo')} className="hall-card p-10 rounded-[40px] cursor-pointer group">
                 <div className="text-cyan-500 font-black text-[10px] tracking-widest uppercase mb-6 italic">Accès Gratuit</div>
                 <h3 className="text-3xl font-black uppercase italic mb-4">Le Monarque</h3>
                 <p className="text-white/40 text-sm leading-relaxed mb-8">Défie tes propres limites. 31 jours pour forger ton destin seul.</p>
                 <div className="text-cyan-400 font-black text-[10px] group-hover:translate-x-3 transition-transform uppercase tracking-widest">Entrer dans l'Arène →</div>
               </div>
-
-              {/* ESCOUADE (BLOQUÉ) */}
               <div className="hall-card p-10 rounded-[40px] opacity-40 grayscale relative overflow-hidden">
                 <div className="absolute top-6 right-8 bg-cyan-600 text-black text-[8px] px-3 py-1 rounded-full font-black uppercase">Premium</div>
                 <h3 className="text-3xl font-black uppercase italic mb-4">Escouade</h3>
-                <p className="text-white/40 text-sm leading-relaxed mb-8">Coopération de 3 à 10 membres. La santé est partagée. Ne trahis pas tes frères.</p>
+                <p className="text-white/40 text-sm leading-relaxed mb-8">Coopération de 3 à 10 membres. Santé partagée.</p>
                 <div className="text-white/20 font-black text-[10px] uppercase tracking-widest italic">Bientôt disponible...</div>
               </div>
-
-              {/* GUILDE (BLOQUÉ) */}
               <div className="hall-card p-10 rounded-[40px] opacity-40 grayscale relative">
                 <div className="absolute top-6 right-8 bg-red-600 text-white text-[8px] px-3 py-1 rounded-full font-black uppercase">Guerre</div>
                 <h3 className="text-3xl font-black uppercase italic mb-4">La Guilde</h3>
-                <p className="text-white/40 text-sm leading-relaxed mb-8">Compétition nationale. Domine le classement du Burundi avec ton clan.</p>
+                <p className="text-white/40 text-sm leading-relaxed mb-8">Compétition nationale. Domine le classement du Burundi.</p>
                 <div className="text-white/20 font-black text-[10px] uppercase tracking-widest italic">Bientôt disponible...</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* --- VUE 2 : MODE SOLO --- */}
         {view === 'solo' && (
           <>
             {step === 1 ? (
@@ -207,7 +223,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
               </div>
             ) : (
               <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-10 items-start animate-in zoom-in-95 duration-500">
-                {/* HISTORIQUE */}
+                {/* GAUCHE : HISTORIQUE */}
                 <div className="bg-white/5 border border-white/10 p-6 rounded-3xl h-[450px] flex flex-col">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-500 border-b border-white/10 pb-4 mb-4 italic">Registre du Système</h4>
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
@@ -224,8 +240,8 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                   </div>
                 </div>
 
-                {/* CENTRE : AVATAR & CHRONO */}
-                <div className="flex flex-col items-center space-y-10">
+                {/* CENTRE : AVATAR, CHRONO & LISTE DE QUÊTES */}
+                <div className="flex flex-col items-center space-y-8">
                   <div className="text-center">
                     <div className="text-6xl md:text-8xl font-black text-cyan-400 font-mono tracking-tighter drop-shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-pulse">
                       {timeLeft}
@@ -233,8 +249,26 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                     <p className="text-[9px] font-bold text-cyan-500/40 uppercase tracking-[0.5em] mt-4">Délai avant pénalité</p>
                   </div>
 
+                  {/* NOUVEAU : BLOC DE QUÊTES SUBDIVISÉ */}
+                  <div className="w-full max-w-sm bg-cyan-500/5 border border-cyan-500/20 p-6 rounded-3xl backdrop-blur-sm">
+                    <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+                      <h5 className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.3em]">Mission de Rang {avatarData.level > 20 ? 'S' : avatarData.level > 10 ? 'A' : 'B'}</h5>
+                      <span className="text-[9px] text-white/30 font-bold uppercase">{getDailyQuests().length} Objectifs</span>
+                    </div>
+                    <ul className="space-y-3">
+                      {getDailyQuests().map((quest, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <div className="w-3 h-3 rounded-sm border border-cyan-500/40 flex-shrink-0 mt-1 flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-cyan-500 rounded-px opacity-60" />
+                          </div>
+                          <p className="text-[11px] font-medium text-white/80 leading-tight italic">{quest}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
                   <div className="relative">
-                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData.seed}`} style={visuals.imgStyle} className="w-64 h-64 md:w-80 md:h-80 relative z-10" />
+                    <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData.seed}`} style={visuals.imgStyle} className="w-56 h-56 md:w-64 md:h-64 relative z-10" />
                     {avatarData.missedDays > 0 && (
                       <div className="absolute top-0 right-0 bg-red-600 px-4 py-1 rounded-full text-[10px] font-black animate-bounce shadow-2xl z-20 italic">AVATAR FANÉ</div>
                     )}
@@ -243,7 +277,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                   <button onClick={completeQuest} className="w-full max-w-xs py-5 bg-cyan-600 text-black font-black uppercase text-[11px] tracking-[0.2em] rounded-2xl hover:bg-cyan-400 hover:scale-105 transition-all shadow-xl shadow-cyan-500/40 active:scale-95">Soumettre le Rapport</button>
                 </div>
 
-                {/* STATS */}
+                {/* DROITE : STATS */}
                 <div className="space-y-6">
                   <div className="bg-white/5 border border-white/10 p-8 rounded-3xl text-center space-y-4">
                     <h3 className="text-4xl font-black italic uppercase tracking-tighter text-white">{avatarData.name}</h3>
@@ -258,7 +292,6 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                       </div>
                     </div>
                   </div>
-
                   <div className="p-6 bg-white/5 border border-white/10 rounded-3xl italic text-[11px] text-white/40 text-center leading-relaxed uppercase tracking-widest">
                     {avatarData.missedDays >= 7 
                       ? "Sujet éliminé. La volonté a fait défaut." 

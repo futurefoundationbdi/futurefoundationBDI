@@ -4,17 +4,17 @@ import React, { useState, useEffect } from 'react';
 // Mise à jour des seeds pour une distinction claire Homme/Femme et labels réalistes
 const AVATAR_ARCHETYPES = [
   // FILLES (Identité visuelle claire)
-  { id: 'f1', seed: 'Aneka', label: 'La Stratège', gender: 'F' },
-  { id: 'f2', seed: 'Bella', label: 'La Rebelle', gender: 'F' },
+  { id: 'f1', seed: 'Aneka', label: 'Le Stratège', gender: 'F' },
+  { id: 'f2', seed: 'Bella', label: 'a Geekette', gender: 'F' },
   { id: 'f3', seed: 'Clara', label: 'L\'Ambitieuse', gender: 'F' },
   { id: 'f4', seed: 'Eden', label: 'La Râleuse', gender: 'F' },
-  { id: 'f5', seed: 'Fiona', label: 'La Geekette', gender: 'F' },
-  { id: 'f6', seed: 'Grace', label: 'L\'Influenceuse', gender: 'F' },
-  { id: 'f7', seed: 'Jocelyn', label: 'La Mystérieuse', gender: 'F' },
+  { id: 'f5', seed: 'Fiona', label: 'L\'Influenceuse', gender: 'F' },
+  { id: 'f6', seed: 'Grace', label: 'Le Visionnaire', gender: 'F' },
+  { id: 'f7', seed: 'Jocelyn', label: 'Le Charmeur', gender: 'F' },
   // GARÇONS (Seeds avec traits masculins marqués : barbe, mâchoire, coiffure)
   { id: 'm1', seed: 'Nolan', label: 'Le Charmeur', gender: 'M' },
-  { id: 'm2', seed: 'Ryker', label: 'Le Bosseur', gender: 'M' },
-  { id: 'm3', seed: 'Caleb', label: 'Le Visionnaire', gender: 'M' },
+  { id: 'm2', seed: 'Ryker', label: 'La Rebelle', gender: 'M' },
+  { id: 'm3', seed: 'Caleb', label: 'La flemmarde', gender: 'M' },
   { id: 'm4', seed: 'Bastian', label: 'Le Comics', gender: 'M' },
   { id: 'm5', seed: 'Gage', label: 'L\'Audacieux', gender: 'M' },
 ];

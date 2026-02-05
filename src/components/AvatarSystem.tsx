@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
 // --- CONFIGURATION DES ARCHÉTYPES (7 Filles, 5 Garçons) ---
+// Mise à jour des seeds pour une distinction claire Homme/Femme et labels réalistes
 const AVATAR_ARCHETYPES = [
-  // FILLES
-  { id: 'f1', seed: 'Aneka', label: 'L\'Érudite', gender: 'F' },
-  { id: 'f2', seed: 'Bella', label: 'La Guerrière', gender: 'F' },
-  { id: 'f3', seed: 'Clara', label: 'La Visionnaire', gender: 'F' },
-  { id: 'f4', seed: 'Daisy', label: 'L\'Exploratrice', gender: 'F' },
-  { id: 'f5', seed: 'Eden', label: 'La Sage', gender: 'F' },
-  { id: 'f6', seed: 'Fiona', label: 'La Tech', gender: 'F' },
-  { id: 'f7', seed: 'Grace', label: 'L\'Artiste', gender: 'F' },
-  // GARÇONS
-  { id: 'm1', seed: 'Felix', label: 'Le Mentor', gender: 'M' },
-  { id: 'm2', seed: 'George', label: 'Le Bâtisseur', gender: 'M' },
-  { id: 'm3', seed: 'Hugo', label: 'Le Stratège', gender: 'M' },
-  { id: 'm4', seed: 'Ivan', label: 'Le Veilleur', gender: 'M' },
-  { id: 'm5', seed: 'Jack', label: 'L\'Audacieux', gender: 'M' },
+  // FILLES (Identité visuelle claire)
+  { id: 'f1', seed: 'Aneka', label: 'La Stratège', gender: 'F' },
+  { id: 'f2', seed: 'Bella', label: 'La Rebelle', gender: 'F' },
+  { id: 'f3', seed: 'Clara', label: 'L\'Ambitieuse', gender: 'F' },
+  { id: 'f4', seed: 'Eden', label: 'La Râleuse', gender: 'F' },
+  { id: 'f5', seed: 'Fiona', label: 'La Geekette', gender: 'F' },
+  { id: 'f6', seed: 'Grace', label: 'L\'Influenceuse', gender: 'F' },
+  { id: 'f7', seed: 'Jocelyn', label: 'La Mystérieuse', gender: 'F' },
+  // GARÇONS (Seeds avec traits masculins marqués : barbe, mâchoire, coiffure)
+  { id: 'm1', seed: 'Nolan', label: 'Le Charmeur', gender: 'M' },
+  { id: 'm2', seed: 'Ryker', label: 'Le Bosseur', gender: 'M' },
+  { id: 'm3', seed: 'Caleb', label: 'Le Visionnaire', gender: 'M' },
+  { id: 'm4', seed: 'Bastian', label: 'Le Comics', gender: 'M' },
+  { id: 'm5', seed: 'Gage', label: 'L\'Audacieux', gender: 'M' },
 ];
 
 interface AvatarSystemProps {
@@ -23,12 +24,11 @@ interface AvatarSystemProps {
 }
 
 export default function AvatarSystem({ onBack }: AvatarSystemProps) {
-  const [step, setStep] = useState(1); // 1: Sélection, 2: Dashboard
+  const [step, setStep] = useState(1); 
   const [selectedId, setSelectedId] = useState('f1');
   const [userName, setUserName] = useState("");
   const [avatarData, setAvatarData] = useState<any>(null);
 
-  // Charger les données existantes
   useEffect(() => {
     const saved = localStorage.getItem('future_library_avatar');
     if (saved) {
@@ -38,8 +38,6 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
     }
   }, []);
 
-  // --- LOGIQUE DE DÉGRADATION VISUELLE ---
-  // Calcule les filtres CSS selon le nombre de jours manqués
   const getAvatarStyle = (missedDays: number) => {
     if (missedDays >= 7) {
       return { 
@@ -49,9 +47,9 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
       };
     }
     
-    const grayscale = (missedDays / 7) * 100; // De 0 à 100% de gris
-    const brightness = 1 - (missedDays * 0.12); // Perd ~12% de lumière par jour
-    const sepia = missedDays * 10; // Devient un peu "vieilli/jauni"
+    const grayscale = (missedDays / 7) * 100;
+    const brightness = 1 - (missedDays * 0.12);
+    const sepia = missedDays * 10;
     
     return {
       filter: `grayscale(${grayscale}%) brightness(${brightness}) sepia(${sepia}%)`,
@@ -68,8 +66,9 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
       name: userName,
       seed: archetype?.seed,
       label: archetype?.label,
+      gender: archetype?.gender,
       level: 1,
-      missedDays: 0, // Simuler pour le test : change cette valeur pour voir l'effet
+      missedDays: 0, 
       health: 100,
       createdAt: new Date().toISOString()
     };
@@ -80,7 +79,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   };
 
   const resetAvatar = () => {
-    if(window.confirm("Ton avatar va être supprimé. Es-tu sûr ?")) {
+    if(window.confirm("Ton avatar va être supprimé et ton cycle de 31 jours sera réinitialisé. Es-tu sûr ?")) {
       localStorage.removeItem('future_library_avatar');
       setStep(1);
       setAvatarData(null);
@@ -90,17 +89,15 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   return (
     <div className="min-h-screen bg-[#050505] text-white p-4 md:p-10 flex flex-col items-center justify-center">
       
-      {/* BOUTON RETOUR */}
       <button 
         onClick={onBack}
-        className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-emerald-500 transition-all"
+        className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-emerald-500 transition-all z-50"
       >
         ← Retour au portail
       </button>
 
       <div className="max-w-6xl w-full">
         
-        {/* --- ÉTAPE 1 : CRÉATION ET GALERIE --- */}
         {step === 1 && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <div className="text-center space-y-4">
@@ -108,11 +105,10 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                 Choisis ton <span className="text-emerald-500">ADN numérique</span>
               </h2>
               <p className="text-white/40 text-sm max-w-md mx-auto italic">
-                Séléctionne l'avatar qui portera ta progression pendant les 31 prochains jours.
+                Séléctionne l'archétype qui te ressemble le plus pour entamer ta discipline.
               </p>
             </div>
 
-            {/* Grille des 12 avatars */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {AVATAR_ARCHETYPES.map((arc) => (
                 <div 
@@ -138,7 +134,6 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
               ))}
             </div>
 
-            {/* Input Nom */}
             <div className="max-w-md mx-auto flex flex-col gap-4">
               <input 
                 type="text" 
@@ -157,12 +152,10 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
           </div>
         )}
 
-        {/* --- ÉTAPE 2 : DASHBOARD / ÉTAT DE L'AVATAR --- */}
         {step === 2 && avatarData && (
           <div className="max-w-2xl mx-auto text-center space-y-8 animate-in zoom-in-95 duration-700">
             
             <div className="relative">
-              {/* Image de l'avatar avec les filtres de dégradation */}
               <div className="relative z-10">
                 <img 
                   src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData.seed}&backgroundColor=transparent`} 
@@ -171,16 +164,14 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                 />
               </div>
 
-              {/* Indicateur de "Danger" si manqué */}
               {avatarData.missedDays > 0 && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                  <div className="bg-red-600/90 text-white font-black px-6 py-2 rounded-full text-xs uppercase animate-bounce shadow-2xl">
-                    Attention : {avatarData.missedDays} jour(s) manqué(s)
+                  <div className="bg-red-600/90 text-white font-black px-6 py-2 rounded-full text-[10px] uppercase animate-bounce shadow-2xl tracking-widest">
+                    ALERTE : {avatarData.missedDays} JOUR(S) D'ABSENCE
                   </div>
                 </div>
               )}
 
-              {/* Aura derrière l'avatar (disparaît si fané) */}
               <div 
                 className={`absolute inset-0 bg-emerald-500/20 blur-[100px] rounded-full -z-10 transition-opacity duration-1000 ${avatarData.missedDays > 3 ? 'opacity-0' : 'opacity-100'}`}
               />
@@ -195,46 +186,45 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                   {avatarData.label}
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-                  Jour 1 / 31
+                  Phase d'Éveil
                 </span>
               </div>
             </div>
 
-            {/* Barre de Vitalité */}
             <div className="max-w-xs mx-auto space-y-2">
               <div className="flex justify-between text-[9px] font-black uppercase tracking-widest mb-1">
-                <span>Vitalité</span>
+                <span>Vitalité de l'être</span>
                 <span className={avatarData.missedDays > 4 ? 'text-red-500' : 'text-emerald-500'}>
-                  {Math.max(0, 100 - (avatarData.missedDays * 14.2))}%
+                  {Math.max(0, 100 - (avatarData.missedDays * 14.2)).toFixed(0)}%
                 </span>
               </div>
               <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <div 
-                  className={`h-full transition-all duration-1000 ${avatarData.missedDays > 4 ? 'bg-red-600' : 'bg-emerald-500'}`}
+                  className={`h-full transition-all duration-1000 ${avatarData.missedDays > 4 ? 'bg-red-600 shadow-[0_0_10px_#ef4444]' : 'bg-emerald-500 shadow-[0_0_10px_#10b981]'}`}
                   style={{ width: `${Math.max(0, 100 - (avatarData.missedDays * 14.2))}%` }}
                 />
               </div>
-              <p className="text-[9px] text-white/20 italic mt-4">
+              <p className="text-[10px] text-white/20 italic mt-4 leading-relaxed">
                 {avatarData.missedDays >= 7 
-                  ? "L'avatar est sur le point de s'effacer de la matrice..." 
+                  ? "Dissolution imminente. La discipline a été rompue." 
                   : avatarData.missedDays > 0 
-                  ? "L'avatar fane. Complète un défi pour restaurer ses couleurs." 
-                  : "Ton avatar est vibrant et prêt pour l'ascension."}
+                  ? "Ton double s'efface. Agis maintenant pour restaurer ton éclat." 
+                  : "Ton avatar est en pleine possession de ses moyens."}
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-8 justify-center">
                <button 
                 onClick={onBack}
-                className="px-8 py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-emerald-500 transition-all"
+                className="px-8 py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-emerald-500 transition-all active:scale-95"
                >
-                Aller à la Bibliothèque
+                Accéder aux Défis
                </button>
                <button 
                 onClick={resetAvatar}
-                className="px-8 py-4 bg-white/5 border border-white/10 text-white/40 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all"
+                className="px-8 py-4 bg-white/5 border border-white/10 text-white/40 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95"
                >
-                Réinitialiser
+                Réinitialiser l'ADN
                </button>
             </div>
           </div>

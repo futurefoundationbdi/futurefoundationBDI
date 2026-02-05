@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Copy, Users, LogOut, UserPlus } from 'lucide-react';
+import { Copy, Users, LogOut } from 'lucide-react';
 
 const QUICK_EMOJIS = ["🔥", "💪", "🎯", "🚀", "👑", "🤝", "☕", "📍"];
 
@@ -27,8 +27,6 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // --- LOGIQUE D'AVATAR ---
-  // On récupère l'avatar. Si null, on force la création.
   const [mySoloData, setMySoloData] = useState(() => {
     const saved = localStorage.getItem('future_library_avatar');
     return saved ? JSON.parse(saved) : null;
@@ -36,56 +34,84 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
 
   const [tempName, setTempName] = useState("");
 
-  // Fonction pour créer l'avatar si nouveau joueur
-  const createAvatar = () => {
+  // --- LOGIQUE D'AVATAR (AVEC VÉRIFICATION SUPABASE) ---
+  const createAvatar = async () => {
     if (!tempName.trim()) return;
+    
+    setError("Vérification...");
+    
+    const { data: existing } = await supabase
+      .from('squad_members')
+      .select('user_name')
+      .eq('user_name', tempName.trim())
+      .maybeSingle();
+
+    if (existing) {
+      setError("NOM DE CODE DÉJÀ RÉSERVÉ");
+      return;
+    }
+
     const newAvatar = {
-      name: tempName,
-      seed: tempName + Math.floor(Math.random() * 1000), // Graine aléatoire basée sur le nom
+      name: tempName.trim(),
+      seed: tempName.trim() + Math.floor(Math.random() * 1000),
       level: 1
     };
+    
     localStorage.setItem('future_library_avatar', JSON.stringify(newAvatar));
     setMySoloData(newAvatar);
+    setError("");
   };
 
-  // --- LOGIQUE SUPABASE ---
-
+  // --- LOGIQUE SUPABASE (TEMPS RÉEL UNIFIÉ) ---
   useEffect(() => {
     if (!squadId || !mySoloData) return;
 
-    const syncMembers = async () => {
-      // S'ajouter à la liste des membres actifs
+    const fetchMembers = async () => {
+      const { data } = await supabase
+        .from('squad_members')
+        .select('user_name, user_seed')
+        .eq('squad_id', squadId);
+      if (data) setMembers(data);
+    };
+
+    const setupSquad = async () => {
       await supabase.from('squad_members').upsert({
         squad_id: squadId,
         user_name: mySoloData.name,
         user_seed: mySoloData.seed,
         last_seen: new Date().toISOString()
-      }, { onConflict: 'squad_id,user_name' });
+      }, { onConflict: 'user_name' });
 
-      // Récupérer la liste des membres
-      const { data } = await supabase.from('squad_members').select('user_name, user_seed').eq('squad_id', squadId);
-      if (data) setMembers(data);
+      fetchMembers();
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('squad_id', squadId)
+        .order('created_at', { ascending: true });
+      if (msgs) setMessages(msgs);
     };
 
-    syncMembers();
+    setupSquad();
 
-    // Temps réel : Nouveaux membres et nouveaux messages
-    const memberChannel = supabase.channel(`members_${squadId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'squad_members', filter: `squad_id=eq.${squadId}` }, syncMembers)
+    const channel = supabase.channel(`squad_${squadId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'squad_members', 
+        filter: `squad_id=eq.${squadId}` 
+      }, () => fetchMembers())
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'messages', 
+        filter: `squad_id=eq.${squadId}` 
+      }, (payload) => {
+        setMessages(prev => [...prev, payload.new as Message]);
+      })
       .subscribe();
-
-    const msgChannel = supabase.channel(`msgs_${squadId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `squad_id=eq.${squadId}` }, 
-      (payload) => setMessages(prev => [...prev, payload.new as Message]))
-      .subscribe();
-
-    // Charger historique
-    supabase.from('messages').select('*').eq('squad_id', squadId).order('created_at', { ascending: true })
-      .then(({ data }) => data && setMessages(data));
 
     return () => {
-      supabase.removeChannel(memberChannel);
-      supabase.removeChannel(msgChannel);
+      supabase.removeChannel(channel);
     };
   }, [squadId, mySoloData]);
 
@@ -94,12 +120,13 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
   }, [messages]);
 
   // --- ACTIONS ---
-
   const joinSquad = async (id: string) => {
     const code = id.trim().toUpperCase() || Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    // Vérifier si le groupe est plein (max 6)
-    const { count } = await supabase.from('squad_members').select('*', { count: 'exact', head: true }).eq('squad_id', code);
+    const { count } = await supabase
+      .from('squad_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('squad_id', code);
     
     if (count && count >= 6) {
       setError("UNITÉ SATURÉE (MAX 6)");
@@ -116,22 +143,21 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     alert("Code copié !");
   };
 
-  // --- RENDU ---
-
-  // ÉCRAN 1 : CRÉATION D'AVATAR (Si nouveau)
+  // --- RENDU (ÉCRANS) ---
   if (!mySoloData) {
     return (
       <div className="flex flex-col items-center justify-center p-6 space-y-8 min-h-[60vh] animate-in fade-in zoom-in duration-500">
         <div className="text-center space-y-2">
           <h2 className="text-4xl font-black italic uppercase text-purple-500">Nouveau Chasseur</h2>
-          <p className="text-[10px] text-white/40 uppercase tracking-widest">Crée ton identité avant la coalition</p>
+          <p className="text-[10px] text-white/40 uppercase tracking-widest">Crée ton identité unique</p>
         </div>
         <div className="w-full max-w-sm space-y-4">
           <input 
             type="text" placeholder="NOM DE CODE..." value={tempName}
             onChange={(e) => setTempName(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl text-center font-bold outline-none focus:border-purple-500 uppercase"
+            className={`w-full bg-white/5 border ${error ? 'border-red-500' : 'border-white/10'} p-5 rounded-3xl text-center font-bold outline-none focus:border-purple-500 uppercase transition-all`}
           />
+          {error && <p className="text-red-500 text-[10px] font-bold text-center animate-pulse italic uppercase">⚠️ {error}</p>}
           <button onClick={createAvatar} className="w-full py-5 bg-purple-600 text-white font-black rounded-3xl shadow-lg shadow-purple-900/40">
             INITIALISER L'AVATAR
           </button>
@@ -140,7 +166,6 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     );
   }
 
-  // ÉCRAN 2 : REJOINDRE UNE UNITÉ
   if (!squadId) {
     return (
       <div className="flex flex-col items-center justify-center p-6 space-y-8 min-h-[60vh] animate-in zoom-in duration-500">
@@ -154,7 +179,7 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
             onChange={(e) => setInputCode(e.target.value.toUpperCase())}
             className="w-full bg-white/5 border border-white/10 p-5 rounded-3xl text-center font-bold outline-none focus:border-purple-500"
           />
-          {error && <p className="text-red-500 text-[10px] font-bold text-center animate-pulse">{error}</p>}
+          {error && <p className="text-red-500 text-[10px] font-bold text-center animate-pulse uppercase italic">{error}</p>}
           <button onClick={() => joinSquad(inputCode)} className="w-full py-5 bg-purple-600 text-white font-black rounded-3xl">
             INFILTRER
           </button>
@@ -167,49 +192,38 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     );
   }
 
-  // ÉCRAN 3 : INTERFACE DE GROUPE (DYNAMIQUE)
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10 h-auto lg:h-[80vh] animate-in fade-in duration-700">
-      
-      {/* GAUCHE : MEMBRES RÉELS */}
       <div className="lg:col-span-4 space-y-4 flex flex-col">
         <div className="bg-white/5 border border-white/10 p-6 rounded-[40px] shadow-xl">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xs font-black uppercase text-purple-400 italic">UNITÉ: {squadId}</h3>
-            <button onClick={copyInvite} className="p-2 bg-purple-500/10 rounded-full text-purple-400 hover:bg-purple-500/20 transition-all" title="Inviter des amis">
+            <button onClick={copyInvite} className="p-2 bg-purple-500/10 rounded-full text-purple-400 hover:bg-purple-500/20 transition-all">
               <Copy size={16} />
             </button>
           </div>
-
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <Users size={12} className="text-white/20" />
               <span className="text-[9px] font-black uppercase text-white/20">Membres Actifs ({members.length}/6)</span>
             </div>
             {members.map((m, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all">
+              <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all animate-in slide-in-from-left-2 duration-300">
                 <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${m.user_seed}`} className="w-10 h-10 rounded-xl bg-purple-500/10 border border-white/5" alt="avatar" />
-                <div className="flex-1">
-                  <div className="text-[10px] font-black uppercase">
-                    {m.user_name} {m.user_name === mySoloData.name && <span className="text-purple-500 ml-1">(TOI)</span>}
-                  </div>
-                  <div className="h-1 w-full bg-white/10 rounded-full mt-1 overflow-hidden">
-                    <div className="h-full bg-purple-500" style={{ width: '30%' }} />
-                  </div>
+                <div className="flex-1 text-[10px] font-black uppercase">
+                  {m.user_name} {m.user_name === mySoloData.name && <span className="text-purple-500 ml-1">(TOI)</span>}
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        <button onClick={() => {localStorage.removeItem('squad_id'); setSquadId(null);}} className="text-[9px] font-black text-white/10 hover:text-red-500/50 transition-colors uppercase italic text-center py-2 flex items-center justify-center gap-2">
+        <button onClick={() => {localStorage.removeItem('squad_id'); setSquadId(null);}} className="text-[9px] font-black text-white/10 hover:text-red-500 uppercase py-2 flex items-center justify-center gap-2 transition-colors">
           <LogOut size={12} /> Quitter l'unité
         </button>
       </div>
 
-      {/* DROITE : CHAT SOCIAL */}
-      <div className="lg:col-span-8 flex flex-col bg-white/5 border border-white/10 rounded-[40px] overflow-hidden shadow-2xl relative">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6 custom-scrollbar bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent">
+      <div className="lg:col-span-8 flex flex-col bg-white/5 border border-white/10 rounded-[40px] overflow-hidden shadow-2xl">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full opacity-10 space-y-4">
               <span className="text-4xl text-purple-500 italic font-black uppercase">Prêt ?</span>
@@ -220,11 +234,11 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
             <div key={msg.id} className={`flex items-end gap-3 ${msg.user_name === mySoloData.name ? 'flex-row-reverse' : 'flex-row'} animate-in slide-in-from-bottom-2 duration-300`}>
               <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${msg.user_seed}`} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10" alt="av" />
               <div className={`flex flex-col max-w-[80%] ${msg.user_name === mySoloData.name ? 'items-end' : 'items-start'}`}>
-                <span className="text-[8px] font-black text-white/20 uppercase mb-1 px-1">{msg.user_name}</span>
-                <div className={`p-4 rounded-2xl text-xs shadow-xl ${
+                <span className="text-[8px] font-black text-white/20 uppercase mb-1">{msg.user_name}</span>
+                <div className={`p-4 rounded-2xl text-xs ${
                   msg.user_name === mySoloData.name 
-                    ? 'bg-purple-600 text-white rounded-br-none border border-purple-400/30' 
-                    : 'bg-white/10 text-white/90 rounded-bl-none border border-white/5'
+                    ? 'bg-purple-600 text-white rounded-br-none' 
+                    : 'bg-white/10 text-white/90 rounded-bl-none'
                 }`}>
                   {msg.text}
                 </div>
@@ -233,7 +247,19 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
           ))}
         </div>
 
-        {/* Barre de saisie */}
+        {/* BARRE D'EMOJIS RAPIDES */}
+        <div className="px-4 py-2 bg-black/40 border-t border-white/5 flex gap-2 overflow-x-auto no-scrollbar">
+          {QUICK_EMOJIS.map(emoji => (
+            <button
+              key={emoji}
+              onClick={() => setNewMessage(prev => prev + emoji)}
+              className="p-2 hover:bg-white/10 rounded-xl transition-colors text-lg"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
         <form onSubmit={(e) => {
           e.preventDefault();
           if (!newMessage.trim()) return;
@@ -249,7 +275,7 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
             placeholder="COORDONNER, PLANIFIER..."
             className="flex-1 bg-white/5 border border-white/10 p-4 rounded-2xl text-xs font-bold outline-none focus:border-purple-500 uppercase"
           />
-          <button type="submit" className="bg-purple-600 px-8 rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-purple-500 transition-all">
+          <button type="submit" className="bg-purple-600 px-8 rounded-2xl font-black text-[10px] uppercase hover:bg-purple-500 transition-all shadow-lg">
             Envoyer
           </button>
         </form>

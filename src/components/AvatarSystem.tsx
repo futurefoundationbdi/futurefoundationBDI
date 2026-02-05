@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// --- CONFIGURATION DES ARCHÉTYPES ---
 const AVATAR_ARCHETYPES = [
   { id: 'f1', seed: 'Aneka', label: 'La Stratège', gender: 'F' },
   { id: 'f2', seed: 'Bella', label: 'La Geekette', gender: 'F' },
@@ -28,25 +27,19 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   const [timeLeft, setTimeLeft] = useState<string>("24:00:00");
   const [history, setHistory] = useState<any[]>([]);
 
-  // 1. CHARGEMENT INITIAL
   useEffect(() => {
     const savedAvatar = localStorage.getItem('future_library_avatar');
     const savedHistory = localStorage.getItem('quest_history');
-    
     if (savedAvatar) {
       setAvatarData(JSON.parse(savedAvatar));
       setStep(2);
     }
-    if (savedHistory) {
-      setHistory(JSON.parse(savedHistory));
-    }
+    if (savedHistory) setHistory(JSON.parse(savedHistory));
   }, []);
 
-  // 2. LOGIQUE DU CHRONO (SOLO LEVELING)
   useEffect(() => {
     const timer = setInterval(() => {
       if (!avatarData || step !== 2) return;
-
       const now = new Date().getTime();
       const lastValidation = new Date(avatarData.lastValidation || avatarData.createdAt).getTime();
       const deadline = lastValidation + (24 * 60 * 60 * 1000);
@@ -61,11 +54,9 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
         setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
       }
     }, 1000);
-
     return () => clearInterval(timer);
   }, [avatarData, step]);
 
-  // 3. ACTIONS
   const handleCreate = () => {
     if (!userName.trim()) return alert("Hé ! Donne-nous ton nom.");
     const archetype = AVATAR_ARCHETYPES.find(a => a.id === selectedId);
@@ -84,21 +75,35 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   };
 
   const completeQuest = () => {
+    const messages = [
+      "BIEN JOUÉ SPARTAN ! TA DISCIPLINE FAIT TA FORCE.",
+      "QUÊTE TERMINÉE. LE SYSTÈME EST SATISFAIT.",
+      "UN PAS DE PLUS VERS LA LÉGENDE. CONTINUE !",
+      "PAS D'EXCUSES, QUE DES RÉSULTATS. BRAVO !",
+      "TON AVATAR REPREND DES COULEURS. BIEN JOUÉ !",
+      "DISCIPLINE DE FER. NE LÂCHE RIEN."
+    ];
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateString = now.toLocaleDateString();
+
     const newData = {
       ...avatarData,
       level: avatarData.level + 1,
       missedDays: 0,
-      lastValidation: new Date().toISOString()
+      lastValidation: now.toISOString()
     };
     
-    const newLog = { date: new Date().toLocaleDateString(), status: 'SUCCESS', level: newData.level };
-    const updatedHistory = [newLog, ...history].slice(0, 5);
+    const newLog = { date: dateString, time: timeString, level: newData.level };
+    const updatedHistory = [newLog, ...history];
     
     setAvatarData(newData);
     setHistory(updatedHistory);
     localStorage.setItem('future_library_avatar', JSON.stringify(newData));
     localStorage.setItem('quest_history', JSON.stringify(updatedHistory));
-    alert("DÉFI TERMINÉ. TU MONTES EN PUISSANCE !");
+    
+    alert(messages[Math.floor(Math.random() * messages.length)]);
   };
 
   const handlePenalty = () => {
@@ -120,18 +125,14 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
     }
   };
 
-  // 4. STYLE VISUEL (AURA & MORT)
-  const getVisuals = () => {
+  const visuals = (() => {
     if (!avatarData) return {};
     const { missedDays, level } = avatarData;
-    
     const grayscale = (missedDays / 7) * 100;
     const brightness = 1 - (missedDays * 0.12);
-    
-    let auraColor = 'rgba(16, 185, 129, 0.3)'; // Vert
-    if (level > 10) auraColor = 'rgba(59, 130, 246, 0.4)'; // Bleu
-    if (level > 25) auraColor = 'rgba(251, 191, 36, 0.5)'; // Or
-
+    let auraColor = 'rgba(16, 185, 129, 0.3)';
+    if (level > 10) auraColor = 'rgba(6, 182, 212, 0.4)'; // Cyan Solo Leveling
+    if (level > 25) auraColor = 'rgba(251, 191, 36, 0.5)';
     return {
       imgStyle: {
         filter: missedDays >= 7 ? 'grayscale(1) brightness(0.1) blur(8px)' : `grayscale(${grayscale}%) brightness(${brightness})`,
@@ -139,113 +140,112 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
       },
       auraColor
     };
-  };
-
-  const visuals = getVisuals();
+  })();
 
   return (
     <div className="min-h-screen bg-[#050505] text-white p-6 flex flex-col items-center justify-center font-sans overflow-x-hidden">
-      
-      {/* HEADER */}
-      <button onClick={onBack} className="absolute top-8 left-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-emerald-500 transition-all z-50">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 10px; }
+      `}</style>
+
+      <button onClick={onBack} className="absolute top-8 left-8 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-cyan-400 transition-all z-50">
         ← Retour au portail
       </button>
 
       <div className="max-w-6xl w-full">
-        
-        {/* STEP 1 : SELECTION SPARTAN */}
         {step === 1 && (
           <div className="space-y-10 animate-in fade-in duration-700">
             <div className="text-center space-y-2">
               <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase">L'Arène</h2>
-              <p className="text-emerald-500 text-[10px] font-bold tracking-[0.5em] uppercase text-center">Choisis ton visage, Spartan</p>
+              <p className="text-cyan-500 text-[10px] font-bold tracking-[0.5em] uppercase">Initialisation du Système</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {AVATAR_ARCHETYPES.map((arc) => (
-                <div key={arc.id} onClick={() => setSelectedId(arc.id)} className={`cursor-pointer rounded-2xl border-2 p-2 transition-all ${selectedId === arc.id ? 'border-emerald-500 bg-emerald-500/10 scale-105' : 'border-white/5 opacity-40'}`}>
+                <div key={arc.id} onClick={() => setSelectedId(arc.id)} className={`cursor-pointer rounded-2xl border-2 p-2 transition-all ${selectedId === arc.id ? 'border-cyan-500 bg-cyan-500/10 scale-105 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-white/5 opacity-40'}`}>
                   <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${arc.seed}`} className="w-full h-auto" />
                   <p className="text-[8px] text-center font-black uppercase mt-2">{arc.label}</p>
                 </div>
               ))}
             </div>
             <div className="max-w-xs mx-auto space-y-4">
-              <input type="text" placeholder="TON NOM..." value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-center font-bold outline-none focus:border-emerald-500" />
-              <button onClick={handleCreate} className="w-full py-4 bg-emerald-500 text-black font-black uppercase text-xs rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20">Initialiser le système</button>
+              <input type="text" placeholder="NOM DU JOUEUR..." value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-center font-bold outline-none focus:border-cyan-500 transition-all" />
+              <button onClick={handleCreate} className="w-full py-4 bg-cyan-600 text-black font-black uppercase text-xs rounded-xl hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-500/20">Lancer l'Éveil</button>
             </div>
           </div>
         )}
 
-        {/* STEP 2 : INTERFACE SOLO LEVELING */}
         {step === 2 && avatarData && (
           <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-10 items-start animate-in zoom-in-95 duration-500">
             
-            {/* GAUCHE : HISTORIQUE */}
-            <div className="bg-white/5 border border-white/10 p-6 rounded-3xl space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 border-b border-white/10 pb-2">Journal de bord</h4>
-              <div className="space-y-3">
-                {history.length === 0 && <p className="text-white/20 text-[10px] italic">Aucune mission accomplie...</p>}
+            {/* GAUCHE : HISTORIQUE SCROLLABLE */}
+            <div className="bg-white/5 border border-white/10 p-6 rounded-3xl h-[450px] flex flex-col">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-500 border-b border-white/10 pb-4 mb-4">Journal de Quête</h4>
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                {history.length === 0 && <p className="text-white/20 text-[10px] italic text-center pt-10">Aucun enregistrement...</p>}
                 {history.map((log, i) => (
-                  <div key={i} className="flex justify-between items-center text-[11px] bg-white/5 p-3 rounded-xl border border-white/5">
-                    <span className="font-bold opacity-60">{log.date}</span>
-                    <span className="text-emerald-400 font-black">LVL {log.level} ACCOMPLI</span>
+                  <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-1 transition-all hover:border-cyan-500/30">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-cyan-400 tracking-tighter">LEVEL {log.level} COMPLETE</span>
+                      <span className="text-[9px] opacity-40 font-mono tracking-tighter">{log.time}</span>
+                    </div>
+                    <div className="text-[10px] font-bold opacity-70 uppercase tracking-widest">{log.date}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* CENTRE : CHRONO & AVATAR */}
+            {/* CENTRE : HUD SOLO LEVELING (CHRONO BLEU) */}
             <div className="flex flex-col items-center space-y-10">
               <div className="text-center">
-                <div className="text-5xl md:text-7xl font-black text-red-600 font-mono tracking-tighter drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
+                <div className="text-5xl md:text-7xl font-black text-cyan-400 font-mono tracking-tighter drop-shadow-[0_0_15px_rgba(6,182,212,0.6)] animate-pulse">
                   {timeLeft}
                 </div>
-                <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.4em] mt-2">Délai avant pénalité système</p>
+                <p className="text-[9px] font-bold text-cyan-500/40 uppercase tracking-[0.5em] mt-3">Temps restant • Quête Journalière</p>
               </div>
 
               <div className="relative">
                 <div className="absolute inset-0 rounded-full blur-[100px] opacity-40 animate-pulse" style={{ backgroundColor: visuals.auraColor }} />
                 <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData.seed}`} style={visuals.imgStyle} className="w-64 h-64 md:w-80 md:h-80 relative z-10" />
                 {avatarData.missedDays > 0 && (
-                  <div className="absolute top-0 right-0 bg-red-600 px-4 py-1 rounded-full text-[10px] font-black animate-bounce shadow-2xl">ABSENT {avatarData.missedDays}J</div>
+                  <div className="absolute top-0 right-0 bg-red-600 px-4 py-1 rounded-full text-[10px] font-black animate-bounce shadow-2xl z-20">PÉNALITÉ: {avatarData.missedDays}J</div>
                 )}
               </div>
 
-              <button onClick={completeQuest} className="w-full max-w-xs py-5 bg-emerald-600 text-black font-black uppercase text-[11px] tracking-[0.2em] rounded-2xl hover:bg-emerald-400 hover:scale-105 transition-all shadow-xl shadow-emerald-500/20 active:scale-95">
-                Valider ma Discipline
+              <button onClick={completeQuest} className="w-full max-w-xs py-5 bg-cyan-600 text-black font-black uppercase text-[11px] tracking-[0.2em] rounded-2xl hover:bg-cyan-400 hover:scale-105 transition-all shadow-xl shadow-cyan-500/40 active:scale-95">
+                Soumettre le Rapport
               </button>
             </div>
 
-            {/* DROITE : STATS & INFOS */}
+            {/* DROITE : STATS DU JOUEUR */}
             <div className="space-y-6">
               <div className="bg-white/5 border border-white/10 p-8 rounded-3xl text-center space-y-4">
-                <h3 className="text-4xl font-black italic uppercase tracking-tighter">{avatarData.name}</h3>
-                <span className="inline-block px-4 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-[10px] font-black uppercase tracking-widest">{avatarData.label}</span>
-                
-                <div className="pt-6 space-y-2">
+                <h3 className="text-4xl font-black italic uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">{avatarData.name}</h3>
+                <span className="inline-block px-4 py-1 bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 rounded-full text-[10px] font-black uppercase tracking-widest">{avatarData.label}</span>
+                <div className="pt-6 space-y-2 text-left">
                   <div className="flex justify-between text-[10px] font-black uppercase">
-                    <span className="opacity-40">Niveau {avatarData.level} / 31</span>
-                    <span>{Math.round((avatarData.level / 31) * 100)}%</span>
+                    <span className="opacity-40">Progression Rang</span>
+                    <span className="text-cyan-400">{Math.round((avatarData.level / 31) * 100)}%</span>
                   </div>
-                  <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
-                    <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${(avatarData.level / 31) * 100}%` }} />
+                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                    <div className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all duration-1000" style={{ width: `${(avatarData.level / 31) * 100}%` }} />
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 bg-white/5 border border-white/10 rounded-3xl italic text-[12px] text-white/50 text-center leading-relaxed">
+              <div className="p-6 bg-white/5 border border-white/10 rounded-3xl italic text-[11px] text-white/40 text-center leading-relaxed">
                 {avatarData.missedDays >= 7 
-                  ? "Ton avatar a été effacé par le système. Recommence, Spartan." 
+                  ? "Sujet éliminé. La volonté a fait défaut." 
                   : avatarData.missedDays > 0 
-                  ? "Reviens vite ! Ta discipline fane et ton avatar s'efface." 
-                  : "Excellent. Ta force vitale est au maximum. Continue ainsi."}
+                  ? "DANGER : Ton existence numérique s'effrite. Agis immédiatement." 
+                  : "État optimal détecté. Ta détermination nourrit le système."}
               </div>
 
-              <button onClick={resetAvatar} className="w-full py-4 text-[10px] font-black uppercase text-white/20 hover:text-red-500 transition-colors">Réinitialiser l'ADN</button>
+              <button onClick={resetAvatar} className="w-full py-4 text-[10px] font-black uppercase text-white/10 hover:text-red-500 transition-colors">Réinitialiser les données de combat</button>
             </div>
-
           </div>
         )}
-
       </div>
     </div>
   );

@@ -16,6 +16,14 @@ const AVATAR_ARCHETYPES = [
   { id: 'm5', seed: 'Gage', label: 'L\'Audacieux', gender: 'M' },
 ];
 
+const MOTIVATIONAL_QUOTES = [
+  "Excellent travail ! Ta discipline d'aujourd'hui est le socle de ta réussite de demain.",
+  "Mission accomplie. Chaque effort compte, et tu viens de marquer un point crucial.",
+  "Le système est fier de ta constance. Tu deviens la meilleure version de toi-même.",
+  "Incroyable focus. Repose-toi bien, ton ascension continue dès demain.",
+  "La force ne vient pas des capacités physiques, mais d'une volonté invincible comme la tienne."
+];
+
 interface AvatarSystemProps {
   onBack: () => void;
 }
@@ -28,127 +36,100 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
   const [avatarData, setAvatarData] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<string>("24:00:00");
   const [history, setHistory] = useState<any[]>([]);
-  
-  // ÉTAT DES TÂCHES COCHÉES (STYLE ME+)
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  
+  // NOUVEAUX ÉTATS POUR LE COACH
+  const [sessionFinished, setSessionFinished] = useState(false);
+  const [coachMessage, setCoachMessage] = useState("");
 
-  // 1. CHARGEMENT
   useEffect(() => {
     const savedAvatar = localStorage.getItem('future_library_avatar');
     const savedHistory = localStorage.getItem('quest_history');
     const savedChecks = localStorage.getItem('daily_checks');
     
     if (savedAvatar) {
-      setAvatarData(JSON.parse(savedAvatar));
+      const parsedAvatar = JSON.parse(savedAvatar);
+      setAvatarData(parsedAvatar);
       setStep(2);
+
+      // Vérifier si la validation a déjà eu lieu aujourd'hui
+      const today = new Date().toLocaleDateString();
+      if (new Date(parsedAvatar.lastValidation).toLocaleDateString() === today && parsedAvatar.level > 1) {
+        setSessionFinished(true);
+        setCoachMessage(MOTIVATIONAL_QUOTES[0]);
+      }
     }
     if (savedHistory) setHistory(JSON.parse(savedHistory));
-    
-    // Charger les tâches cochées si c'est le même jour
     if (savedChecks) {
       const { date, tasks } = JSON.parse(savedChecks);
-      if (date === new Date().toLocaleDateString()) {
-        setCompletedTasks(tasks);
-      }
+      if (date === new Date().toLocaleDateString()) setCompletedTasks(tasks);
     }
   }, []);
 
-  // 2. LOGIQUE DE SÉLECTION DES QUÊTES (Mémorisée pour la journée)
   const currentQuests = useMemo(() => {
     if (!avatarData) return [];
     const allQuests = [...QUEST_POOL.mental, ...QUEST_POOL.physique, ...QUEST_POOL.discipline];
     const level = avatarData.level;
-    
-    let count = 1;
-    if (level > 20) count = (level % 2 === 0) ? 4 : 5;
-    else if (level > 10) count = (level % 2 === 0) ? 3 : 4;
-    else count = (level % 2 === 0) ? 1 : 2;
-
+    let count = level > 20 ? (level % 2 === 0 ? 4 : 5) : level > 10 ? (level % 2 === 0 ? 3 : 4) : (level % 2 === 0 ? 1 : 2);
     const startIndex = (level * 3) % allQuests.length;
     let selected = allQuests.slice(startIndex, startIndex + count);
-    if (selected.length < count) {
-      selected = [...selected, ...allQuests.slice(0, count - selected.length)];
-    }
+    if (selected.length < count) selected = [...selected, ...allQuests.slice(0, count - selected.length)];
     return selected;
   }, [avatarData?.level]);
 
-  // 3. CHRONO
   useEffect(() => {
     const timer = setInterval(() => {
-      if (!avatarData || view !== 'solo' || step !== 2) return;
+      if (!avatarData || view !== 'solo' || step !== 2 || sessionFinished) return;
       const now = new Date().getTime();
       const lastValidation = new Date(avatarData.lastValidation || avatarData.createdAt).getTime();
       const deadline = lastValidation + (24 * 60 * 60 * 1000);
       const distance = deadline - now;
-
-      if (distance <= 0) {
-        handlePenalty();
-      } else {
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      if (distance <= 0) handlePenalty();
+      else {
+        const h = Math.floor((distance % (86400000)) / 3600000);
+        const m = Math.floor((distance % 3600000) / 60000);
+        const s = Math.floor((distance % 60000) / 1000);
+        setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [avatarData, view, step]);
+  }, [avatarData, view, step, sessionFinished]);
 
-  // 4. ACTIONS & AUTO-VALIDATION
   const toggleQuest = (questName: string) => {
-    if (completedTasks.includes(questName)) return; // On ne peut pas décocher pour éviter la triche
-
+    if (completedTasks.includes(questName) || sessionFinished) return;
     const newCompleted = [...completedTasks, questName];
     setCompletedTasks(newCompleted);
-    
-    // Sauvegarde temporaire des checks
-    localStorage.setItem('daily_checks', JSON.stringify({
-      date: new Date().toLocaleDateString(),
-      tasks: newCompleted
-    }));
-
-    // SI TOUTES LES TÂCHES SONT FAITES -> VALIDATION AUTO
+    localStorage.setItem('daily_checks', JSON.stringify({ date: new Date().toLocaleDateString(), tasks: newCompleted }));
     if (newCompleted.length === currentQuests.length) {
-      setTimeout(() => {
-        completeQuest();
-      }, 500); // Petit délai pour laisser l'utilisateur voir le dernier check
+      setTimeout(() => completeQuest(), 600);
     }
   };
 
   const completeQuest = () => {
-    const messages = ["QUÊTE TERMINÉE", "SYSTÈME SATISFAIT", "LEVEL UP !"];
     const now = new Date();
     const newData = { ...avatarData, level: avatarData.level + 1, missedDays: 0, lastValidation: now.toISOString() };
     const newLog = { date: now.toLocaleDateString(), time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), level: newData.level };
     
     setAvatarData(newData);
     setHistory([newLog, ...history]);
-    setCompletedTasks([]); // Reset des checks pour le nouveau niveau
+    setCoachMessage(MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]);
+    setSessionFinished(true);
+
     localStorage.setItem('future_library_avatar', JSON.stringify(newData));
     localStorage.setItem('quest_history', JSON.stringify([newLog, ...history]));
     localStorage.removeItem('daily_checks');
-    alert(messages[Math.floor(Math.random() * messages.length)]);
   };
 
   const handlePenalty = () => {
     const newData = { ...avatarData, missedDays: Math.min(7, avatarData.missedDays + 1), lastValidation: new Date().toISOString() };
     setAvatarData(newData);
-    setCompletedTasks([]);
     localStorage.setItem('future_library_avatar', JSON.stringify(newData));
-    localStorage.removeItem('daily_checks');
   };
 
   const handleCreate = () => {
     if (!userName.trim()) return alert("Hé ! Donne-nous ton nom.");
     const archetype = AVATAR_ARCHETYPES.find(a => a.id === selectedId);
-    const newAvatar = {
-      name: userName,
-      seed: archetype?.seed,
-      label: archetype?.label,
-      level: 1,
-      missedDays: 0,
-      createdAt: new Date().toISOString(),
-      lastValidation: new Date().toISOString()
-    };
+    const newAvatar = { name: userName, seed: archetype?.seed, label: archetype?.label, level: 1, missedDays: 0, createdAt: new Date().toISOString(), lastValidation: new Date().toISOString() };
     setAvatarData(newAvatar);
     localStorage.setItem('future_library_avatar', JSON.stringify(newAvatar));
     setStep(2);
@@ -160,6 +141,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
       setAvatarData(null);
       setHistory([]);
       setCompletedTasks([]);
+      setSessionFinished(false);
       setStep(1);
     }
   };
@@ -171,13 +153,11 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
     const brightness = 1 - (missedDays * 0.12);
     const glowLevel = Math.min(level * 2, 40);
     let auraColor = level > 25 ? 'rgba(168, 85, 247, 0.6)' : level > 10 ? 'rgba(59, 130, 246, 0.5)' : 'rgba(6, 182, 212, 0.3)';
-
     return {
       imgStyle: {
         filter: missedDays >= 7 ? 'grayscale(1) brightness(0.1) blur(8px)' : `grayscale(${grayscale}%) brightness(${brightness}) drop-shadow(0 0 ${glowLevel}px ${auraColor})`,
         transition: 'all 1s ease'
-      },
-      auraColor
+      }
     };
   })();
 
@@ -196,36 +176,29 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
 
       <div className="max-w-6xl w-full">
         {view === 'hall' && (
-          <div className="animate-in fade-in zoom-in-95 duration-700">
-             <div className="text-center mb-16 space-y-4">
-              <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase">Hall des <span className="text-cyan-500">Chasseurs</span></h2>
-              <p className="text-white/30 text-xs font-bold tracking-[0.5em] uppercase text-center">Sélectionnez votre contrat de discipline</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div onClick={() => setView('solo')} className="bg-white/5 border border-white/10 p-10 rounded-[40px] cursor-pointer group hover:border-cyan-500 hover:bg-cyan-500/5 transition-all">
-                <div className="text-cyan-500 font-black text-[10px] tracking-widest uppercase mb-6 italic">Accès Gratuit</div>
-                <h3 className="text-3xl font-black uppercase italic mb-4">Le Monarque</h3>
-                <p className="text-white/40 text-sm leading-relaxed mb-8">Défie tes propres limites. 31 jours pour forger ton destin seul.</p>
-                <div className="text-cyan-400 font-black text-[10px] group-hover:translate-x-3 transition-transform uppercase tracking-widest">Entrer dans l'Arène →</div>
-              </div>
-              {/* ESCOUADE & GUILDE resteraient grisés */}
-              <div className="bg-white/5 border border-white/10 p-10 rounded-[40px] opacity-20 grayscale cursor-not-allowed">
-                <h3 className="text-3xl font-black uppercase italic mb-4 text-white/20">Escouade</h3>
-              </div>
-              <div className="bg-white/5 border border-white/10 p-10 rounded-[40px] opacity-20 grayscale cursor-not-allowed">
-                <h3 className="text-3xl font-black uppercase italic mb-4 text-white/20">La Guilde</h3>
-              </div>
-            </div>
+          <div className="animate-in fade-in zoom-in-95 duration-700 text-center">
+             <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase mb-16">Hall des <span className="text-cyan-500">Chasseurs</span></h2>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               <div onClick={() => setView('solo')} className="bg-white/5 border border-white/10 p-10 rounded-[40px] cursor-pointer hover:border-cyan-500 transition-all">
+                 <h3 className="text-3xl font-black uppercase italic mb-4">Le Monarque</h3>
+                 <p className="text-white/40 text-sm mb-8">Défie tes propres limites seul.</p>
+                 <div className="text-cyan-400 font-black text-[10px] uppercase tracking-widest">Entrer →</div>
+               </div>
+               <div className="bg-white/5 border border-white/10 p-10 rounded-[40px] opacity-20 grayscale cursor-not-allowed">
+                 <h3 className="text-3xl font-black uppercase italic text-white/20">Escouade</h3>
+               </div>
+               <div className="bg-white/5 border border-white/10 p-10 rounded-[40px] opacity-20 grayscale cursor-not-allowed">
+                 <h3 className="text-3xl font-black uppercase italic text-white/20">La Guilde</h3>
+               </div>
+             </div>
           </div>
         )}
 
         {view === 'solo' && (
           <>
             {step === 1 ? (
-              <div className="space-y-10 animate-in fade-in duration-700">
-                <div className="text-center space-y-2">
-                   <h2 className="text-5xl font-black italic tracking-tighter uppercase text-cyan-500">Éveil du Monarque</h2>
-                </div>
+              <div className="space-y-10 animate-in fade-in duration-700 text-center">
+                <h2 className="text-5xl font-black italic uppercase text-cyan-500">Éveil du Monarque</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {AVATAR_ARCHETYPES.map((arc) => (
                     <div key={arc.id} onClick={() => setSelectedId(arc.id)} className={`cursor-pointer rounded-2xl border-2 p-2 transition-all ${selectedId === arc.id ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/5 opacity-40'}`}>
@@ -235,7 +208,7 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                 </div>
                 <div className="max-w-xs mx-auto space-y-4">
                   <input type="text" placeholder="NOM..." value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-center outline-none focus:border-cyan-500 uppercase font-bold" />
-                  <button onClick={handleCreate} className="w-full py-4 bg-cyan-600 text-black font-black uppercase rounded-xl">Activer l'ADN</button>
+                  <button onClick={handleCreate} className="w-full py-4 bg-cyan-600 text-black font-black uppercase rounded-xl">Commencer</button>
                 </div>
               </div>
             ) : (
@@ -250,45 +223,43 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
                           <span>LEVEL {log.level}</span>
                           <span className="opacity-40">{log.time}</span>
                         </div>
-                        <div className="text-[10px] font-bold opacity-70 uppercase mt-1">{log.date}</div>
+                        <div className="text-[10px] font-bold opacity-70 mt-1">{log.date}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* CENTRE : CHECKLIST STYLE ME+ */}
+                {/* CENTRE : CHECKLIST & AVATAR */}
                 <div className="flex flex-col items-center space-y-8 order-1 lg:order-2">
                   <div className="text-center">
-                    <div className="text-7xl font-black text-cyan-400 font-mono tracking-tighter drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-                      {timeLeft}
+                    <div className={`text-7xl font-black font-mono tracking-tighter transition-all ${sessionFinished ? 'text-white/20' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]'}`}>
+                      {sessionFinished ? "READY" : timeLeft}
                     </div>
                     <p className="text-[9px] font-bold text-cyan-500/40 uppercase tracking-[0.3em] mt-2">Délai de la Mission</p>
                   </div>
 
-                  <div className="w-full max-w-sm space-y-3">
+                  <div className="w-full max-w-sm space-y-3 relative">
+                    {sessionFinished && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-3xl border border-cyan-500/30 animate-in fade-in duration-500">
+                            <div className="text-center p-6">
+                                <div className="text-3xl mb-2">⚡</div>
+                                <p className="text-xs font-black uppercase tracking-widest text-white mb-1">Quêtes Accomplies</p>
+                                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Reviens demain pour la suite</p>
+                            </div>
+                        </div>
+                    )}
                     <div className="flex justify-between items-end px-2 mb-4">
-                      <h5 className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Quêtes de Rang {avatarData.level > 20 ? 'S' : avatarData.level > 10 ? 'A' : 'B'}</h5>
+                      <h5 className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Objectifs</h5>
                       <span className="text-[10px] font-mono text-cyan-500">{completedTasks.length}/{currentQuests.length}</span>
                     </div>
-                    
                     {currentQuests.map((quest, index) => {
                       const isDone = completedTasks.includes(quest);
                       return (
-                        <div 
-                          key={index}
-                          onClick={() => toggleQuest(quest)}
-                          className={`quest-card cursor-pointer p-5 rounded-2xl border flex items-center gap-4 transition-all ${
-                            isDone 
-                            ? 'bg-cyan-500/10 border-cyan-500/40 opacity-50' 
-                            : 'bg-white/5 border-white/10 hover:border-cyan-400/50'
-                          }`}
-                        >
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-cyan-500 border-cyan-500' : 'border-white/20'}`}>
+                        <div key={index} onClick={() => toggleQuest(quest)} className={`quest-card p-5 rounded-2xl border flex items-center gap-4 ${isDone ? 'bg-cyan-500/10 border-cyan-500/40 opacity-50' : 'bg-white/5 border-white/10'}`}>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isDone ? 'bg-cyan-500 border-cyan-500' : 'border-white/20'}`}>
                             {isDone && <span className="text-black text-xs font-bold">✓</span>}
                           </div>
-                          <p className={`text-[12px] font-bold tracking-tight ${isDone ? 'line-through text-white/30' : 'text-white/90'}`}>
-                            {quest}
-                          </p>
+                          <p className={`text-[12px] font-bold ${isDone ? 'line-through text-white/30' : 'text-white/90'}`}>{quest}</p>
                         </div>
                       );
                     })}
@@ -296,25 +267,44 @@ export default function AvatarSystem({ onBack }: AvatarSystemProps) {
 
                   <div className="relative pt-6">
                     <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData.seed}`} style={visuals.imgStyle} className="w-48 h-48 md:w-56 md:h-56 relative z-10" />
-                    {avatarData.missedDays > 0 && <div className="absolute top-0 right-0 bg-red-600 px-4 py-1 rounded-full text-[10px] font-black animate-bounce italic z-20">ADN FANÉ</div>}
                   </div>
                 </div>
 
-                {/* DROITE : STATS */}
+                {/* DROITE : STATS & COACH */}
                 <div className="space-y-6 order-3">
-                  <div className="bg-white/5 border border-white/10 p-8 rounded-3xl text-center">
+                  <div className="bg-white/5 border border-white/10 p-8 rounded-3xl text-center relative overflow-hidden">
+                    {sessionFinished && <div className="absolute inset-0 bg-cyan-500/5 animate-pulse"></div>}
                     <h3 className="text-3xl font-black italic uppercase text-white">{avatarData.name}</h3>
+                    
                     <div className="mt-6 space-y-2 text-left">
                       <div className="flex justify-between text-[10px] font-black uppercase">
                         <span className="opacity-40">Progression</span>
                         <span className="text-cyan-400">{avatarData.level}/31</span>
                       </div>
                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
-                        <div className="h-full bg-cyan-500 transition-all duration-1000 shadow-[0_0_10px_#06b6d4]" style={{ width: `${(avatarData.level / 31) * 100}%` }} />
+                        <div className="h-full bg-cyan-500 transition-all duration-1000" style={{ width: `${(avatarData.level / 31) * 100}%` }} />
                       </div>
                     </div>
+
+                    {/* POP-UP MESSAGE DU COACH */}
+                    {sessionFinished && (
+                      <div className="mt-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl animate-in slide-in-from-top-4 duration-500">
+                        <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 italic">Note du Coach :</p>
+                        <p className="text-[11px] text-white/80 leading-relaxed italic font-medium">"{coachMessage}"</p>
+                      </div>
+                    )}
                   </div>
-                  <button onClick={resetAvatar} className="w-full py-4 text-[10px] font-black text-white/10 hover:text-red-500 transition-colors uppercase italic">Supprimer ADN</button>
+
+                  {!sessionFinished ? (
+                    <div className="p-6 bg-white/5 border border-white/10 rounded-3xl text-[11px] text-white/40 text-center uppercase tracking-widest italic">
+                       {avatarData.missedDays > 0 ? "Ton existence s'efface..." : "État optimal. Continue."}
+                    </div>
+                  ) : (
+                    <button onClick={() => setView('hall')} className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+                        Terminer la Session
+                    </button>
+                  )}
+                  <button onClick={resetAvatar} className="w-full py-2 text-[10px] font-black text-white/5 hover:text-red-500 transition-colors uppercase italic">Réinitialiser ADN</button>
                 </div>
               </div>
             )}

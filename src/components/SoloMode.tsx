@@ -19,9 +19,17 @@ const AVATAR_ARCHETYPES = [
 const MOTIVATIONAL_QUOTES = [
   "Excellent travail ! Ta discipline d'aujourd'hui forge ton succès.",
   "Mission accomplie. Le système enregistre ta progression.",
-  "Le Monarque ne recule jamais. Tu l'as prouvé.",
+  "Tiens bon, le meilleur est à venir !",
   "Focus incroyable. Ton ADN se stabilise.",
-  "La constance est l'arme ultime. Repose-toi, guerrier."
+  "Tu es plus fort(e) que tu ne le penses",
+  "Focus incroyable. Ton ADN se stabilise.",
+  " Rien n'est impossible, surtout pour toi.",
+  "Lève-toi, brille, et montre au monde de quoi tu es capable !",
+  "Fais chaque jour quelque chose qui te rapproche de ton objectif.",
+  " Chaque petit pas est un progrès.",
+  "Ils ne savaient pas que c'était impossible, alors ils l'ont fait.",
+  "La constance est l'arme ultime. Repose-toi, guerrier.",
+  "Fais de ta vie un rêve et d'un rêve une réalité. "
 ];
 
 interface SoloModeProps {

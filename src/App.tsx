@@ -6,19 +6,20 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Chatbot from "./components/Chatbot";
 
-// Importation DIRECTE pour forcer la mise à jour du nouveau système de Hub
+// Importation directe pour éviter tout délai sur la page principale de l'avatar
 import AvatarPage from "./pages/AvatarPage"; 
 
-// On garde lazy pour les autres pages moins critiques
+// Pages chargées à la demande
 const Index = lazy(() => import("./pages/Index"));
 const Success = lazy(() => import("./pages/Success"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
+// Loader élégant utilisant ta palette émeraude
 const PageLoader = () => (
   <div className="h-screen w-screen flex items-center justify-center bg-[#050505]">
-    <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+    <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
   </div>
 );
 
@@ -30,20 +31,21 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            {/* Route Accueil */}
             <Route path="/" element={<Index />} />
             
-            {/* Route pour la confirmation de don */}
+            {/* Route Success (Donations) */}
             <Route path="/success" element={<Success />} />
 
-            {/* Route pour l'expérience Avatar - Import direct utilisé ici */}
+            {/* Route Avatar (L'expérience immersive) */}
             <Route path="/mon-avatar" element={<AvatarPage />} />
 
-            {/* CATCH-ALL ROUTE */}
+            {/* Gestion de l'erreur 404 interne à React */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
         
-        {/* Chatbot global */}
+        {/* Le Chatbot reste accessible sur toutes les routes */}
         <Chatbot />
       </BrowserRouter>
     </TooltipProvider>

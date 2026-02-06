@@ -34,10 +34,8 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
 
   const [tempName, setTempName] = useState("");
 
-  // --- LOGIQUE D'AVATAR (AVEC VÉRIFICATION SUPABASE) ---
   const createAvatar = async () => {
     if (!tempName.trim()) return;
-    
     setError("Vérification...");
     
     const { data: existing } = await supabase
@@ -62,7 +60,7 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     setError("");
   };
 
-  // --- LOGIQUE SUPABASE (TEMPS RÉEL UNIFIÉ) ---
+  // --- LOGIQUE DE NETTOYAGE ET SYNCHRO ---
   useEffect(() => {
     if (!squadId || !mySoloData) return;
 
@@ -75,14 +73,19 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     };
 
     const setupSquad = async () => {
-      await supabase.from('squad_members').upsert({
+      // S'assurer qu'on n'est pas déjà dans un autre groupe avec ce nom
+      await supabase.from('squad_members').delete().eq('user_name', mySoloData.name);
+
+      // S'enregistrer dans le nouveau groupe
+      await supabase.from('squad_members').insert({
         squad_id: squadId,
         user_name: mySoloData.name,
         user_seed: mySoloData.seed,
         last_seen: new Date().toISOString()
-      }, { onConflict: 'user_name' });
+      });
 
       fetchMembers();
+      
       const { data: msgs } = await supabase
         .from('messages')
         .select('*')
@@ -106,7 +109,9 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
         table: 'messages', 
         filter: `squad_id=eq.${squadId}` 
       }, (payload) => {
-        setMessages(prev => [...prev, payload.new as Message]);
+        if ((payload.new as Message).squad_id === squadId) {
+            setMessages(prev => [...prev, payload.new as Message]);
+        }
       })
       .subscribe();
 
@@ -119,10 +124,14 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // --- ACTIONS ---
   const joinSquad = async (id: string) => {
     const code = id.trim().toUpperCase() || Math.random().toString(36).substring(2, 8).toUpperCase();
     
+    // On nettoie la table avant de rejoindre pour éviter les fantômes
+    if (mySoloData) {
+        await supabase.from('squad_members').delete().eq('user_name', mySoloData.name);
+    }
+
     const { count } = await supabase
       .from('squad_members')
       .select('*', { count: 'exact', head: true })
@@ -135,7 +144,18 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
 
     setSquadId(code);
     localStorage.setItem('squad_id', code);
+    setMessages([]); // On vide le chat localement pour le nouveau groupe
     setError("");
+  };
+
+  const leaveSquad = async () => {
+    if (mySoloData) {
+        await supabase.from('squad_members').delete().eq('user_name', mySoloData.name);
+    }
+    localStorage.removeItem('squad_id');
+    setSquadId(null);
+    setMembers([]);
+    setMessages([]);
   };
 
   const copyInvite = () => {
@@ -143,7 +163,6 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
     alert("Code copié !");
   };
 
-  // --- RENDU (ÉCRANS) ---
   if (!mySoloData) {
     return (
       <div className="flex flex-col items-center justify-center p-6 space-y-8 min-h-[60vh] animate-in fade-in zoom-in duration-500">
@@ -208,7 +227,7 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
               <span className="text-[9px] font-black uppercase text-white/20">Membres Actifs ({members.length}/6)</span>
             </div>
             {members.map((m, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all animate-in slide-in-from-left-2 duration-300">
+              <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all">
                 <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${m.user_seed}`} className="w-10 h-10 rounded-xl bg-purple-500/10 border border-white/5" alt="avatar" />
                 <div className="flex-1 text-[10px] font-black uppercase">
                   {m.user_name} {m.user_name === mySoloData.name && <span className="text-purple-500 ml-1">(TOI)</span>}
@@ -217,7 +236,7 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
             ))}
           </div>
         </div>
-        <button onClick={() => {localStorage.removeItem('squad_id'); setSquadId(null);}} className="text-[9px] font-black text-white/10 hover:text-red-500 uppercase py-2 flex items-center justify-center gap-2 transition-colors">
+        <button onClick={leaveSquad} className="text-[9px] font-black text-white/10 hover:text-red-500 uppercase py-2 flex items-center justify-center gap-2 transition-colors">
           <LogOut size={12} /> Quitter l'unité
         </button>
       </div>
@@ -247,14 +266,9 @@ export default function SquadMode({ onBack }: { onBack: () => void }) {
           ))}
         </div>
 
-        {/* BARRE D'EMOJIS RAPIDES */}
         <div className="px-4 py-2 bg-black/40 border-t border-white/5 flex gap-2 overflow-x-auto no-scrollbar">
           {QUICK_EMOJIS.map(emoji => (
-            <button
-              key={emoji}
-              onClick={() => setNewMessage(prev => prev + emoji)}
-              className="p-2 hover:bg-white/10 rounded-xl transition-colors text-lg"
-            >
+            <button key={emoji} onClick={() => setNewMessage(prev => prev + emoji)} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-lg">
               {emoji}
             </button>
           ))}

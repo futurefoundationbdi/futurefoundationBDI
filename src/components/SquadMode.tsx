@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabaseClient';
 import { Users, Send, ShieldCheck } from 'lucide-react';
 
 // Import des sous-composants que tu as créés
-import { SquadJoin } from './squad/SquadJoin';
-import { SquadContract } from './squad/SquadContract';
-import { SquadChat } from './squad/SquadChat';
+import { SquadJoin } from './Squad/SquadJoin';
+import { SquadContract } from './Squad/SquadContract';
+import { SquadChat } from './Squad/SquadChat';
 
 const QUICK_EMOJIS = ["🔥", "💪", "🎯", "🚀", "👑", "🤝", "☕", "📍"];
 

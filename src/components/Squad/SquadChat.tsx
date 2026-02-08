@@ -19,36 +19,37 @@ export const SquadChat = ({ messages, newMessage, setNewMessage, onSend, myName 
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full bg-[#F8F9FF] animate-in slide-in-from-right duration-300">
+    <div className="flex flex-col h-full bg-black animate-in slide-in-from-right duration-300">
       
-      {/* En-tête du Chat Style Tactique */}
-      <div className="p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm">
+      {/* En-tête du Chat Style Opérations Spéciales */}
+      <div className="p-4 bg-[#0A0A0A] border-b border-white/5 flex justify-between items-center shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="bg-slate-900 p-2 rounded-xl">
-            <Hash size={16} className="text-purple-400" />
+          <div className="bg-purple-900/20 p-2 rounded-xl border border-purple-500/30">
+            <Hash size={16} className="text-purple-500" />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase italic text-slate-900">Canal Tactique</h3>
+            <h3 className="text-xs font-black uppercase italic text-white tracking-widest">Canal Tactique</h3>
             <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Unité Active</p>
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]"></span>
+              <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Liaison Établie</p>
             </div>
           </div>
         </div>
-        <ShieldCheck size={20} className="text-slate-200" />
+        <ShieldCheck size={20} className="text-white/10" />
       </div>
 
-      {/* Zone des Messages */}
+      {/* Zone des Messages (Dark Mode) */}
       <div 
         ref={scrollRef} 
-        className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+        className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide"
+        style={{ scrollbarWidth: 'none' }}
       >
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
-            <div className="p-6 bg-slate-100 rounded-full">
-              <Send size={32} className="text-slate-400" />
+          <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-20">
+            <div className="p-6 bg-white/5 rounded-full border border-white/5">
+              <Send size={32} className="text-white" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]">En attente de transmission...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Cryptage activé. En attente de transmission...</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -56,17 +57,19 @@ export const SquadChat = ({ messages, newMessage, setNewMessage, onSend, myName 
               key={msg.id} 
               className={`flex flex-col ${msg.user_name === myName ? 'items-end' : 'items-start'}`}
             >
-              {/* Nom de l'utilisateur */}
-              <span className="text-[8px] font-black text-slate-300 uppercase mb-1.5 tracking-tighter px-1">
-                {msg.user_name === myName ? 'Moi (Elite)' : msg.user_name}
+              {/* Nom de l'utilisateur avec accent violet */}
+              <span className={`text-[8px] font-black uppercase mb-1.5 tracking-widest px-1 ${
+                msg.user_name === myName ? 'text-purple-500' : 'text-white/40'
+              }`}>
+                {msg.user_name === myName ? 'VOUS (UNITÉ 01)' : msg.user_name}
               </span>
               
-              {/* Bulle de message */}
+              {/* Bulle de message Tactique */}
               <div 
-                className={`max-w-[85%] p-4 rounded-[24px] text-[12px] font-bold shadow-sm leading-relaxed ${
+                className={`max-w-[85%] p-4 rounded-[24px] text-[12px] font-bold shadow-2xl leading-relaxed italic ${
                   msg.user_name === myName 
-                    ? 'bg-black text-white rounded-br-none' 
-                    : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'
+                    ? 'bg-purple-600 text-white rounded-br-none border border-purple-400/50 shadow-purple-900/20' 
+                    : 'bg-white/5 text-white/90 rounded-bl-none border border-white/10'
                 }`}
               >
                 {msg.text}
@@ -76,26 +79,26 @@ export const SquadChat = ({ messages, newMessage, setNewMessage, onSend, myName 
         )}
       </div>
 
-      {/* Zone de Saisie Style Me+ */}
-      <div className="p-4 bg-white border-t border-slate-100 pb-10">
+      {/* Zone de Saisie Dark */}
+      <div className="p-4 bg-[#0A0A0A] border-t border-white/5 pb-10">
         <form 
           onSubmit={onSend} 
-          className="flex items-center gap-2 bg-slate-50 p-2 rounded-[24px] border border-slate-100 focus-within:border-purple-300 transition-all shadow-inner"
+          className="flex items-center gap-2 bg-white/5 p-2 rounded-[24px] border border-white/10 focus-within:border-purple-500/50 transition-all"
         >
           <input 
             type="text" 
             value={newMessage} 
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="ÉCRIRE UNE NOTE À L'UNITÉ..."
-            className="flex-1 bg-transparent p-3 text-[11px] font-bold uppercase outline-none placeholder:text-slate-300"
+            placeholder="TRANSMETTRE UNE INFORMATION..."
+            className="flex-1 bg-transparent p-3 text-[11px] font-black uppercase outline-none placeholder:text-white/10 text-white tracking-widest"
           />
           <button 
             type="submit" 
             disabled={!newMessage.trim()}
             className={`p-3 rounded-full transition-all ${
               newMessage.trim() 
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-200' 
-                : 'bg-slate-200 text-slate-400'
+                ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)] hover:scale-105 active:scale-95' 
+                : 'bg-white/5 text-white/20'
             }`}
           >
             <Send size={18} />

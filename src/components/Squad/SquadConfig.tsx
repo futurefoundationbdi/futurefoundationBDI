@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ArrowRight, Shield, Clock } from 'lucide-react';
+import { Calendar, ArrowRight, Shield, Clock, ArrowLeft } from 'lucide-react';
 
 interface SquadConfigProps {
   duration: number;
@@ -10,7 +10,7 @@ interface SquadConfigProps {
 
 export const SquadConfig = ({ duration, setDuration, onConfirm, onBack }: SquadConfigProps) => {
   
-  // Calculer la date de fin approximative
+  // Calculer la date de fin pour renforcer l'aspect sérieux
   const getEndDate = () => {
     const date = new Date();
     date.setDate(date.getDate() + duration);
@@ -18,38 +18,39 @@ export const SquadConfig = ({ duration, setDuration, onConfirm, onBack }: SquadC
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 min-h-[80vh] animate-in fade-in zoom-in duration-500">
+    <div className="flex flex-col items-center justify-center p-6 min-h-[80vh] bg-black text-white animate-in fade-in zoom-in duration-500">
       
-      {/* Badge de configuration */}
-      <div className="mb-8 bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full flex items-center gap-2">
-        <Shield size={14} className="fill-purple-700" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Initialisation de l'Unité</span>
+      {/* Badge de statut */}
+      <div className="mb-8 bg-purple-900/30 text-purple-400 px-5 py-2 rounded-full flex items-center gap-2 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+        <Shield size={14} className="fill-purple-400/20" />
+        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Paramétrage de Mission</span>
       </div>
 
-      <div className="w-full max-w-sm bg-white rounded-[40px] p-8 shadow-2xl shadow-purple-900/10 border border-slate-100 space-y-8">
+      <div className="w-full max-w-sm bg-[#0A0A0A] rounded-[40px] p-8 shadow-2xl border border-white/5 space-y-8 relative overflow-hidden">
         
+        {/* Header de la carte */}
         <div className="text-center space-y-2">
-          <h3 className="text-2xl font-black text-slate-900 uppercase italic leading-none">Plan de Mission</h3>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Définissez la durée de l'engagement</p>
+          <h3 className="text-2xl font-black text-white uppercase italic leading-none tracking-tighter">Plan d'Opération</h3>
+          <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest italic">Définition de la fenêtre temporelle</p>
         </div>
 
-        {/* Affichage de la durée sélectionnée */}
-        <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-50">
+        {/* Display central de la durée */}
+        <div className="bg-black rounded-[32px] p-8 text-center space-y-2 border border-white/5 shadow-inner">
           <div className="flex justify-center items-baseline gap-2">
-            <span className="text-6xl font-black text-slate-900 tracking-tighter">{duration}</span>
-            <span className="text-lg font-black text-purple-600 uppercase italic">Jours</span>
+            <span className="text-7xl font-black text-white tracking-tighter animate-pulse">{duration}</span>
+            <span className="text-xl font-black text-purple-600 uppercase italic tracking-widest">Jours</span>
           </div>
-          <div className="flex items-center justify-center gap-2 text-slate-400">
-            <Clock size={12} />
-            <p className="text-[9px] font-bold uppercase">Fin prévue : {getEndDate()}</p>
+          <div className="flex items-center justify-center gap-2 text-white/40 pt-2 border-t border-white/5">
+            <Clock size={12} className="text-purple-500" />
+            <p className="text-[9px] font-black uppercase tracking-widest italic">Échéance : {getEndDate()}</p>
           </div>
         </div>
 
-        {/* Slider stylisé */}
-        <div className="space-y-4">
-          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase italic px-1">
-            <span>Minimum (1 sem)</span>
-            <span>Maximum (3 mois)</span>
+        {/* Slider custom Dark Mode */}
+        <div className="space-y-6">
+          <div className="flex justify-between text-[10px] font-black text-white/20 uppercase italic px-1">
+            <span>Minimum</span>
+            <span>Objectif Max</span>
           </div>
           
           <div className="relative flex items-center">
@@ -60,43 +61,41 @@ export const SquadConfig = ({ duration, setDuration, onConfirm, onBack }: SquadC
               step="1" 
               value={duration} 
               onChange={(e) => setDuration(parseInt(e.target.value))}
-              className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-purple-600 focus:outline-none"
+              className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-purple-600 focus:outline-none"
             />
           </div>
 
-          {/* Marqueurs visuels */}
+          {/* Marqueurs tactiques */}
           <div className="flex justify-between px-1">
             {[7, 30, 60, 90].map((mark) => (
-              <div key={mark} className="flex flex-col items-center gap-1">
-                <div className={`w-1 h-1 rounded-full ${duration >= mark ? 'bg-purple-600' : 'bg-slate-200'}`} />
-                <span className="text-[8px] font-bold text-slate-300">{mark}j</span>
+              <div key={mark} className="flex flex-col items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${duration >= mark ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]' : 'bg-white/10'}`} />
+                <span className={`text-[9px] font-black transition-colors ${duration >= mark ? 'text-white' : 'text-white/20'}`}>{mark}j</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Bouton de confirmation */}
-        <div className="space-y-4 pt-2">
+        {/* Actions */}
+        <div className="space-y-4 pt-4">
           <button 
             onClick={onConfirm}
-            className="w-full py-6 bg-black text-white font-black rounded-[24px] flex items-center justify-center gap-3 hover:bg-slate-800 active:scale-95 transition-all uppercase italic tracking-widest text-sm shadow-xl shadow-slate-200"
+            className="w-full py-6 bg-white text-black font-black rounded-[24px] flex items-center justify-center gap-3 hover:bg-purple-500 hover:text-white active:scale-95 transition-all uppercase italic tracking-[0.2em] text-sm shadow-xl"
           >
-            Confirmer la durée <ArrowRight size={18} />
+            Lancer le challenge <ArrowRight size={18} />
           </button>
           
           <button 
             onClick={onBack}
-            className="w-full text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-slate-500 transition-colors"
+            className="w-full flex items-center justify-center gap-2 text-[10px] font-black text-white/20 uppercase tracking-widest hover:text-white transition-colors"
           >
-            Annuler et retourner
+            <ArrowLeft size={14} /> Retour
           </button>
         </div>
-
       </div>
 
-      {/* Note de bas de page style APK Me+ */}
-      <p className="mt-8 text-[9px] text-slate-400 text-center max-w-[250px] font-medium leading-relaxed uppercase">
-        Une fois validée, la durée ne pourra plus être modifiée par les membres de l'escouade.
+      <p className="mt-8 text-[9px] text-white/20 text-center max-w-[250px] font-black leading-relaxed uppercase italic tracking-tighter">
+        Avertissement : La durée choisie engage l'ensemble des futurs membres de l'escouade.
       </p>
     </div>
   );

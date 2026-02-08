@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, PlusCircle, ArrowLeft } from 'lucide-react';
+import { Users, PlusCircle, ArrowLeft, Shield } from 'lucide-react';
 
 interface SquadJoinProps {
   inputCode: string;
@@ -11,62 +11,80 @@ interface SquadJoinProps {
 }
 
 export const SquadJoin = ({ inputCode, setInputCode, onJoin, isLoading, error, onBack }: SquadJoinProps) => (
-  <div className="flex flex-col items-center justify-center p-6 space-y-10 min-h-[80vh] animate-in zoom-in duration-500">
-    <div className="text-center space-y-2">
-      <div className="bg-purple-600 text-white w-16 h-16 rounded-[22px] flex items-center justify-center mx-auto shadow-lg shadow-purple-200 mb-4 rotate-3">
+  <div className="flex flex-col items-center justify-center p-6 space-y-10 min-h-[80vh] bg-black text-white animate-in zoom-in duration-500">
+    
+    {/* En-tête Tactique */}
+    <div className="text-center space-y-3">
+      <div className="bg-purple-600 text-white w-16 h-16 rounded-[22px] flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(147,51,234,0.3)] mb-4 rotate-3 border border-purple-400">
         <Users size={32} />
       </div>
-      <h2 className="text-4xl font-black italic uppercase text-slate-900 tracking-tighter">Coalition</h2>
-      <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Discipline Collective</p>
+      <h2 className="text-5xl font-black italic uppercase text-transparent bg-clip-text bg-gradient-to-b from-white to-purple-800 tracking-tighter">
+        Coalition
+      </h2>
+      <div className="flex items-center justify-center gap-2">
+        <span className="h-[1px] w-8 bg-purple-900"></span>
+        <p className="text-[10px] text-purple-500 font-black uppercase tracking-[0.3em]">Discipline Collective</p>
+        <span className="h-[1px] w-8 bg-purple-900"></span>
+      </div>
     </div>
 
     <div className="w-full max-w-sm space-y-8">
-      {/* Rejoindre */}
+      {/* SECTION : REJOINDRE */}
       <div className="space-y-3">
-        <p className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">Rejoindre une unité</p>
+        <p className="text-[10px] font-black text-purple-400 uppercase ml-2 italic tracking-widest">Infiltrer une unité existante :</p>
         <div className="relative">
           <input 
-            type="text" placeholder="CODE DE L'UNITÉ" value={inputCode}
+            type="text" 
+            placeholder="ENTRER LE CODE D'ACCÈS..." 
+            value={inputCode}
             onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-            className="w-full bg-white border border-slate-100 p-5 rounded-[24px] text-center font-bold outline-none focus:ring-2 ring-purple-500/20 transition-all text-slate-800 shadow-sm placeholder:text-slate-200"
+            className="w-full bg-white/5 border border-white/10 p-5 rounded-[24px] text-center font-black outline-none focus:border-purple-500 focus:ring-1 ring-purple-500/50 transition-all text-white shadow-inner placeholder:text-white/10 uppercase"
           />
         </div>
         <button 
           onClick={() => onJoin(inputCode, false)} 
           disabled={isLoading || !inputCode}
-          className="w-full py-5 bg-black text-white font-black rounded-[24px] shadow-xl shadow-slate-200 active:scale-95 transition-all uppercase italic text-sm"
+          className="w-full py-5 bg-purple-600 text-white font-black rounded-[24px] shadow-xl shadow-purple-900/40 active:scale-95 transition-all uppercase italic text-sm tracking-widest disabled:opacity-50 disabled:bg-slate-800"
         >
-          {isLoading ? "LOCALISATION..." : "Infiltrer l'unité"}
+          {isLoading ? "LOCALISATION EN COURS..." : "LANCER L'INFILTRATION"}
         </button>
       </div>
 
+      {/* SÉPARATEUR */}
       <div className="relative py-2 flex items-center justify-center">
-        <div className="absolute w-full border-t border-slate-100"></div>
-        <span className="relative bg-[#F8F9FF] px-4 text-[10px] font-black text-slate-300 uppercase italic">OU</span>
+        <div className="absolute w-full border-t border-white/5"></div>
+        <span className="relative bg-black px-4 text-[10px] font-black text-white/20 uppercase italic tracking-widest">OU</span>
       </div>
 
-      {/* Créer */}
+      {/* SECTION : CRÉER */}
       <div className="space-y-4">
         <button 
           onClick={() => onJoin("", true)} 
-          className="w-full py-5 border-2 border-dashed border-purple-200 text-purple-600 font-black rounded-[24px] hover:bg-purple-50 transition-all uppercase text-sm flex items-center justify-center gap-3"
+          className="w-full py-5 border-2 border-dashed border-purple-900/50 text-purple-400 font-black rounded-[24px] hover:bg-purple-900/20 hover:border-purple-500 transition-all uppercase text-sm flex items-center justify-center gap-3 italic"
         >
-          <PlusCircle size={18} /> Créer une escouade
+          <PlusCircle size={18} /> Fonder une escouade
         </button>
-        <p className="text-[9px] text-slate-400 text-center font-bold uppercase leading-relaxed px-6">
-          Générez un code et invitez jusqu'à 6 membres à vous suivre.
+        <p className="text-[9px] text-white/30 text-center font-bold uppercase leading-relaxed px-6 tracking-tight">
+          Générez un code unique et invitez vos alliés à sceller leur destin avec le vôtre.
         </p>
       </div>
     </div>
 
+    {/* ERREUR TACTIQUE */}
     {error && (
-      <div className="bg-red-50 text-red-500 p-4 rounded-2xl border border-red-100 animate-bounce">
-        <p className="text-[10px] font-black uppercase italic">⚠️ {error}</p>
+      <div className="bg-red-950/30 text-red-500 p-4 rounded-2xl border border-red-900/50 animate-pulse">
+        <p className="text-[10px] font-black uppercase italic flex items-center gap-2">
+           ⚠️ ALERTE : {error}
+        </p>
       </div>
     )}
 
-    <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-purple-600 transition-colors">
-      <ArrowLeft size={14} /> Retour au Hub
+    {/* RETOUR */}
+    <button 
+      onClick={onBack} 
+      className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/20 hover:text-purple-500 transition-colors"
+    >
+      <ArrowLeft size={14} /> Abandonner et retourner au Hub
     </button>
   </div>
 );

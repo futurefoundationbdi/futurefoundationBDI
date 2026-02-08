@@ -1,211 +1,190 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { Users, Send, ShieldCheck } from 'lucide-react';
+import { 
+  LayoutDashboard, Users, MessageSquare, Zap, User, 
+  Droplets, CheckCircle2, Trophy 
+} from 'lucide-react';
 
-// Import des sous-composants que tu as créés
+// Import de tes composants séparés
 import { SquadJoin } from './Squad/SquadJoin';
+import { SquadConfig } from './Squad/SquadConfig';
 import { SquadContract } from './Squad/SquadContract';
 import { SquadChat } from './Squad/SquadChat';
 
-const QUICK_EMOJIS = ["🔥", "💪", "🎯", "🚀", "👑", "🤝", "☕", "📍"];
-
-interface Member {
-  user_name: string;
-  user_seed: string;
-}
-
 export default function SquadMode({ onBack }: { onBack: () => void }) {
-  const [squadId, setSquadId] = useState<string | null>(localStorage.getItem('squad_id'));
-  const [isContractSigned, setIsContractSigned] = useState(localStorage.getItem('squad_signed') === 'true');
-  const [inputCode, setInputCode] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  // États de navigation
+  const [step, setStep] = useState<'join' | 'config' | 'contract' | 'dashboard'>('join');
+  const [activeTab, setActiveTab] = useState('routine');
   
-  const [members, setMembers] = useState<Member[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [showChat, setShowChat] = useState(false);
+  // États de données
+  const [squadId, setSquadId] = useState<string | null>(localStorage.getItem('squad_id'));
+  const [duration, setDuration] = useState(30);
+  const [inputCode, setInputCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Récupération des données Solo
-  const mySoloData = (() => {
-    const saved = localStorage.getItem('future_library_avatar');
-    return saved ? JSON.parse(saved) : null;
-  })();
-
-  // 1. PROTECTION : AVATAR OBLIGATOIRE
-  if (!mySoloData) {
-    return (
-      <div className="flex flex-col items-center justify-center p-6 text-center space-y-6 min-h-[60vh]">
-        <ShieldCheck size={64} className="text-purple-500 opacity-20" />
-        <h2 className="text-2xl font-black uppercase italic text-white">Accès Refusé</h2>
-        <p className="text-xs text-white/50 max-w-xs uppercase leading-relaxed">
-          Tu dois d'abord éveiller ton monarque en mode <span className="text-purple-500">Solo</span> avant de rejoindre une unité d'élite.
-        </p>
-        <button onClick={onBack} className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white">
-          Retourner au Hub
-        </button>
-      </div>
-    );
-  }
-
-  // 2. LOGIQUE D'ENTRÉE / CRÉATION
-  const handleJoin = async (id: string, isNew: boolean) => {
-    setError("");
-    setIsLoading(true);
-    const code = id.trim().toUpperCase();
-
-    if (!isNew && !code) {
-      setError("ENTREZ UN CODE D'UNITÉ");
-      setIsLoading(false);
-      return;
-    }
-
-    const finalCode = isNew ? Math.random().toString(36).substring(2, 8).toUpperCase() : code;
-
-    // Vérification de l'existence si infiltration
-    if (!isNew) {
-      const { data: existingGroup } = await supabase
-        .from('squad_members')
-        .select('squad_id')
-        .eq('squad_id', finalCode)
-        .limit(1);
-
-      if (!existingGroup || existingGroup.length === 0) {
-        setError("CODE D'UNITÉ INVALIDE OU INEXISTANT");
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    setSquadId(finalCode);
-    localStorage.setItem('squad_id', finalCode);
-    setIsLoading(false);
-  };
-
-  // 3. SYNCHRO TEMPS RÉEL
+  // Initialisation au chargement
   useEffect(() => {
-    if (!squadId || !mySoloData) return;
+    if (squadId) {
+      const signed = localStorage.getItem('squad_signed') === 'true';
+      setStep(signed ? 'dashboard' : 'contract');
+    }
+  }, [squadId]);
 
-    const fetchMembers = async () => {
-      const { data } = await supabase.from('squad_members').select('user_name, user_seed').eq('squad_id', squadId);
-      if (data) setMembers(data);
-    };
-
-    const setupUser = async () => {
-      // Nettoyage des anciennes sessions
-      await supabase.from('squad_members').delete().eq('user_name', mySoloData.name);
-      // Insertion nouvelle session
-      await supabase.from('squad_members').insert({
-        squad_id: squadId,
-        user_name: mySoloData.name,
-        user_seed: mySoloData.seed,
-        last_seen: new Date().toISOString()
-      });
-      fetchMembers();
-      
-      // Charger les messages existants
-      const { data: msgs } = await supabase.from('messages').select('*').eq('squad_id', squadId).order('created_at', { ascending: true });
-      if (msgs) setMessages(msgs);
-    };
-
-    setupUser();
-
-    const channel = supabase.channel(`squad_${squadId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'squad_members', filter: `squad_id=eq.${squadId}` }, () => fetchMembers())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `squad_id=eq.${squadId}` }, (payload) => {
-        setMessages(prev => [...prev, payload.new]);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [squadId, mySoloData.name]);
-
-  // 4. ENVOI DE MESSAGE
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !squadId) return;
-
-    const { error } = await supabase.from('messages').insert([{
-      squad_id: squadId,
-      user_name: mySoloData.name,
-      text: newMessage.toUpperCase(), // Forçage Majuscules
-      user_seed: mySoloData.seed
-    }]);
-
-    if (!error) setNewMessage("");
+  // Actions
+  const handleJoin = (id: string, isNew: boolean) => {
+    if (isNew) {
+      setStep('config');
+    } else {
+      if (!id) return setError("Code requis");
+      setSquadId(id);
+      localStorage.setItem('squad_id', id);
+      setStep('contract');
+    }
   };
 
-  // --- RENDU CONDITIONNEL ---
+  const handleSign = () => {
+    localStorage.setItem('squad_signed', 'true');
+    setStep('dashboard');
+  };
 
-  // Étape 1 : Rejoindre ou Créer
-  if (!squadId) {
-    return <SquadJoin inputCode={inputCode} setInputCode={setInputCode} onJoin={handleJoin} isLoading={isLoading} error={error} onBack={onBack} />;
-  }
+  // --- RENDU DES ÉTAPES ---
 
-  // Étape 2 : Signature du Contrat
-  if (!isContractSigned) {
-    return <SquadContract squadId={squadId} onSign={() => { setIsContractSigned(true); localStorage.setItem('squad_signed', 'true'); }} />;
-  }
+  if (step === 'join') return (
+    <div className="bg-[#F8F9FF] min-h-screen">
+      <SquadJoin 
+        inputCode={inputCode} setInputCode={setInputCode} 
+        onJoin={handleJoin} isLoading={isLoading} 
+        error={error} onBack={onBack} 
+      />
+    </div>
+  );
 
-  // Étape 3 : Dashboard de l'Unité
+  if (step === 'config') return (
+    <div className="bg-[#F8F9FF] min-h-screen">
+      <SquadConfig 
+        duration={duration} setDuration={setDuration} 
+        onConfirm={() => setStep('contract')} 
+        onBack={() => setStep('join')}
+      />
+    </div>
+  );
+
+  if (step === 'contract') return (
+    <SquadContract 
+      squadId={squadId || "NOUVELLE UNITÉ"} 
+      duration={duration} 
+      onSign={handleSign} 
+    />
+  );
+
+  // --- DASHBOARD FINAL (Look Me+) ---
   return (
-    <div className="relative min-h-[80vh] px-4 animate-in fade-in duration-700">
-      {/* HEADER STATS */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h2 className="text-xs font-black text-purple-500 uppercase italic tracking-widest">Unité Opérationnelle</h2>
-          <div className="flex items-center gap-3">
-             <span className="text-4xl font-black text-white italic">{squadId}</span>
-             <button onClick={() => {
-               const url = `https://wa.me/?text=Rejoins mon unité d'élite sur Future Library ! Code : ${squadId}`;
-               window.open(url, '_blank');
-             }} className="p-2 bg-green-500/10 text-green-500 rounded-full hover:bg-green-500/20 transition-all">
-               <Send size={16} />
-             </button>
-          </div>
-        </div>
-        
-        <button onClick={() => {
-            localStorage.removeItem('squad_id');
-            localStorage.removeItem('squad_signed');
-            setSquadId(null);
-            setIsContractSigned(false);
-          }} className="text-[10px] font-black text-white/20 hover:text-red-500 uppercase transition-colors">
-          Quitter l'unité
-        </button>
-      </div>
-
-      {/* GRID DES MEMBRES */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-20">
-        {members.map((m, i) => (
-          <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-3xl flex flex-col items-center text-center space-y-3 relative overflow-hidden group">
-            <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_green]"></div>
-            <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${m.user_seed}`} className="w-16 h-16 md:w-20 md:h-20" alt="av" />
-            <div>
-              <p className="text-[10px] font-black text-white uppercase truncate w-full italic">{m.user_name}</p>
-              <p className="text-[8px] font-bold text-purple-400 uppercase tracking-tighter">LVL ??</p>
+    <div className="flex flex-col h-screen bg-[#F8F9FF] text-slate-900 max-w-md mx-auto shadow-2xl overflow-hidden relative font-sans">
+      
+      {/* 1. Header Tactique */}
+      {activeTab !== 'chat' && (
+        <header className="p-6 bg-white border-b border-slate-100 animate-in fade-in slide-in-from-top duration-500">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-black italic uppercase tracking-tighter">Jour 01</h2>
+            <div className="flex -space-x-2">
+              {[1, 2].map(i => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden">
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+10}`} alt="member" />
+                </div>
+              ))}
+              <div className="w-8 h-8 rounded-full border-2 border-white bg-purple-600 flex items-center justify-center text-[10px] text-white font-bold">+1</div>
             </div>
           </div>
-        ))}
-        {/* Slots vides */}
-        {[...Array(Math.max(0, 6 - members.length))].map((_, i) => (
-          <div key={i} className="border-2 border-dashed border-white/5 rounded-3xl flex items-center justify-center p-8 opacity-10">
-            <Users size={20} className="text-white" />
-          </div>
-        ))}
-      </div>
 
-      {/* SYSTÈME DE CHAT (Sous-composant) */}
-      <SquadChat 
-        showChat={showChat} 
-        setShowChat={setShowChat} 
-        messages={messages} 
-        newMessage={newMessage} 
-        setNewMessage={setNewMessage} 
-        onSend={sendMessage} 
-        myName={mySoloData.name}
-        quickEmojis={QUICK_EMOJIS}
-      />
+          {/* Barre de progression d'unité */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-[9px] font-black uppercase text-slate-400 tracking-widest">
+              <span>Progression Unité</span>
+              <span className="text-purple-600">8%</span>
+            </div>
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: '8%' }}></div>
+            </div>
+          </div>
+
+          {/* Objectif Eau Collectif */}
+          <div className="mt-4 bg-blue-50/50 p-4 rounded-[24px] border border-blue-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white p-2 rounded-xl text-blue-500 shadow-sm"><Droplets size={20} /></div>
+              <div>
+                <p className="text-[9px] font-black text-blue-400 uppercase">Objectif Eau</p>
+                <p className="text-sm font-black text-blue-900 tracking-tight">2.5L / 15L</p>
+              </div>
+            </div>
+            <button className="bg-white text-blue-600 p-2 rounded-full shadow-sm hover:scale-110 transition-transform">
+              <CheckCircle2 size={24} />
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* 2. Contenu Principal */}
+      <main className="flex-1 overflow-y-auto">
+        {activeTab === 'routine' && (
+          <div className="p-6 space-y-4 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Missions du jour</h3>
+            {/* Exemple de tâche système */}
+            <div className="bg-white p-5 rounded-[28px] border border-slate-50 flex items-center justify-between shadow-sm group active:scale-95 transition-all">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">⚡</div>
+                <div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">08:00 • Système</p>
+                  <p className="font-black text-slate-800 uppercase italic text-sm">Réveil Stratégique</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-full border-2 border-slate-100 flex items-center justify-center text-slate-200">
+                <CheckCircle2 size={20} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'chat' && (
+          <div className="h-full">
+            <SquadChat messages={[]} newMessage="" setNewMessage={() => {}} onSend={(e) => e.preventDefault()} myName="Moi" />
+          </div>
+        )}
+        
+        {/* Placeholder pour les autres onglets */}
+        {['membres', 'boosts', 'profil'].includes(activeTab) && (
+          <div className="h-full flex items-center justify-center text-slate-300 font-black uppercase text-xs italic">
+            Section {activeTab} en cours...
+          </div>
+        )}
+      </main>
+
+      {/* 3. Tab Bar (Navigation Basse) */}
+      <nav className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 p-4 pb-8 flex justify-around items-center">
+        <button onClick={() => setActiveTab('routine')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'routine' ? 'text-purple-600 scale-110' : 'text-slate-300'}`}>
+          <LayoutDashboard size={20} />
+          <span className="text-[8px] font-black uppercase">Routine</span>
+        </button>
+        
+        <button onClick={() => setActiveTab('membres')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'membres' ? 'text-purple-600 scale-110' : 'text-slate-300'}`}>
+          <Users size={20} />
+          <span className="text-[8px] font-black uppercase">Unité</span>
+        </button>
+
+        {/* Bouton Central Chat */}
+        <button onClick={() => setActiveTab('chat')} className={`p-4 rounded-full -translate-y-6 shadow-2xl transition-all border-4 border-[#F8F9FF] ${activeTab === 'chat' ? 'bg-black text-white' : 'bg-purple-600 text-white'}`}>
+          <MessageSquare size={24} />
+        </button>
+
+        <button onClick={() => setActiveTab('boosts')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'boosts' ? 'text-purple-600 scale-110' : 'text-slate-300'}`}>
+          <Zap size={20} />
+          <span className="text-[8px] font-black uppercase">Boosts</span>
+        </button>
+
+        <button onClick={() => setActiveTab('profil')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'profil' ? 'text-purple-600 scale-110' : 'text-slate-300'}`}>
+          <User size={20} />
+          <span className="text-[8px] font-black uppercase">Profil</span>
+        </button>
+      </nav>
     </div>
   );
 }

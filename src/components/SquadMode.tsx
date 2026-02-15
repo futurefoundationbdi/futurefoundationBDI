@@ -36,16 +36,28 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     }
   }, []);
 
-  // --- UTILITAIRES DE VALIDATION ---
+  // --- UTILITAIRES DE VALIDATION STRICTE (Harmonisé avec SoloMode) ---
   const validateUsername = (name: string): string | null => {
-    const trimmed = name.trim();
-    // Vérifie s'il y a au moins une lettre (évite full emojis ou full chiffres)
-    const hasLetters = /[a-zA-ZàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]/.test(trimmed);
-    const isOnlyNumbers = /^\d+$/.test(trimmed);
-
+    const trimmed = name.trim().toLowerCase();
+    
+    // 1. Longueur minimale
     if (trimmed.length < 3) return "NOM TROP COURT (MIN. 3)";
-    if (!hasLetters) return "LE NOM DOIT CONTENIR DES LETTRES";
-    if (isOnlyNumbers) return "NOM UNIQUEMENT COMPOSÉ DE CHIFFRES REFUSÉ";
+
+    // 2. Uniquement des chiffres
+    if (/^\d+$/.test(trimmed)) return "IDENTIFIANT NUMÉRIQUE REFUSÉ";
+
+    // 3. Présence de lettres
+    const hasLetters = /[a-zàâäéèêëîïôöùûüç]/.test(trimmed);
+    if (!hasLetters) return "L'ADN REQUIERT DES LETTRES";
+
+    // 4. Cohérence (Voyelles)
+    const hasVowels = /[aeiouyàâäéèêëîïôöùûü]/.test(trimmed);
+    if (!hasVowels) return "NOM INCOHÉRENT (VOYELLES REQUISES)";
+
+    // 5. Anti-Spam (Répétitions)
+    const hasRepetition = /(.)\1{3,}/.test(trimmed);
+    if (hasRepetition) return "FORMAT INVALIDE (RÉPÉTITION ABUSIVE)";
+
     return null;
   };
 
@@ -62,8 +74,9 @@ export default function SquadMode({ onBack }: SquadModeProps) {
 
     const userData = JSON.parse(savedAvatar);
     const nameValidationError = validateUsername(userData.name);
+    
     if (nameValidationError) {
-      setError(nameValidationError);
+      setError(`ADN CORROMPU : ${nameValidationError}. RÉINITIALISEZ EN MODE SOLO.`);
       return;
     }
 
@@ -72,7 +85,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
       const newCode = "UNIT-" + Math.random().toString(36).substring(2, 7).toUpperCase();
       setSquadId(newCode);
       
-      // Simuler l'enregistrement du code dans un registre global
       const registry = JSON.parse(localStorage.getItem('all_active_squads') || '[]');
       localStorage.setItem('all_active_squads', JSON.stringify([...registry, newCode]));
       
@@ -83,7 +95,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
         return;
       }
 
-      // Vérifier si le code existe dans notre registre
       const registry = JSON.parse(localStorage.getItem('all_active_squads') || '[]');
       if (!registry.includes(id.toUpperCase())) {
         setError("CODE D'INFILTRATION INVALIDE OU INEXISTANT");
@@ -134,12 +145,10 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                 </div>
               </div>
 
-              {/* Affichage des membres RÉELS (Pour l'instant seulement l'utilisateur) */}
               <div className="flex -space-x-3">
                 <div className="w-9 h-9 rounded-xl border-2 border-purple-500 bg-zinc-800 overflow-hidden shadow-lg z-10">
                   <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatar.seed}`} alt="member" />
                 </div>
-                {/* Slots vides pour les futurs membres */}
                 <div className="w-9 h-9 rounded-xl border-2 border-dashed border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-white/20 font-black italic">
                   +
                 </div>
@@ -158,7 +167,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
           </header>
         )}
 
-        {/* Contenu Principal */}
         <main className="flex-1 overflow-y-auto bg-black">
           {activeTab === 'routine' && (
             <div className="p-6 space-y-4 pb-32 animate-in fade-in slide-in-from-bottom-4">
@@ -211,7 +219,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
           )}
         </main>
 
-        {/* Navigation Basse */}
         <nav className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/10 p-4 pb-8 flex justify-around items-center">
           <button onClick={() => setActiveTab('routine')} className={`flex flex-col items-center gap-1 ${activeTab === 'routine' ? 'text-purple-500' : 'text-white/20'}`}>
             <LayoutDashboard size={20} />

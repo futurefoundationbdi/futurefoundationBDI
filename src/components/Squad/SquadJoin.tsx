@@ -38,7 +38,8 @@ export const SquadJoin = ({ inputCode, setInputCode, onJoin, isLoading, error, o
             placeholder="ENTRER LE CODE D'ACCÈS..." 
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-            className="w-full bg-white/5 border border-white/10 p-5 rounded-[24px] text-center font-black outline-none focus:border-purple-500 focus:ring-1 ring-purple-500/50 transition-all text-white shadow-inner placeholder:text-white/10 uppercase"
+            // MODIFICATION ICI : Ajout du bounce et de la bordure rouge si erreur
+            className={`w-full bg-white/5 border ${error ? 'border-red-500 animate-bounce' : 'border-white/10'} p-5 rounded-[24px] text-center font-black outline-none focus:border-purple-500 focus:ring-1 ring-purple-500/50 transition-all text-white shadow-inner placeholder:text-white/10 uppercase`}
           />
         </div>
         <button 
@@ -58,9 +59,10 @@ export const SquadJoin = ({ inputCode, setInputCode, onJoin, isLoading, error, o
 
       {/* SECTION : CRÉER */}
       <div className="space-y-4">
+        {/* MODIFICATION ICI : Le bouton "Fonder" peut aussi bénéficier du bounce s'il y a une erreur d'ADN */}
         <button 
           onClick={() => onJoin("", true)} 
-          className="w-full py-5 border-2 border-dashed border-purple-900/50 text-purple-400 font-black rounded-[24px] hover:bg-purple-900/20 hover:border-purple-500 transition-all uppercase text-sm flex items-center justify-center gap-3 italic"
+          className={`w-full py-5 border-2 border-dashed ${error ? 'border-red-500 animate-bounce' : 'border-purple-900/50'} text-purple-400 font-black rounded-[24px] hover:bg-purple-900/20 hover:border-purple-500 transition-all uppercase text-sm flex items-center justify-center gap-3 italic`}
         >
           <PlusCircle size={18} /> Fonder une escouade
         </button>
@@ -72,9 +74,9 @@ export const SquadJoin = ({ inputCode, setInputCode, onJoin, isLoading, error, o
 
     {/* ERREUR TACTIQUE */}
     {error && (
-      <div className="bg-red-950/30 text-red-500 p-4 rounded-2xl border border-red-900/50 animate-pulse">
+      <div className="bg-red-950/30 text-red-500 p-4 rounded-2xl border border-red-900/50 animate-in fade-in slide-in-from-bottom-2">
         <p className="text-[10px] font-black uppercase italic flex items-center gap-2">
-           ⚠️ ALERTE : {error}
+            ⚠️ ALERTE : {error}
         </p>
       </div>
     )}

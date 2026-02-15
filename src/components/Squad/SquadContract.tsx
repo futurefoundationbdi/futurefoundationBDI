@@ -5,18 +5,17 @@ interface SquadContractProps {
   squadId: string;
   duration: number;
   onSign: () => void;
-  onBack: () => void; // Prop ajoutée pour le retour
+  onBack: () => void;
 }
 
 export const SquadContract = ({ squadId, duration, onSign, onBack }: SquadContractProps) => {
   return (
-    <div className="flex flex-col h-screen bg-black p-6 justify-center animate-in slide-in-from-bottom-10 duration-700">
-      <div className="max-w-md mx-auto w-full bg-[#0A0A0A] p-8 rounded-[40px] shadow-[0_20px_50px_rgba(147,51,234,0.15)] border border-white/5 space-y-8 relative overflow-hidden">
+    // CHANGEMENT ICI : min-h-screen et py-10 pour laisser respirer le contenu
+    <div className="flex flex-col min-h-screen bg-black p-6 items-center justify-start overflow-y-auto animate-in slide-in-from-bottom-10 duration-700">
+      <div className="max-w-md mx-auto w-full bg-[#0A0A0A] p-8 rounded-[40px] shadow-[0_20px_50px_rgba(147,51,234,0.15)] border border-white/5 space-y-8 relative overflow-hidden my-auto">
         
-        {/* Barre de décoration supérieure néon */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-900 via-purple-500 to-purple-900"></div>
 
-        {/* En-tête du Contrat */}
         <div className="text-center space-y-2">
           <div className="w-16 h-16 bg-purple-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3 border border-purple-500/30">
             <ShieldCheck size={32} className="text-purple-500 animate-pulse" />
@@ -27,7 +26,6 @@ export const SquadContract = ({ squadId, duration, onSign, onBack }: SquadContra
           </div>
         </div>
 
-        {/* Clauses de l'engagement */}
         <div className="space-y-4">
           <h4 className="text-[10px] font-black uppercase text-purple-500 tracking-widest ml-1 text-center">Protocoles d'engagement</h4>
           <div className="space-y-3">
@@ -45,7 +43,6 @@ export const SquadContract = ({ squadId, duration, onSign, onBack }: SquadContra
           </div>
         </div>
 
-        {/* Alerte Risque */}
         <div className="flex gap-3 items-start bg-red-900/10 p-4 rounded-2xl border border-red-900/20">
           <AlertCircle size={16} className="text-red-500 shrink-0" />
           <p className="text-[9px] font-bold text-red-400 uppercase leading-relaxed">
@@ -53,8 +50,7 @@ export const SquadContract = ({ squadId, duration, onSign, onBack }: SquadContra
           </p>
         </div>
 
-        {/* Actions finales */}
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
           <button 
             onClick={onSign}
             className="w-full py-6 bg-purple-600 text-white font-black rounded-[24px] shadow-[0_10px_30px_rgba(147,51,234,0.3)] active:scale-95 transition-all uppercase italic tracking-widest text-sm border border-purple-400"
@@ -71,7 +67,7 @@ export const SquadContract = ({ squadId, duration, onSign, onBack }: SquadContra
         </div>
       </div>
 
-      <p className="text-center mt-8 text-[9px] font-bold text-white/20 uppercase tracking-widest italic">
+      <p className="text-center mt-8 mb-8 text-[9px] font-bold text-white/20 uppercase tracking-widest italic">
         Coalition Intelligence System • 2026
       </p>
     </div>

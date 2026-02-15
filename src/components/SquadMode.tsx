@@ -21,6 +21,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   // --- ÉTATS DE DONNÉES ---
   const [squadId, setSquadId] = useState<string | null>(localStorage.getItem('squad_id'));
   const [duration, setDuration] = useState(30);
+  const [maxMembers, setMaxMembers] = useState(3); // Ajout : par défaut 3
   const [inputCode, setInputCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +30,9 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   useEffect(() => {
     const savedSquadId = localStorage.getItem('squad_id');
     const isSigned = localStorage.getItem('squad_signed') === 'true';
+    const savedMax = localStorage.getItem('squad_max_members'); // Récupère la config
+
+    if (savedMax) setMaxMembers(parseInt(savedMax));
 
     if (savedSquadId) {
       setSquadId(savedSquadId);
@@ -36,36 +40,23 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     }
   }, []);
 
-  // --- UTILITAIRES DE VALIDATION STRICTE (Harmonisé avec SoloMode) ---
+  // --- UTILITAIRES DE VALIDATION STRICTE (Gardé identique) ---
   const validateUsername = (name: string): string | null => {
     const trimmed = name.trim().toLowerCase();
-    
-    // 1. Longueur minimale
     if (trimmed.length < 3) return "NOM TROP COURT (MIN. 3)";
-
-    // 2. Uniquement des chiffres
     if (/^\d+$/.test(trimmed)) return "IDENTIFIANT NUMÉRIQUE REFUSÉ";
-
-    // 3. Présence de lettres
     const hasLetters = /[a-zàâäéèêëîïôöùûüç]/.test(trimmed);
     if (!hasLetters) return "L'ADN REQUIERT DES LETTRES";
-
-    // 4. Cohérence (Voyelles)
     const hasVowels = /[aeiouyàâäéèêëîïôöùûü]/.test(trimmed);
     if (!hasVowels) return "NOM INCOHÉRENT (VOYELLES REQUISES)";
-
-    // 5. Anti-Spam (Répétitions)
     const hasRepetition = /(.)\1{3,}/.test(trimmed);
     if (hasRepetition) return "FORMAT INVALIDE (RÉPÉTITION ABUSIVE)";
-
     return null;
   };
 
   // --- ACTIONS DE NAVIGATION ---
   const handleJoin = (id: string, isNew: boolean) => {
     setError(""); 
-    
-    // Vérification de l'existence d'un avatar Solo
     const savedAvatar = localStorage.getItem('future_library_avatar');
     if (!savedAvatar) {
       setError("INITIALISEZ VOTRE ADN EN MODE SOLO D'ABORD");
@@ -81,26 +72,21 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     }
 
     if (isNew) {
-      // Création d'un nouveau code unique
       const newCode = "UNIT-" + Math.random().toString(36).substring(2, 7).toUpperCase();
       setSquadId(newCode);
-      
       const registry = JSON.parse(localStorage.getItem('all_active_squads') || '[]');
       localStorage.setItem('all_active_squads', JSON.stringify([...registry, newCode]));
-      
       setStep('config');
     } else {
       if (!id || id.trim() === "") {
         setError("CODE D'ACCÈS REQUIS");
         return;
       }
-
       const registry = JSON.parse(localStorage.getItem('all_active_squads') || '[]');
       if (!registry.includes(id.toUpperCase())) {
         setError("CODE D'INFILTRATION INVALIDE OU INEXISTANT");
         return;
       }
-
       setSquadId(id.toUpperCase());
       localStorage.setItem('squad_id', id.toUpperCase());
       setStep('contract');
@@ -109,6 +95,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
 
   const handleSign = () => {
     localStorage.setItem('squad_signed', 'true');
+    localStorage.setItem('squad_max_members', maxMembers.toString()); // Sauvegarde la limite
     setStep('dashboard');
   };
 
@@ -116,6 +103,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     if (window.confirm("VOULEZ-VOUS VRAIMENT QUITTER CETTE UNITÉ ? TOUTE PROGRESSION SERA PERDUE.")) {
       localStorage.removeItem('squad_id');
       localStorage.removeItem('squad_signed');
+      localStorage.removeItem('squad_max_members');
       setSquadId(null);
       setStep('join');
     }
@@ -127,16 +115,11 @@ export default function SquadMode({ onBack }: SquadModeProps) {
 
     return (
       <div className="flex flex-col h-screen bg-black text-white max-w-md mx-auto overflow-hidden relative font-sans border-x border-white/5">
-        
-        {/* Header Tactique */}
         {activeTab !== 'chat' && (
           <header className="p-6 bg-[#0A0A0A] border-b border-white/10 animate-in fade-in slide-in-from-top duration-500 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={onBack}
-                  className="p-2 -ml-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
-                >
+                <button onClick={onBack} className="p-2 -ml-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white">
                   <ChevronLeft size={24} />
                 </button>
                 <div>
@@ -149,15 +132,18 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                 <div className="w-9 h-9 rounded-xl border-2 border-purple-500 bg-zinc-800 overflow-hidden shadow-lg z-10">
                   <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatar.seed}`} alt="member" />
                 </div>
-                <div className="w-9 h-9 rounded-xl border-2 border-dashed border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-white/20 font-black italic">
-                  +
-                </div>
+                {/* On affiche des slots vides selon la config choisie (maxMembers) */}
+                {Array.from({ length: Math.min(maxMembers - 1, 3) }).map((_, i) => (
+                  <div key={i} className="w-9 h-9 rounded-xl border-2 border-dashed border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-white/20 font-black italic">
+                    +
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="space-y-2 bg-black/40 p-3 rounded-2xl border border-white/5">
               <div className="flex justify-between text-[8px] font-black uppercase text-white/30 tracking-widest">
-                <span>Sync. Unité</span>
+                <span>Sync. Unité ({maxMembers} membres)</span>
                 <span className="text-purple-400">0%</span>
               </div>
               <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
@@ -202,10 +188,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                 <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatar.seed}`} alt="Profile" />
               </div>
               <h3 className="text-2xl font-black uppercase italic">{avatar.name}</h3>
-              <button 
-                onClick={handleAbandonSquad}
-                className="w-full py-4 bg-red-950/20 border border-red-900/40 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all"
-              >
+              <button onClick={handleAbandonSquad} className="w-full py-4 bg-red-950/20 border border-red-900/40 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all">
                 Quitter l'escouade actuelle
               </button>
             </div>
@@ -224,26 +207,17 @@ export default function SquadMode({ onBack }: SquadModeProps) {
             <LayoutDashboard size={20} />
             <span className="text-[8px] font-black uppercase tracking-tighter">Missions</span>
           </button>
-          
           <button onClick={() => setActiveTab('membres')} className={`flex flex-col items-center gap-1 ${activeTab === 'membres' ? 'text-purple-500' : 'text-white/20'}`}>
             <Users size={20} />
             <span className="text-[8px] font-black uppercase tracking-tighter">Unité</span>
           </button>
-
-          <button 
-            onClick={() => setActiveTab('chat')} 
-            className={`p-4 rounded-[22px] -translate-y-8 shadow-[0_0_30px_rgba(147,51,234,0.3)] border-4 border-black transition-all ${
-              activeTab === 'chat' ? 'bg-white text-black' : 'bg-purple-600 text-white'
-            }`}
-          >
+          <button onClick={() => setActiveTab('chat')} className={`p-4 rounded-[22px] -translate-y-8 shadow-[0_0_30px_rgba(147,51,234,0.3)] border-4 border-black transition-all ${activeTab === 'chat' ? 'bg-white text-black' : 'bg-purple-600 text-white'}`}>
             <MessageSquare size={26} />
           </button>
-
           <button onClick={() => setActiveTab('boosts')} className={`flex flex-col items-center gap-1 ${activeTab === 'boosts' ? 'text-purple-500' : 'text-white/20'}`}>
             <Zap size={20} />
             <span className="text-[8px] font-black uppercase tracking-tighter">Boosts</span>
           </button>
-
           <button onClick={() => setActiveTab('profil')} className={`flex flex-col items-center gap-1 ${activeTab === 'profil' ? 'text-purple-500' : 'text-white/20'}`}>
             <User size={20} />
             <span className="text-[8px] font-black uppercase tracking-tighter">Profil</span>
@@ -256,38 +230,11 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const renderCurrentStep = () => {
     switch (step) {
       case 'join':
-        return (
-          <SquadJoin 
-            inputCode={inputCode} 
-            setInputCode={setInputCode} 
-            onJoin={handleJoin} 
-            isLoading={isLoading} 
-            error={error} 
-            onBack={onBack} 
-          />
-        );
+        return <SquadJoin inputCode={inputCode} setInputCode={setInputCode} onJoin={handleJoin} isLoading={isLoading} error={error} onBack={onBack} />;
       case 'config':
-        return (
-          <SquadConfig 
-            duration={duration} 
-            setDuration={setDuration} 
-            onConfirm={() => setStep('contract')} 
-            onBack={() => setStep('join')}
-          />
-        );
+        return <SquadConfig duration={duration} setDuration={setDuration} maxMembers={maxMembers} setMaxMembers={setMaxMembers} onConfirm={() => setStep('contract')} onBack={() => setStep('join')} />;
       case 'contract':
-        return (
-          <SquadContract 
-            squadId={squadId || "UNITÉ-ALPHA"} 
-            duration={duration} 
-            onSign={handleSign} 
-            onBack={() => {
-               localStorage.removeItem('squad_id');
-               setSquadId(null);
-               setStep('join');
-            }} 
-          />
-        );
+        return <SquadContract squadId={squadId || "UNITÉ-ALPHA"} duration={duration} onSign={handleSign} onBack={() => { localStorage.removeItem('squad_id'); setSquadId(null); setStep('join'); }} />;
       case 'dashboard':
         return renderDashboard();
       default:
@@ -295,9 +242,5 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     }
   };
 
-  return (
-    <div className="bg-black min-h-screen">
-      {renderCurrentStep()}
-    </div>
-  );
+  return <div className="bg-black min-h-screen">{renderCurrentStep()}</div>;
 }

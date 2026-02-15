@@ -98,7 +98,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
             onBack={() => setStep('join')} // Retourne à l'accueil du mode Squad si refusé
           />
         );
-
       case 'dashboard':
         return renderDashboard();
 

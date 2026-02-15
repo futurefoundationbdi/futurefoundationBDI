@@ -39,7 +39,7 @@ export default function SoloMode({ onBack }: SoloModeProps) {
   const [step, setStep] = useState(1);
   const [selectedId, setSelectedId] = useState('f1');
   const [userName, setUserName] = useState("");
-  const [error, setError] = useState(""); // État pour la validation
+  const [error, setError] = useState(""); 
   const [avatarData, setAvatarData] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
   const [history, setHistory] = useState<any[]>([]);
@@ -47,15 +47,28 @@ export default function SoloMode({ onBack }: SoloModeProps) {
   const [sessionFinished, setSessionFinished] = useState(false);
   const [coachMessage, setCoachMessage] = useState("");
 
-  // --- 1. VALIDATION DE L'IDENTITÉ ---
+  // --- 1. VALIDATION STRICTE DE L'IDENTITÉ ---
   const validateUsername = (name: string): string | null => {
-    const trimmed = name.trim();
-    const hasLetters = /[a-zA-ZàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]/.test(trimmed);
-    const isOnlyNumbers = /^\d+$/.test(trimmed);
+    const trimmed = name.trim().toLowerCase();
+    
+    // Longueur
+    if (trimmed.length < 3) return "NOM TROP COURT (MIN. 3)";
 
-    if (trimmed.length < 3) return "NOM TROP COURT (MIN. 3 CHAR)";
+    // Uniquement des chiffres
+    if (/^\d+$/.test(trimmed)) return "IDENTIFIANT NUMÉRIQUE REFUSÉ";
+
+    // Présence de lettres
+    const hasLetters = /[a-zàâäéèêëîïôöùûüç]/.test(trimmed);
     if (!hasLetters) return "L'ADN REQUIERT DES LETTRES";
-    if (isOnlyNumbers) return "IDENTIFIANT NUMÉRIQUE PUR REFUSÉ";
+
+    // Cohérent (doit contenir au moins une voyelle)
+    const hasVowels = /[aeiouyàâäéèêëîïôöùûü]/.test(trimmed);
+    if (!hasVowels) return "NOM INCOHÉRENT (VOYELLES REQUISES)";
+
+    // Anti-Spam (pas de répétition de plus de 3 fois la même lettre)
+    const hasRepetition = /(.)\1{3,}/.test(trimmed);
+    if (hasRepetition) return "FORMAT INVALIDE (RÉPÉTITION ABUSIVE)";
+
     return null;
   };
 
@@ -204,9 +217,9 @@ export default function SoloMode({ onBack }: SoloModeProps) {
                 value={userName} 
                 onChange={(e) => {
                   setUserName(e.target.value);
-                  if(error) setError(""); // Reset l'erreur pendant la frappe
+                  if(error) setError(""); 
                 }} 
-                className={`w-full bg-white/5 border ${error ? 'border-red-500' : 'border-white/10'} p-4 rounded-2xl text-center outline-none focus:border-cyan-500 uppercase font-bold text-white transition-colors`} 
+                className={`w-full bg-white/5 border ${error ? 'border-red-500 animate-bounce' : 'border-white/10'} p-4 rounded-2xl text-center outline-none focus:border-cyan-500 uppercase font-bold text-white transition-colors`} 
               />
               {error && <p className="text-[9px] text-red-500 font-black text-center uppercase animate-pulse">{error}</p>}
             </div>

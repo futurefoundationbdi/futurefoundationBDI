@@ -1,4 +1,4 @@
-# The Future Foundation BDI - Plateforme Officielle
+# The Future Generation BDI - Plateforme Officielle
 
 Bienvenue sur le dépôt officiel de **The Future Foundation BDI**. Notre mission est de bâtir une génération financièrement indépendante au Burundi grâce à l'éducation, l'intelligence financière et le développement personnel.
 

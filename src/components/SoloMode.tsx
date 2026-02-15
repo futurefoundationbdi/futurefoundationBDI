@@ -39,6 +39,7 @@ export default function SoloMode({ onBack }: SoloModeProps) {
   const [step, setStep] = useState(1);
   const [selectedId, setSelectedId] = useState('f1');
   const [userName, setUserName] = useState("");
+  const [error, setError] = useState(""); // État pour la validation
   const [avatarData, setAvatarData] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
   const [history, setHistory] = useState<any[]>([]);
@@ -46,22 +47,31 @@ export default function SoloMode({ onBack }: SoloModeProps) {
   const [sessionFinished, setSessionFinished] = useState(false);
   const [coachMessage, setCoachMessage] = useState("");
 
-  // --- 1. FONCTION DE CALCUL DU CHRONO ---
+  // --- 1. VALIDATION DE L'IDENTITÉ ---
+  const validateUsername = (name: string): string | null => {
+    const trimmed = name.trim();
+    const hasLetters = /[a-zA-ZàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]/.test(trimmed);
+    const isOnlyNumbers = /^\d+$/.test(trimmed);
+
+    if (trimmed.length < 3) return "NOM TROP COURT (MIN. 3 CHAR)";
+    if (!hasLetters) return "L'ADN REQUIERT DES LETTRES";
+    if (isOnlyNumbers) return "IDENTIFIANT NUMÉRIQUE PUR REFUSÉ";
+    return null;
+  };
+
+  // --- 2. CALCUL DU CHRONO ---
   const calculateTimeLeft = () => {
     const now = new Date();
     const midnight = new Date();
     midnight.setHours(24, 0, 0, 0);
     const diff = midnight.getTime() - now.getTime();
-    
     const totalSeconds = Math.max(0, Math.floor(diff / 1000));
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = totalSeconds % 60;
-    
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // --- 2. CHARGEMENT INITIAL ---
   useEffect(() => {
     const savedAvatar = localStorage.getItem('future_library_avatar');
     const savedHistory = localStorage.getItem('quest_history');
@@ -85,7 +95,6 @@ export default function SoloMode({ onBack }: SoloModeProps) {
     }
   }, []);
 
-  // --- 3. LOGIQUE DES QUÊTES (Memoized) ---
   const currentQuests = useMemo(() => {
     if (!avatarData) return [];
     const allQuests = [...QUEST_POOL.mental, ...QUEST_POOL.physique, ...QUEST_POOL.discipline];
@@ -97,23 +106,18 @@ export default function SoloMode({ onBack }: SoloModeProps) {
     return selected;
   }, [avatarData?.level]);
 
-  // --- 4. TIMER (Protocole Temporel) ---
   useEffect(() => {
     if (step !== 2) return;
-    
-    setTimeLeft(calculateTimeLeft()); // Init immédiat
+    setTimeLeft(calculateTimeLeft());
     const timer = setInterval(() => {
       const time = calculateTimeLeft();
       setTimeLeft(time);
-      
-      // Si minuit passe, on réinitialise l'état pour le nouveau jour
       if (time === "00:00:00") {
         setSessionFinished(false);
         setCompletedTasks([]);
         localStorage.removeItem('daily_checks');
       }
     }, 1000);
-
     return () => clearInterval(timer);
   }, [step]);
 
@@ -141,10 +145,17 @@ export default function SoloMode({ onBack }: SoloModeProps) {
   };
 
   const handleCreate = () => {
-    if (!userName.trim()) return alert("Nom requis.");
+    setError("");
+    const validationError = validateUsername(userName);
+    
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     const archetype = AVATAR_ARCHETYPES.find(a => a.id === selectedId);
     const newAvatar = { 
-      name: userName, 
+      name: userName.trim(), 
       seed: archetype?.seed, 
       level: 1, 
       createdAt: new Date().toISOString(), 
@@ -162,6 +173,8 @@ export default function SoloMode({ onBack }: SoloModeProps) {
       setHistory([]);
       setCompletedTasks([]);
       setSessionFinished(false);
+      setUserName("");
+      setError("");
       setStep(1);
     }
   };
@@ -184,8 +197,19 @@ export default function SoloMode({ onBack }: SoloModeProps) {
             ))}
           </div>
           <div className="w-full max-w-xs space-y-4">
-            <input type="text" placeholder="NOM DU MONARQUE..." value={userName} onChange={(e) => setUserName(e.target.value)} 
-              className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-center outline-none focus:border-cyan-500 uppercase font-bold text-white" />
+            <div className="space-y-1">
+              <input 
+                type="text" 
+                placeholder="NOM DU MONARQUE..." 
+                value={userName} 
+                onChange={(e) => {
+                  setUserName(e.target.value);
+                  if(error) setError(""); // Reset l'erreur pendant la frappe
+                }} 
+                className={`w-full bg-white/5 border ${error ? 'border-red-500' : 'border-white/10'} p-4 rounded-2xl text-center outline-none focus:border-cyan-500 uppercase font-bold text-white transition-colors`} 
+              />
+              {error && <p className="text-[9px] text-red-500 font-black text-center uppercase animate-pulse">{error}</p>}
+            </div>
             <button onClick={handleCreate} className="w-full py-4 bg-cyan-600 text-black font-black uppercase rounded-2xl shadow-lg shadow-cyan-900/20 active:scale-95 transition-transform">
               Activer l'ADN
             </button>
@@ -250,21 +274,21 @@ export default function SoloMode({ onBack }: SoloModeProps) {
               })}
             </div>
 
-            <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData.seed}`} 
+            <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarData?.seed}`} 
                  className="w-32 h-32 md:w-56 md:h-56 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.3)] animate-pulse" alt="avatar" />
           </div>
 
           {/* DROITE : STATS */}
           <div className="space-y-4 md:space-y-6">
             <div className="bg-white/5 border border-white/10 p-6 md:p-8 rounded-[32px] text-center relative overflow-hidden backdrop-blur-sm">
-              <h3 className="text-2xl md:text-3xl font-black italic uppercase text-white">{avatarData.name}</h3>
+              <h3 className="text-2xl md:text-3xl font-black italic uppercase text-white">{avatarData?.name}</h3>
               <div className="mt-6 space-y-2 text-left">
                 <div className="flex justify-between text-[10px] font-black uppercase">
                   <span className="opacity-40">Progression ADN</span>
-                  <span className="text-cyan-400">NIVEAU {avatarData.level} / 31</span>
+                  <span className="text-cyan-400">NIVEAU {avatarData?.level} / 31</span>
                 </div>
                 <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-[2px]">
-                  <div className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-1000" style={{ width: `${(avatarData.level / 31) * 100}%` }} />
+                  <div className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-1000" style={{ width: `${((avatarData?.level || 1) / 31) * 100}%` }} />
                 </div>
               </div>
 

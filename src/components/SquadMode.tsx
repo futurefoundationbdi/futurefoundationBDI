@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, MessageSquare, Zap, User, 
-  Droplets, CheckCircle2, Trophy, ShieldAlert
+  CheckCircle2, Trophy, ArrowLeft, ChevronLeft
 } from 'lucide-react';
 
-// Import de tes composants (Chemin : ./Squad/...)
 import { SquadJoin } from './Squad/SquadJoin';
 import { SquadConfig } from './Squad/SquadConfig';
 import { SquadContract } from './Squad/SquadContract';
@@ -40,18 +39,14 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   // --- ACTIONS DE NAVIGATION ---
 
   const handleJoin = (id: string, isNew: boolean) => {
-    setError(""); // Reset de l'erreur
-    
+    setError(""); 
     if (isNew) {
-      // CAS 1 : Création d'une nouvelle escouade
       setStep('config');
     } else {
-      // CAS 2 : Tentative de rejoindre une escouade existante
       if (!id || id.trim() === "") {
         setError("CODE D'ACCÈS REQUIS");
         return;
       }
-      // Simulation de succès (À lier plus tard à ta DB)
       setSquadId(id);
       localStorage.setItem('squad_id', id);
       setStep('contract');
@@ -61,6 +56,11 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const handleSign = () => {
     localStorage.setItem('squad_signed', 'true');
     setStep('dashboard');
+  };
+
+  const handleExitSquad = () => {
+    // Cette fonction permet de revenir au menu principal sans quitter l'escouade
+    onBack();
   };
 
   // --- RENDU DES ÉTAPES ---
@@ -95,7 +95,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
             squadId={squadId || "UNITÉ-ALPHA"} 
             duration={duration} 
             onSign={handleSign} 
-            onBack={() => setStep('join')} // Retourne à l'accueil du mode Squad si refusé
+            onBack={() => setStep('join')} 
           />
         );
       case 'dashboard':
@@ -114,9 +114,18 @@ export default function SquadMode({ onBack }: SquadModeProps) {
       {activeTab !== 'chat' && (
         <header className="p-6 bg-[#0A0A0A] border-b border-white/10 animate-in fade-in slide-in-from-top duration-500 shadow-2xl">
           <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">JOUR 01</h2>
-              <p className="text-[9px] font-black text-purple-500 uppercase tracking-[0.3em]">Opération active</p>
+            <div className="flex items-center gap-3">
+              {/* BOUTON RETOUR AJOUTÉ ICI */}
+              <button 
+                onClick={handleExitSquad}
+                className="p-2 -ml-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <div>
+                <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">JOUR 01</h2>
+                <p className="text-[9px] font-black text-purple-500 uppercase tracking-[0.3em]">Opération active</p>
+              </div>
             </div>
             <div className="flex -space-x-3">
               {[1, 2, 3].map(i => (
@@ -145,7 +154,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
         {activeTab === 'routine' && (
           <div className="p-6 space-y-4 pb-32 animate-in fade-in slide-in-from-bottom-4">
              <h3 className="text-[10px] font-black uppercase text-white/20 tracking-[0.2em]">Missions de l'escouade</h3>
-             {/* Tes missions ici... */}
              <div className="bg-[#0A0A0A] p-5 rounded-[28px] border border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-black rounded-2xl border border-white/5 flex items-center justify-center text-xl shadow-inner text-orange-500">⚡</div>
@@ -160,8 +168,15 @@ export default function SquadMode({ onBack }: SquadModeProps) {
         )}
 
         {activeTab === 'chat' && (
-          <div className="h-full">
-            <SquadChat messages={[]} newMessage="" setNewMessage={() => {}} onSend={(e:any) => e.preventDefault()} myName="Moi" />
+          <div className="h-full flex flex-col">
+            {/* Bouton retour spécial pour le mode chat plein écran */}
+            <div className="p-4 bg-[#0A0A0A] border-b border-white/5 flex items-center gap-3">
+              <button onClick={() => setActiveTab('routine')} className="text-white/40"><ArrowLeft size={20}/></button>
+              <span className="text-[10px] font-black uppercase tracking-widest italic">Canal de l'Unité</span>
+            </div>
+            <div className="flex-1">
+              <SquadChat messages={[]} newMessage="" setNewMessage={() => {}} onSend={(e:any) => e.preventDefault()} myName="Moi" />
+            </div>
           </div>
         )}
 
@@ -169,6 +184,12 @@ export default function SquadMode({ onBack }: SquadModeProps) {
           <div className="h-full flex flex-col items-center justify-center text-white/10 space-y-4">
             <Trophy size={48} />
             <p className="font-black uppercase text-[10px] tracking-[0.4em] italic text-center px-10">Accès restreint aux membres certifiés</p>
+            <button 
+              onClick={() => setActiveTab('routine')}
+              className="text-[9px] bg-white/5 px-4 py-2 rounded-full border border-white/10 text-white/40"
+            >
+              RETOUR MISSIONS
+            </button>
           </div>
         )}
       </main>

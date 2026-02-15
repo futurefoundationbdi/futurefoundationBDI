@@ -95,6 +95,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
             squadId={squadId || "UNITÉ-ALPHA"} 
             duration={duration} 
             onSign={handleSign} 
+            onBack={() => setStep('join')} // Retourne à l'accueil du mode Squad si refusé
           />
         );
 

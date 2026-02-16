@@ -8,6 +8,7 @@ import { SquadJoin } from './Squad/SquadJoin';
 import { SquadConfig } from './Squad/SquadConfig';
 import { SquadContract } from './Squad/SquadContract';
 import { SquadChat } from './Squad/SquadChat';
+// Assure-toi que ChallengeMode est bien exporté dans squadService.ts
 import { squadService, ChallengeMode } from '../services/squadService';
 
 interface SquadModeProps {
@@ -21,7 +22,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const [squadId, setSquadId] = useState<string | null>(localStorage.getItem('squad_id'));
   const [duration, setDuration] = useState(30);
   const [maxMembers, setMaxMembers] = useState(3);
-  const [challengeMode, setChallengeMode] = useState<ChallengeMode>('SYSTEM'); // Nouvel état
+  const [challengeMode, setChallengeMode] = useState<ChallengeMode>('SYSTEM');
   const [inputCode, setInputCode] = useState("");
   const [error, setError] = useState("");
 
@@ -52,7 +53,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     }
   }, []);
 
-  // Intervalle + Écouteurs pour l'instantanéité
   useEffect(() => {
     if (step === 'dashboard' && squadId) {
       const sync = () => {
@@ -62,7 +62,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
 
       const syncInterval = setInterval(sync, 1500);
       window.addEventListener('squad_message_received', sync);
-      window.addEventListener('storage', sync); // Pour la synchro entre onglets
+      window.addEventListener('storage', sync);
 
       return () => {
         clearInterval(syncInterval);
@@ -103,7 +103,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const handleSign = () => {
     if (squadId) {
       if (!squadService.exists(squadId)) {
-        // Enregistrement avec le challengeMode choisi en config
         squadService.registerUnit(squadId, maxMembers, duration, challengeMode);
       } else {
         squadService.addMember(squadId);
@@ -121,36 +120,73 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     e.preventDefault();
     if (!newMessage.trim() || !squadId) return;
     const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
-    // Le service déclenchera l'événement 'squad_message_received'
     squadService.sendMessage(squadId, newMessage, avatar.name || "Moi");
     setNewMessage("");
   };
 
-  // --- RENDUS (uniquement les modifs dans renderCurrentStep) ---
-
-  const renderCurrentStep = () => {
-    switch (step) {
-      case 'list': return renderSquadList();
-      case 'join': return <SquadJoin inputCode={inputCode} setInputCode={setInputCode} onJoin={handleJoin} isLoading={false} error={error} onBack={onBack} />;
-      case 'config': return (
-        <SquadConfig 
-          duration={duration} 
-          setDuration={setDuration} 
-          maxMembers={maxMembers} 
-          setMaxMembers={setMaxMembers} 
-          challengeMode={challengeMode}
-          setChallengeMode={setChallengeMode}
-          onConfirm={() => setStep('contract')} 
-          onBack={() => setStep('join')} 
-        />
-      );
-      case 'contract': return <SquadContract squadId={squadId || "UNITÉ-ALPHA"} duration={duration} onSign={handleSign} onBack={() => setStep('join')} />;
-      case 'dashboard': return renderDashboard();
-      default: return null;
+  const handleAbandonSquad = () => {
+    if (window.confirm("VOULEZ-VOUS VRAIMENT QUITTER CETTE UNITÉ ?")) {
+      const remaining = squadService.removeFromMySquads(squadId!);
+      setMySquads(remaining);
+      localStorage.removeItem(`squad_signed_${squadId}`);
+      localStorage.removeItem('squad_id');
+      setSquadId(null);
+      setStep(remaining.length > 0 ? 'list' : 'join');
     }
   };
 
-  // ... (Garder renderDashboard et renderSquadList tels quels, ils utilisent déjà les bons états)
+  const copyToClipboard = () => {
+    if (squadId) {
+      navigator.clipboard.writeText(squadId);
+      alert("CODE COPIÉ !");
+    }
+  };
+
+  const shareWhatsApp = () => {
+    const text = `Rejoins mon unité sur SQUADMODE ! Code d'accès : ${squadId}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const renderSquadList = () => (
+    <div className="p-6 flex flex-col items-center justify-center min-h-[80vh] space-y-8 animate-in fade-in bg-black text-white">
+      <div className="text-center">
+        <h2 className="text-3xl font-black italic uppercase tracking-tighter">Vos Unités</h2>
+        <p className="text-[10px] text-purple-500 font-black tracking-widest uppercase mt-1">Sélectionnez une mission</p>
+      </div>
+
+      <div className="w-full max-w-sm space-y-4">
+        {mySquads.map((id) => (
+          <button 
+            key={id}
+            onClick={() => { setSquadId(id); setStep('dashboard'); localStorage.setItem('squad_id', id); }}
+            className="w-full p-6 bg-[#0A0A0A] border border-white/10 rounded-[28px] flex items-center justify-between hover:border-purple-500 transition-all group"
+          >
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white font-black uppercase">
+                {id.charAt(5) || "U"}
+              </div>
+              <div>
+                <p className="font-black italic text-lg uppercase tracking-tighter">{id}</p>
+                <p className="text-[9px] text-white/40 uppercase font-bold">Accéder au QG</p>
+              </div>
+            </div>
+            <ChevronLeft size={20} className="rotate-180 text-white/20 group-hover:text-purple-500" />
+          </button>
+        ))}
+
+        {mySquads.length < 2 && (
+          <button 
+            onClick={() => setStep('join')} 
+            className="w-full p-6 border-2 border-dashed border-white/5 rounded-[28px] flex items-center justify-center gap-3 text-white/30 hover:text-white transition-all bg-white/5"
+          >
+            <Plus size={20} />
+            <span className="font-black uppercase text-xs italic">Nouvelle Unité</span>
+          </button>
+        )}
+      </div>
+      <button onClick={onBack} className="text-[10px] font-black uppercase text-white/20 tracking-widest">Retour au Hub</button>
+    </div>
+  );
 
   const renderDashboard = () => {
     const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
@@ -210,7 +246,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
           {activeTab === 'routine' && (
             <div className="p-6 space-y-6">
                <h3 className="text-[10px] font-black uppercase text-white/20 tracking-[0.2em]">Protocole de Mission</h3>
-               
                {!isFull ? (
                  <div className="bg-orange-500/5 border border-orange-500/20 p-8 rounded-[32px] space-y-4 text-center animate-in zoom-in duration-500">
                     <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center mx-auto border border-orange-500/20">
@@ -228,11 +263,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                       <p className="text-sm font-black uppercase italic text-green-400">Membres au complet !</p>
                       <p className="text-[12px] font-black text-white uppercase italic tracking-tight">Le challenge commencera demain à 05h00</p>
                     </div>
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                       <p className="text-[9px] text-white/40 uppercase font-black leading-tight italic">
-                         Préparez-vous : vous aurez 24h pour chaque défi avant de recevoir les pénalités.
-                       </p>
-                    </div>
                  </div>
                )}
             </div>
@@ -242,7 +272,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
             <div className="h-full flex flex-col">
               <div className="p-4 bg-[#0A0A0A] border-b border-white/5 flex items-center gap-3">
                 <button onClick={() => setActiveTab('routine')} className="text-white/40"><ArrowLeft size={20}/></button>
-                <span className="text-[10px] font-black uppercase tracking-widest italic tracking-widest">Canal Tactique : {squadId}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest italic">Canal Tactique : {squadId}</span>
               </div>
               <div className="flex-1 overflow-hidden">
                 <SquadChat 
@@ -265,13 +295,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
               <button onClick={handleAbandonSquad} className="w-full py-4 bg-red-950/20 border border-red-900/40 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all">
                 Démanteler la liaison
               </button>
-            </div>
-          )}
-          
-          {['membres', 'boosts'].includes(activeTab) && (
-            <div className="h-full flex flex-col items-center justify-center text-white/10 space-y-4 min-h-[50vh]">
-              <Trophy size={48} />
-              <p className="font-black uppercase text-[10px] tracking-[0.4em] italic text-center px-10">Données restreintes au déploiement</p>
             </div>
           )}
         </main>
@@ -297,57 +320,27 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     );
   };
 
-  const handleAbandonSquad = () => {
-    if (window.confirm("VOULEZ-VOUS VRAIMENT QUITTER CETTE UNITÉ ?")) {
-      const remaining = squadService.removeFromMySquads(squadId!);
-      setMySquads(remaining);
-      localStorage.removeItem(`squad_signed_${squadId}`);
-      localStorage.removeItem('squad_id');
-      setSquadId(null);
-      setStep(remaining.length > 0 ? 'list' : 'join');
+  const renderCurrentStep = () => {
+    switch (step) {
+      case 'list': return renderSquadList();
+      case 'join': return <SquadJoin inputCode={inputCode} setInputCode={setInputCode} onJoin={handleJoin} isLoading={false} error={error} onBack={onBack} />;
+      case 'config': return (
+        <SquadConfig 
+          duration={duration} 
+          setDuration={setDuration} 
+          maxMembers={maxMembers} 
+          setMaxMembers={setMaxMembers} 
+          challengeMode={challengeMode}
+          setChallengeMode={setChallengeMode}
+          onConfirm={() => setStep('contract')} 
+          onBack={() => setStep('join')} 
+        />
+      );
+      case 'contract': return <SquadContract squadId={squadId || "UNITÉ-ALPHA"} duration={duration} onSign={handleSign} onBack={() => setStep('join')} />;
+      case 'dashboard': return renderDashboard();
+      default: return null;
     }
   };
-
-  const renderSquadList = () => (
-    <div className="p-6 flex flex-col items-center justify-center min-h-[80vh] space-y-8 animate-in fade-in bg-black">
-      <div className="text-center">
-        <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">Vos Unités</h2>
-        <p className="text-[10px] text-purple-500 font-black tracking-widest uppercase mt-1">Sélectionnez une mission</p>
-      </div>
-
-      <div className="w-full max-w-sm space-y-4">
-        {mySquads.map((id) => (
-          <button 
-            key={id}
-            onClick={() => { setSquadId(id); setStep('dashboard'); localStorage.setItem('squad_id', id); }}
-            className="w-full p-6 bg-[#0A0A0A] border border-white/10 rounded-[28px] flex items-center justify-between hover:border-purple-500 transition-all group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white font-black">
-                {id.charAt(5) || "U"}
-              </div>
-              <div className="text-left">
-                <p className="font-black italic text-lg uppercase text-white tracking-tighter">{id}</p>
-                <p className="text-[9px] text-white/40 uppercase font-bold">Accéder au QG</p>
-              </div>
-            </div>
-            <ChevronLeft size={20} className="rotate-180 text-white/20 group-hover:text-purple-500" />
-          </button>
-        ))}
-
-        {mySquads.length < 2 && (
-          <button 
-            onClick={() => setStep('join')} 
-            className="w-full p-6 border-2 border-dashed border-white/5 rounded-[28px] flex items-center justify-center gap-3 text-white/30 hover:text-white transition-all bg-white/5"
-          >
-            <Plus size={20} />
-            <span className="font-black uppercase text-xs italic">Nouvelle Unité</span>
-          </button>
-        )}
-      </div>
-      <button onClick={onBack} className="text-[10px] font-black uppercase text-white/20 tracking-widest">Retour au Hub</button>
-    </div>
-  );
 
   return <div className="bg-black min-h-screen">{renderCurrentStep()}</div>;
 }

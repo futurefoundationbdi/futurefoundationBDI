@@ -2,28 +2,81 @@
 
 const REGISTRY_KEY = 'global_units_registry';
 const MY_SQUADS_KEY = 'all_my_squads';
+const MESSAGES_PREFIX = 'squad_msg_';
+const MEMBERS_PREFIX = 'squad_members_count_';
 
 export const squadService = {
-  // Récupérer la liste de TOUTES les unités créées (simulation base de données)
-  getGlobalRegistry(): string[] {
+  // --- REGISTRE GLOBAL (Unités créées sur le réseau) ---
+  getGlobalRegistry(): any[] {
     return JSON.parse(localStorage.getItem(REGISTRY_KEY) || '[]');
   },
 
-  // Vérifier si un code existe dans le système
+  // Vérifie si un code existe et renvoie true/false
   exists(code: string): boolean {
     const registry = this.getGlobalRegistry();
-    return registry.includes(code.toUpperCase().trim());
+    return registry.some(unit => unit.id === code.toUpperCase().trim());
   },
 
-  // Enregistrer officiellement une nouvelle unité
-  registerUnit(code: string): void {
+  // Récupère toutes les infos d'une unité spécifique (max, durée, etc.)
+  getUnitData(code: string) {
     const registry = this.getGlobalRegistry();
-    if (!registry.includes(code)) {
-      localStorage.setItem(REGISTRY_KEY, JSON.stringify([...registry, code]));
+    return registry.find(unit => unit.id === code.toUpperCase().trim());
+  },
+
+  // Enregistre officiellement une nouvelle unité avec ses paramètres
+  registerUnit(code: string, max: number, duration: number): void {
+    const registry = this.getGlobalRegistry();
+    const cleanCode = code.toUpperCase().trim();
+    
+    if (!this.exists(cleanCode)) {
+      const newUnit = { 
+        id: cleanCode, 
+        max: max, 
+        duration: duration, 
+        createdAt: new Date().toISOString() 
+      };
+      localStorage.setItem(REGISTRY_KEY, JSON.stringify([...registry, newUnit]));
+      
+      // Le créateur est automatiquement le premier membre
+      localStorage.setItem(`${MEMBERS_PREFIX}${cleanCode}`, "1");
     }
   },
 
-  // Gérer mes unités personnelles (Max 2)
+  // --- GESTION DES MEMBRES ---
+  getMemberCount(code: string): number {
+    return parseInt(localStorage.getItem(`${MEMBERS_PREFIX}${code}`) || "0");
+  },
+
+  // Ajoute un membre au compteur (quand quelqu'un clique sur Infiltrer + Signature)
+  addMember(code: string): void {
+    const count = this.getMemberCount(code);
+    const unit = this.getUnitData(code);
+    
+    // Sécurité : on n'ajoute pas si c'est déjà plein
+    if (unit && count < unit.max) {
+      localStorage.setItem(`${MEMBERS_PREFIX}${code}`, (count + 1).toString());
+    }
+  },
+
+  // --- SYSTÈME DE CHAT DYNAMIQUE ---
+  getMessages(code: string): any[] {
+    return JSON.parse(localStorage.getItem(`${MESSAGES_PREFIX}${code}`) || '[]');
+  },
+
+  sendMessage(code: string, text: string, userName: string): any[] {
+    const messages = this.getMessages(code);
+    const newMessage = {
+      id: Date.now(),
+      text,
+      user_name: userName,
+      timestamp: new Date().toISOString()
+    };
+    const updated = [...messages, newMessage];
+    localStorage.setItem(`${MESSAGES_PREFIX}${code}`, JSON.stringify(updated));
+    return updated;
+  },
+
+  // --- GESTION PERSONNELLE (Mes unités) ---
   getMySquads(): string[] {
     return JSON.parse(localStorage.getItem(MY_SQUADS_KEY) || '[]');
   },

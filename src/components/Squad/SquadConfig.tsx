@@ -1,16 +1,24 @@
 import React from 'react';
-import { Calendar, ArrowRight, Shield, Clock, ArrowLeft, Users } from 'lucide-react';
+import { Calendar, ArrowRight, Shield, Clock, ArrowLeft, Users, Zap, Settings } from 'lucide-react';
+import { ChallengeMode } from '../services/squadService';
 
 interface SquadConfigProps {
   duration: number;
   setDuration: (val: number) => void;
-  maxMembers: number; // Nouveau
-  setMaxMembers: (val: number) => void; // Nouveau
+  maxMembers: number;
+  setMaxMembers: (val: number) => void;
+  challengeMode: ChallengeMode; // Nouveau
+  setChallengeMode: (val: ChallengeMode) => void; // Nouveau
   onConfirm: () => void;
   onBack: () => void;
 }
 
-export const SquadConfig = ({ duration, setDuration, maxMembers, setMaxMembers, onConfirm, onBack }: SquadConfigProps) => {
+export const SquadConfig = ({ 
+  duration, setDuration, 
+  maxMembers, setMaxMembers, 
+  challengeMode, setChallengeMode, 
+  onConfirm, onBack 
+}: SquadConfigProps) => {
   
   const getEndDate = () => {
     const date = new Date();
@@ -51,7 +59,51 @@ export const SquadConfig = ({ duration, setDuration, maxMembers, setMaxMembers, 
           </div>
         </div>
 
-        {/* --- SECTION 2 : DURÉE --- */}
+        {/* --- SECTION 2 : ORIGINE DES DÉFIS (NOUVEAU) --- */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Zap size={14} className="text-purple-500" />
+            <p className="text-[10px] font-black uppercase text-white/40 tracking-widest italic">Protocole de Défis</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setChallengeMode('SYSTEM')}
+              className={`p-4 rounded-2xl border transition-all text-left relative overflow-hidden group ${
+                challengeMode === 'SYSTEM' 
+                ? 'bg-purple-600/20 border-purple-500 text-white' 
+                : 'bg-black border-white/5 text-white/20 opacity-40 hover:opacity-100'
+              }`}
+            >
+              <div className="flex flex-col gap-1 relative z-10">
+                <p className="font-black uppercase italic text-[10px]">Système IA</p>
+                <p className="text-[8px] uppercase font-bold opacity-60">Défis imposés</p>
+              </div>
+              {challengeMode === 'SYSTEM' && <div className="absolute top-0 right-0 p-2"><Settings size={10} className="animate-spin-slow" /></div>}
+            </button>
+
+            <button
+              onClick={() => setChallengeMode('CUSTOM')}
+              className={`p-4 rounded-2xl border transition-all text-left relative overflow-hidden group ${
+                challengeMode === 'CUSTOM' 
+                ? 'bg-purple-600/20 border-purple-500 text-white' 
+                : 'bg-black border-white/5 text-white/20 opacity-40 hover:opacity-100'
+              }`}
+            >
+              <div className="flex flex-col gap-1 relative z-10">
+                <p className="font-black uppercase italic text-[10px]">Customisé</p>
+                <p className="text-[8px] uppercase font-bold opacity-60">Choix libre</p>
+              </div>
+              {challengeMode === 'CUSTOM' && <div className="absolute top-0 right-0 p-2"><Zap size={10} /></div>}
+            </button>
+          </div>
+          <p className="text-[8px] text-center text-white/20 uppercase font-bold px-4 leading-tight italic">
+            {challengeMode === 'SYSTEM' 
+              ? "L'IA génère les missions chaque matin à 05:00." 
+              : "Le groupe choisit ses propres règles d'engagement."}
+          </p>
+        </div>
+
+        {/* --- SECTION 3 : DURÉE --- */}
         <div className="space-y-6">
           <div className="bg-black rounded-[32px] p-6 text-center space-y-2 border border-white/5 shadow-inner">
             <div className="flex justify-center items-baseline gap-2">

@@ -8,7 +8,7 @@ import { SquadJoin } from './Squad/SquadJoin';
 import { SquadConfig } from './Squad/SquadConfig';
 import { SquadContract } from './Squad/SquadContract';
 import { SquadChat } from './Squad/SquadChat';
-import { squadService } from '../services/squadService';
+import { squadService, ChallengeMode } from '../services/squadService';
 
 interface SquadModeProps {
   onBack: () => void;
@@ -21,10 +21,10 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const [squadId, setSquadId] = useState<string | null>(localStorage.getItem('squad_id'));
   const [duration, setDuration] = useState(30);
   const [maxMembers, setMaxMembers] = useState(3);
+  const [challengeMode, setChallengeMode] = useState<ChallengeMode>('SYSTEM'); // Nouvel état
   const [inputCode, setInputCode] = useState("");
   const [error, setError] = useState("");
 
-  // États pour le chat dynamique et le statut d'équipe
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [currentMemberCount, setCurrentMemberCount] = useState(0);
@@ -39,11 +39,11 @@ export default function SquadMode({ onBack }: SquadModeProps) {
       const isSigned = localStorage.getItem(`squad_signed_${currentId}`) === 'true';
       setSquadId(currentId);
       
-      // Récupérer les infos de l'unité (maxMembers, duration)
       const data = squadService.getUnitData(currentId);
       if (data) {
         setMaxMembers(data.max);
         setDuration(data.duration);
+        if (data.challengeMode) setChallengeMode(data.challengeMode);
       }
       
       setStep(isSigned ? 'dashboard' : 'contract');
@@ -52,15 +52,23 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     }
   }, []);
 
-  // Intervalle pour rafraîchir le chat et le nombre de membres (Simulation Temps Réel)
+  // Intervalle + Écouteurs pour l'instantanéité
   useEffect(() => {
     if (step === 'dashboard' && squadId) {
-      const syncInterval = setInterval(() => {
+      const sync = () => {
         setMessages(squadService.getMessages(squadId));
         setCurrentMemberCount(squadService.getMemberCount(squadId));
-      }, 1500); 
+      };
 
-      return () => clearInterval(syncInterval);
+      const syncInterval = setInterval(sync, 1500);
+      window.addEventListener('squad_message_received', sync);
+      window.addEventListener('storage', sync); // Pour la synchro entre onglets
+
+      return () => {
+        clearInterval(syncInterval);
+        window.removeEventListener('squad_message_received', sync);
+        window.removeEventListener('storage', sync);
+      };
     }
   }, [step, squadId]);
 
@@ -80,24 +88,25 @@ export default function SquadMode({ onBack }: SquadModeProps) {
       
       const data = squadService.getUnitData(code);
       if (!data) {
-        setError("ÉCHEC D'INFILTRATION : CETTE UNITÉ N'EXISTE PAS.");
+        setError("ÉCHEC d'INFILTRATION : CETTE UNITÉ N'EXISTE PAS.");
         return;
       }
 
       setSquadId(code);
       setDuration(data.duration);
       setMaxMembers(data.max);
+      if (data.challengeMode) setChallengeMode(data.challengeMode);
       setStep('contract');
     }
   };
 
   const handleSign = () => {
     if (squadId) {
-      // Si l'unité n'existe pas encore au registre (création)
       if (!squadService.exists(squadId)) {
-        squadService.registerUnit(squadId, maxMembers, duration);
+        // Enregistrement avec le challengeMode choisi en config
+        squadService.registerUnit(squadId, maxMembers, duration, challengeMode);
       } else {
-        squadService.addMember(squadId); // Rejoindre l'existant
+        squadService.addMember(squadId);
       }
       
       squadService.saveToMySquads(squadId);
@@ -112,33 +121,36 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     e.preventDefault();
     if (!newMessage.trim() || !squadId) return;
     const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
-    const updated = squadService.sendMessage(squadId, newMessage, avatar.name || "Moi");
-    setMessages(updated);
+    // Le service déclenchera l'événement 'squad_message_received'
+    squadService.sendMessage(squadId, newMessage, avatar.name || "Moi");
     setNewMessage("");
   };
 
-  const handleAbandonSquad = () => {
-    if (window.confirm("VOULEZ-VOUS VRAIMENT QUITTER CETTE UNITÉ ?")) {
-      const remaining = squadService.removeFromMySquads(squadId!);
-      setMySquads(remaining);
-      localStorage.removeItem(`squad_signed_${squadId}`);
-      localStorage.removeItem('squad_id');
-      setSquadId(null);
-      setStep(remaining.length > 0 ? 'list' : 'join');
+  // --- RENDUS (uniquement les modifs dans renderCurrentStep) ---
+
+  const renderCurrentStep = () => {
+    switch (step) {
+      case 'list': return renderSquadList();
+      case 'join': return <SquadJoin inputCode={inputCode} setInputCode={setInputCode} onJoin={handleJoin} isLoading={false} error={error} onBack={onBack} />;
+      case 'config': return (
+        <SquadConfig 
+          duration={duration} 
+          setDuration={setDuration} 
+          maxMembers={maxMembers} 
+          setMaxMembers={setMaxMembers} 
+          challengeMode={challengeMode}
+          setChallengeMode={setChallengeMode}
+          onConfirm={() => setStep('contract')} 
+          onBack={() => setStep('join')} 
+        />
+      );
+      case 'contract': return <SquadContract squadId={squadId || "UNITÉ-ALPHA"} duration={duration} onSign={handleSign} onBack={() => setStep('join')} />;
+      case 'dashboard': return renderDashboard();
+      default: return null;
     }
   };
 
-  const copyToClipboard = () => {
-    if (squadId) {
-      navigator.clipboard.writeText(squadId);
-      alert("CODE COPIÉ !");
-    }
-  };
-
-  const shareWhatsApp = () => {
-    const text = `Rejoins mon unité sur SQUADMODE ! Code d'accès : ${squadId}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  };
+  // ... (Garder renderDashboard et renderSquadList tels quels, ils utilisent déjà les bons états)
 
   const renderDashboard = () => {
     const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
@@ -285,14 +297,14 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     );
   };
 
-  const renderCurrentStep = () => {
-    switch (step) {
-      case 'list': return renderSquadList();
-      case 'join': return <SquadJoin inputCode={inputCode} setInputCode={setInputCode} onJoin={handleJoin} isLoading={false} error={error} onBack={onBack} />;
-      case 'config': return <SquadConfig duration={duration} setDuration={setDuration} maxMembers={maxMembers} setMaxMembers={setMaxMembers} onConfirm={() => setStep('contract')} onBack={() => setStep('join')} />;
-      case 'contract': return <SquadContract squadId={squadId || "UNITÉ-ALPHA"} duration={duration} onSign={handleSign} onBack={() => setStep('join')} />;
-      case 'dashboard': return renderDashboard();
-      default: return null;
+  const handleAbandonSquad = () => {
+    if (window.confirm("VOULEZ-VOUS VRAIMENT QUITTER CETTE UNITÉ ?")) {
+      const remaining = squadService.removeFromMySquads(squadId!);
+      setMySquads(remaining);
+      localStorage.removeItem(`squad_signed_${squadId}`);
+      localStorage.removeItem('squad_id');
+      setSquadId(null);
+      setStep(remaining.length > 0 ? 'list' : 'join');
     }
   };
 

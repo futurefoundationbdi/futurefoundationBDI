@@ -244,30 +244,59 @@ export default function SquadMode({ onBack }: SquadModeProps) {
 
         <main className="flex-1 overflow-y-auto bg-black pb-24">
           {activeTab === 'routine' && (
-            <div className="p-6 space-y-6">
-               <h3 className="text-[10px] font-black uppercase text-white/20 tracking-[0.2em]">Protocole de Mission</h3>
-               {!isFull ? (
-                 <div className="bg-orange-500/5 border border-orange-500/20 p-8 rounded-[32px] space-y-4 text-center animate-in zoom-in duration-500">
-                    <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center mx-auto border border-orange-500/20">
-                      <Clock size={32} className="text-orange-500 animate-pulse" />
-                    </div>
-                    <p className="text-sm font-black uppercase italic text-orange-400">En attente des autres membres avant commencement du challenge</p>
-                    <p className="text-[10px] text-white/30 uppercase leading-relaxed font-bold">L'escouade doit être au complet pour activer les défis quotidiens.</p>
-                 </div>
-               ) : (
-                 <div className="bg-green-500/5 border border-green-500/20 p-8 rounded-[32px] space-y-4 text-center animate-in zoom-in duration-500">
-                    <div className="w-16 h-16 bg-green-500/10 rounded-3xl flex items-center justify-center mx-auto border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
-                      <CheckCircle2 size={32} className="text-green-500" />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-black uppercase italic text-green-400">Membres au complet !</p>
-                      <p className="text-[12px] font-black text-white uppercase italic tracking-tight">Le challenge commencera demain à 05h00</p>
-                    </div>
-                 </div>
-               )}
+  <div className="p-6 space-y-6">
+    <h3 className="text-[10px] font-black uppercase text-white/20 tracking-[0.2em]">Protocole de Mission</h3>
+    
+    {!isFull ? (
+      // --- ÉTAT : EN ATTENTE ---
+      <div className="bg-orange-500/5 border border-orange-500/20 p-8 rounded-[32px] space-y-4 text-center animate-in zoom-in duration-500">
+        <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center mx-auto border border-orange-500/20">
+          <Clock size={32} className="text-orange-500 animate-pulse" />
+        </div>
+        <p className="text-sm font-black uppercase italic text-orange-400">En attente des membres...</p>
+        <p className="text-[10px] text-white/30 uppercase leading-relaxed font-bold italic">L'unité doit être au complet pour activer le protocole {challengeMode}.</p>
+      </div>
+    ) : (
+      // --- ÉTAT : OPÉRATIONNEL ---
+      <div className="space-y-6 animate-in fade-in duration-700">
+        {challengeMode === 'SYSTEM' ? (
+          // Rendu Mode Système
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-green-500">
+              <Zap size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest">Défis Système Actifs</span>
             </div>
-          )}
-
+            {/* On boucle sur les défis de base pour l'instant */}
+            {SYSTEM_CHALLENGES.slice(0, 3).map((ch) => (
+              <div key={ch.id} className="bg-[#0A0A0A] border border-white/5 p-5 rounded-[24px] flex items-center justify-between group hover:border-purple-500/50 transition-all">
+                <div>
+                  <p className="text-[10px] font-black text-white group-hover:text-purple-400 transition-colors uppercase italic">{ch.label}</p>
+                  <p className="text-[14px] font-black text-purple-500">+{ch.points} PTS</p>
+                </div>
+                <div className="w-6 h-6 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-purple-500 transition-all">
+                  <div className="w-2 h-2 bg-transparent group-hover:bg-purple-500 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Rendu Mode Custom
+          <div className="space-y-4">
+             <div className="flex items-center gap-2 text-purple-500">
+              <Target size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest">Objectif de l'unité</span>
+            </div>
+            {/* Ici on appelle le composant selector si aucun défi n'est défini */}
+            <SquadCustomSelector onConfirm={(data) => {
+              squadService.sendMessage(squadId!, `Nouveau défi fixé : ${data.label} (+${data.points} PTS)`, "SYSTEM");
+              // Logique de sauvegarde du défi custom à ajouter dans squadService
+            }} />
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
           {activeTab === 'chat' && (
             <div className="h-full flex flex-col">
               <div className="p-4 bg-[#0A0A0A] border-b border-white/5 flex items-center gap-3">

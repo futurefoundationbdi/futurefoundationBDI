@@ -280,20 +280,43 @@ export default function SquadMode({ onBack }: SquadModeProps) {
             ))}
           </div>
         ) : (
-          // Rendu Mode Custom
-          <div className="space-y-4">
-             <div className="flex items-center gap-2 text-purple-500">
-              <Target size={14} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Objectif de l'unité</span>
-            </div>
-            {/* Ici on appelle le composant selector si aucun défi n'est défini */}
-            <SquadCustomSelector onConfirm={(data) => {
-              squadService.sendMessage(squadId!, `Nouveau défi fixé : ${data.label} (+${data.points} PTS)`, "SYSTEM");
-              // Logique de sauvegarde du défi custom à ajouter dans squadService
-            }} />
-          </div>
-        )}
+          // ... dans ton renderDashboard, partie challengeMode === 'CUSTOM'
+) : (
+  <div className="space-y-4">
+    <div className="flex items-center gap-2 text-purple-500">
+      <Target size={14} />
+      <span className="text-[10px] font-black uppercase tracking-widest">Objectif de l'unité</span>
+    </div>
+
+    {/* On vérifie s'il y a déjà un défi enregistré */}
+    {squadService.getSquadChallenge(squadId!) ? (
+      // SI UN DÉFI EXISTE : On l'affiche
+      <div className="bg-purple-500/10 border border-purple-500/30 p-6 rounded-[24px] animate-in zoom-in duration-300">
+        <p className="text-[10px] font-black text-purple-400 uppercase italic mb-1">Mission en cours</p>
+        <p className="text-lg font-black text-white uppercase italic leading-tight">
+          {squadService.getSquadChallenge(squadId!)?.label}
+        </p>
+        <div className="mt-4 flex justify-between items-center">
+          <span className="text-xl font-black text-purple-500">+{squadService.getSquadChallenge(squadId!)?.points} PTS</span>
+          <span className="text-[8px] font-bold text-white/20 uppercase">Fixé aujourd'hui</span>
+        </div>
       </div>
+    ) : (
+      // SI AUCUN DÉFI : On affiche le sélecteur
+      <SquadCustomSelector onConfirm={(data) => {
+        // 1. Sauvegarde dans le localStorage via le service
+        squadService.setSquadChallenge(squadId!, {
+          label: data.label,
+          points: data.points,
+          setAt: new Date().toISOString()
+        });
+
+        // 2. Notification automatique dans le chat
+        squadService.sendMessage(squadId!, `🚨 NOUVEL OBJECTIF : ${data.label} (+${data.points} PTS)`, "SYSTEM");
+        
+        // 3. Forcer la mise à jour de l'affichage
+        setActiveTab('routine'); 
+      }} />
     )}
   </div>
 )}

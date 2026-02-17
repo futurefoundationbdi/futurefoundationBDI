@@ -10,7 +10,7 @@ import { SquadJoin } from './Squad/SquadJoin';
 import { SquadConfig } from './Squad/SquadConfig';
 import { SquadContract } from './Squad/SquadContract';
 import { SquadChat } from './Squad/SquadChat';
-import { SquadCustomSelector } from './Squad/SquadCustomSelector'; // Assure-toi de l'import
+import { SquadCustomSelector } from './SquadCustomSelector';
 import { squadService, ChallengeMode } from '../services/squadService';
 import { SYSTEM_CHALLENGES } from '../config/squadChallenges';
 

@@ -13,6 +13,7 @@ import { SquadChat } from './Squad/SquadChat';
 import { SquadCustomSelector } from './SquadCustomSelector';
 import { squadService, ChallengeMode } from '../services/squadService';
 import { SYSTEM_CHALLENGES } from '../config/squadChallenges';
+import { useSquadTimer } from '../hooks/useSquadTimer'; // Import du nouveau hook
 
 interface SquadModeProps {
   onBack: () => void;
@@ -33,6 +34,17 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const [newMessage, setNewMessage] = useState("");
   const [currentMemberCount, setCurrentMemberCount] = useState(0);
   const [squadScore, setSquadScore] = useState(0);
+
+  // --- LOGIQUE DU TIMER ---
+  const isFull = currentMemberCount >= maxMembers;
+  const currentChallenge = squadId ? squadService.getSquadChallenge(squadId) : null;
+  
+  // Le timer s'active si Full + (Mode Système OU Mode Custom avec challenge validé)
+  const { timeLeft, isUrgent } = useSquadTimer(
+    squadId, 
+    isFull, 
+    challengeMode === 'SYSTEM' ? true : !!currentChallenge
+  );
 
   // --- INITIALISATION & SYNCHRONISATION ---
   useEffect(() => {
@@ -201,8 +213,6 @@ export default function SquadMode({ onBack }: SquadModeProps) {
 
   const renderDashboard = () => {
     const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
-    const isFull = currentMemberCount >= maxMembers;
-    const currentChallenge = squadId ? squadService.getSquadChallenge(squadId) : null;
 
     return (
       <div className="flex flex-col h-screen bg-black text-white max-w-md mx-auto overflow-hidden relative border-x border-white/5 font-sans">
@@ -237,25 +247,41 @@ export default function SquadMode({ onBack }: SquadModeProps) {
               </div>
             </div>
 
-            {/* SCORE GLOBAL SECTION */}
-            <div className="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/20 space-y-3">
-              <div className="flex justify-between items-end">
-                <div className="flex items-center gap-2">
-                  <Trophy size={14} className="text-purple-500" />
-                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest text-left">Progression de l'unité</span>
+            {/* SCORE & TIMER SECTION */}
+            <div className="space-y-4">
+              <div className="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/20 space-y-3">
+                <div className="flex justify-between items-end">
+                  <div className="flex items-center gap-2 text-purple-500">
+                    <Trophy size={14} />
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Score Unité</span>
+                  </div>
+                  <span className="text-lg font-black italic text-purple-500">{squadScore} PTS</span>
                 </div>
-                <span className="text-lg font-black italic text-purple-500">{squadScore} PTS</span>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-1000 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                    style={{ width: `${Math.min(100, (squadScore / 1000) * 100)}%` }}
+                  ></div>
+                </div>
               </div>
-              <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-1000 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                  style={{ width: `${Math.min(100, (squadScore / 1000) * 100)}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-[7px] font-bold text-white/20 uppercase">
-                 <span>Statut: {isFull ? "Opérationnel" : "Recrutement"}</span>
-                 <span>Palier: 1000</span>
-              </div>
+
+              {/* Affichage du Timer si actif */}
+              {timeLeft && (
+                <div className={`flex items-center justify-between px-4 py-3 rounded-2xl border animate-in slide-in-from-left duration-500 ${isUrgent ? 'border-red-500 bg-red-500/10' : 'border-white/10 bg-white/5'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${isUrgent ? 'bg-red-500/20' : 'bg-white/5'}`}>
+                      <Clock size={16} className={isUrgent ? 'text-red-500 animate-pulse' : 'text-white/60'} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white/30">Temps restant mission</span>
+                      <span className={`text-sm font-black italic font-mono ${isUrgent ? 'text-red-500' : 'text-white'}`}>
+                        {timeLeft === "EXPIRED" ? "DÉLAI DÉPASSÉ" : timeLeft}
+                      </span>
+                    </div>
+                  </div>
+                  {isUrgent && <span className="text-[8px] font-black text-red-500 animate-bounce">URGENT</span>}
+                </div>
+              )}
             </div>
           </header>
         )}
@@ -268,10 +294,10 @@ export default function SquadMode({ onBack }: SquadModeProps) {
               {!isFull ? (
                 <div className="bg-orange-500/5 border border-orange-500/20 p-8 rounded-[32px] space-y-4 text-center animate-in zoom-in duration-500">
                   <div className="w-16 h-16 bg-orange-500/10 rounded-3xl flex items-center justify-center mx-auto border border-orange-500/20">
-                    <Clock size={32} className="text-orange-500 animate-pulse" />
+                    <Users size={32} className="text-orange-500 animate-pulse" />
                   </div>
-                  <p className="text-sm font-black uppercase italic text-orange-400">En attente des membres...</p>
-                  <p className="text-[10px] text-white/30 uppercase leading-relaxed font-bold italic">L'unité doit être au complet pour activer le protocole {challengeMode}.</p>
+                  <p className="text-sm font-black uppercase italic text-orange-400">Recrutement en cours...</p>
+                  <p className="text-[10px] text-white/30 uppercase leading-relaxed font-bold italic">L'unité doit être au complet ({currentMemberCount}/{maxMembers}) pour démarrer le chrono.</p>
                 </div>
               ) : (
                 <div className="space-y-6 animate-in fade-in duration-700">

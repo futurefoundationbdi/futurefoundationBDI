@@ -32,6 +32,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [currentMemberCount, setCurrentMemberCount] = useState(0);
+  const [squadScore, setSquadScore] = useState(0);
 
   // --- INITIALISATION & SYNCHRONISATION ---
   useEffect(() => {
@@ -61,11 +62,12 @@ export default function SquadMode({ onBack }: SquadModeProps) {
       const sync = () => {
         setMessages(squadService.getMessages(squadId));
         setCurrentMemberCount(squadService.getMemberCount(squadId));
+        setSquadScore(squadService.getSquadScore(squadId));
       };
 
       const syncInterval = setInterval(sync, 1500);
       window.addEventListener('squad_message_received', sync);
-      window.addEventListener('squad_update', sync); // Écoute les mises à jour de défis
+      window.addEventListener('squad_update', sync);
       window.addEventListener('storage', sync);
 
       return () => {
@@ -127,6 +129,12 @@ export default function SquadMode({ onBack }: SquadModeProps) {
     const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
     squadService.sendMessage(squadId, newMessage, avatar.name || "Moi");
     setNewMessage("");
+  };
+
+  const handleCompleteMission = (points: number, label: string) => {
+    if (!squadId) return;
+    const avatar = JSON.parse(localStorage.getItem('future_library_avatar') || '{}');
+    squadService.completeChallenge(squadId, avatar.name || "Agent", points);
   };
 
   const handleAbandonSquad = () => {
@@ -229,18 +237,24 @@ export default function SquadMode({ onBack }: SquadModeProps) {
               </div>
             </div>
 
-            <div className="space-y-2 bg-black/40 p-3 rounded-2xl border border-white/5">
-              <div className="flex justify-between text-[8px] font-black uppercase tracking-widest">
-                <span className={isFull ? "text-green-500" : "text-orange-500"}>
-                  {isFull ? "● UNITÉ OPÉRATIONNELLE" : "○ SYNC. EN COURS..."}
-                </span>
-                <span className="text-white/40">{currentMemberCount} / {maxMembers} MEMBRES</span>
+            {/* SCORE GLOBAL SECTION */}
+            <div className="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/20 space-y-3">
+              <div className="flex justify-between items-end">
+                <div className="flex items-center gap-2">
+                  <Trophy size={14} className="text-purple-500" />
+                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest text-left">Progression de l'unité</span>
+                </div>
+                <span className="text-lg font-black italic text-purple-500">{squadScore} PTS</span>
               </div>
               <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
                 <div 
-                  className={`h-full transition-all duration-700 ${isFull ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]'}`} 
-                  style={{ width: `${(currentMemberCount / maxMembers) * 100}%` }}
+                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-1000 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                  style={{ width: `${Math.min(100, (squadScore / 1000) * 100)}%` }}
                 ></div>
+              </div>
+              <div className="flex justify-between text-[7px] font-bold text-white/20 uppercase">
+                 <span>Statut: {isFull ? "Opérationnel" : "Recrutement"}</span>
+                 <span>Palier: 1000</span>
               </div>
             </div>
           </header>
@@ -268,14 +282,22 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                         <span className="text-[10px] font-black uppercase tracking-widest">Défis Système Actifs</span>
                       </div>
                       {SYSTEM_CHALLENGES.slice(0, 3).map((ch) => (
-                        <div key={ch.id} className="bg-[#0A0A0A] border border-white/5 p-5 rounded-[24px] flex items-center justify-between group hover:border-purple-500/50 transition-all">
-                          <div>
-                            <p className="text-[10px] font-black text-white group-hover:text-purple-400 transition-colors uppercase italic">{ch.label}</p>
-                            <p className="text-[14px] font-black text-purple-500">+{ch.points} PTS</p>
+                        <div key={ch.id} className="bg-[#0A0A0A] border border-white/5 p-5 rounded-[24px] space-y-4 group hover:border-purple-500/50 transition-all">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[10px] font-black text-white group-hover:text-purple-400 transition-colors uppercase italic">{ch.label}</p>
+                              <p className="text-[14px] font-black text-purple-500">+{ch.points} PTS</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                               <CheckCircle2 size={20} className="text-white/10 group-hover:text-purple-500 transition-colors" />
+                            </div>
                           </div>
-                          <div className="w-6 h-6 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-purple-500 transition-all">
-                            <div className="w-2 h-2 bg-transparent group-hover:bg-purple-500 rounded-full" />
-                          </div>
+                          <button 
+                            onClick={() => handleCompleteMission(ch.points, ch.label)}
+                            className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase italic hover:bg-white hover:text-black transition-all"
+                          >
+                            Valider la mission
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -287,13 +309,22 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                       </div>
                       
                       {currentChallenge ? (
-                        <div className="bg-purple-500/10 border border-purple-500/30 p-6 rounded-[24px] animate-in zoom-in duration-300">
-                          <p className="text-[10px] font-black text-purple-400 uppercase italic mb-1">Mission en cours</p>
-                          <p className="text-lg font-black text-white uppercase italic leading-tight">{currentChallenge.label}</p>
-                          <div className="mt-4 flex justify-between items-center">
-                            <span className="text-xl font-black text-purple-500">+{currentChallenge.points} PTS</span>
-                            <span className="text-[8px] font-bold text-white/20 uppercase tracking-tighter">Activé</span>
+                        <div className="bg-purple-500/10 border border-purple-500/30 p-6 rounded-[24px] space-y-6 animate-in zoom-in duration-300">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-black text-purple-400 uppercase italic mb-1">Mission en cours</p>
+                              <p className="text-xl font-black text-white uppercase italic leading-tight">{currentChallenge.label}</p>
+                            </div>
+                            <span className="text-2xl font-black text-purple-500">+{currentChallenge.points}</span>
                           </div>
+                          
+                          <button 
+                            onClick={() => handleCompleteMission(currentChallenge.points, currentChallenge.label)}
+                            className="w-full py-4 bg-purple-600 hover:bg-green-500 text-white rounded-2xl font-black uppercase italic text-xs transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(168,85,247,0.3)]"
+                          >
+                            <CheckCircle2 size={18} />
+                            Mission accomplie
+                          </button>
                         </div>
                       ) : (
                         <SquadCustomSelector onConfirm={(data) => {
@@ -336,6 +367,10 @@ export default function SquadMode({ onBack }: SquadModeProps) {
                 <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${avatar.seed}`} alt="Profile" />
               </div>
               <h3 className="text-2xl font-black uppercase italic">{avatar.name}</h3>
+              <div className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+                <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Impact sur l'unité</p>
+                <p className="text-xl font-black text-white italic">CONTRIBUTEUR ACTIF</p>
+              </div>
               <button onClick={handleAbandonSquad} className="w-full py-4 bg-red-950/20 border border-red-900/40 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all">
                 Démanteler la liaison
               </button>

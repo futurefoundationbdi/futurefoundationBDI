@@ -1,13 +1,12 @@
 // src/hooks/useSquadTimer.ts
 import { useState, useEffect } from 'react';
 
-export const useSquadTimer = (squadId: string | null, isFull: boolean, hasChallenge: boolean) => {
+export const useSquadTimer = (isActive: boolean) => {
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [isUrgent, setIsUrgent] = useState(false);
 
   useEffect(() => {
-    // La logique : On ne lance le chrono QUE si l'unité est pleine ET qu'un défi existe
-    if (!squadId || !isFull || !hasChallenge) {
+    if (!isActive) {
       setTimeLeft(null);
       return;
     }
@@ -20,7 +19,7 @@ export const useSquadTimer = (squadId: string | null, isFull: boolean, hasChalle
       const diff = midnight.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeLeft("EXPIRED");
+        setTimeLeft("00:00:00");
         return;
       }
 
@@ -28,7 +27,7 @@ export const useSquadTimer = (squadId: string | null, isFull: boolean, hasChalle
       const m = Math.floor((diff / (1000 * 60)) % 60);
       const s = Math.floor((diff / 1000) % 60);
 
-      setIsUrgent(h < 1); // Alerte rouge si moins d'une heure
+      setIsUrgent(h < 1); // Alerte si moins d'une heure
       
       setTimeLeft(
         `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
@@ -39,7 +38,7 @@ export const useSquadTimer = (squadId: string | null, isFull: boolean, hasChalle
     calculateTime();
 
     return () => clearInterval(timer);
-  }, [squadId, isFull, hasChallenge]);
+  }, [isActive]);
 
   return { timeLeft, isUrgent };
 };

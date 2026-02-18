@@ -22,7 +22,7 @@ const PageLoader = () => (
 );
 
 const App = () => {
-  // -- LOGIQUE MOBILE : Gestion du bouton "Retour" sur Android --
+  // --- LOGIQUE MOBILE : Gestion du bouton "Retour" sur Android ---
   useEffect(() => {
     // On écoute le bouton retour physique du téléphone
     const backListener = CapApp.addListener('backButton', ({ canGoBack }) => {

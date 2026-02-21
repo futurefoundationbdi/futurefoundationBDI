@@ -29,7 +29,7 @@ export default function SquadMode({ onBack }: SquadModeProps) {
   const [challengeMode, setChallengeMode] = useState<ChallengeMode>('SYSTEM');
   const [inputCode, setInputCode] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // État pour le chargement Supabase
+  const [isLoading, setIsLoading] = useState(false); // État pour les chargement Supabase
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");

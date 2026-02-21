@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Visionnaire Leap - The Future Foundation</title>
+    <style>
+        body { margin: 0; background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; touch-action: none; }
+        #game-ui { position: absolute; width: 100%; text-align: center; top: 20px; z-index: 10; pointer-events: none; }
+        #impact-index { font-size: 32px; font-weight: 900; color: #f1c40f; }
+        #label { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+        canvas { display: block; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 20px; text-align: center; }
+        .btn-play { background: #f1c40f; color: #0f172a; border: none; padding: 18px 45px; font-size: 22px; font-weight: bold; border-radius: 50px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="game-ui">
+        <div id="label">Indice d'Impact</div>
+        <div id="impact-index">0</div>
+    </div>
+
+    <div id="start-screen" class="overlay">
+        <h1 style="font-size: 36px; color: #f1c40f;">VISIONNAIRE LEAP</h1>
+        <p style="max-width: 400px; line-height: 1.6;">Sautez par-dessus les <b>Dettes</b>. Collectez la <b>Connaissance</b>.</p>
+        <button class="btn-play" onclick="startGame()">COMMENCER L'ASCENSION</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const impactEl = document.getElementById('impact-index');
+        
+        let gameActive = false;
+        let score = 0;
+        let speed = 6;
+        let frame = 0;
+        let groundY;
+        
+        // Configuration du Héros (Jeune Visionnaire) 
+        let player = {
+            x: 80,
+            y: 0,
+            width: 35,
+            height: 55,
+            vY: 0,
+            jumpForce: -16,
+            gravity: 0.8,
+            isGrounded: false,
+            isInvincible: false
+        };
+
+        let obstacles = [];
+        let bonuses = [];
+        const k = 0.6; // Facteur d'accélération logarithmique [cite: 68]
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            groundY = canvas.height * 0.8; // Création du SOL à 80% de l'écran
+            if (!gameActive) player.y = groundY - player.height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            score = 0;
+            speed = 6;
+            frame = 0;
+            obstacles = [];
+            bonuses = [];
+            player.vY = 0;
+            player.y = groundY - player.height;
+            gameActive = true;
+            loop();
+        }
+
+        // Contrôle unique : Sauter [cite: 66]
+        function jump() {
+            if (gameActive && player.isGrounded) {
+                player.vY = player.jumpForce;
+                player.isGrounded = false;
+            }
+        }
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+
+        function loop() {
+            if (!gameActive) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Dessiner le SOL (La Route)
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+
+            // 2. Physique du Héros (Gravité + Collision Sol)
+            player.vY += player.gravity;
+            player.y += player.vY;
+
+            if (player.y > groundY - player.height) {
+                player.y = groundY - player.height;
+                player.vY = 0;
+                player.isGrounded = true;
+            }
+
+            // 3. Vitesse Logarithmique : V(t) = Vi + k * ln(t+1) [cite: 67, 68]
+            speed = 6 + k * Math.log(frame / 60 + 1);
+
+            // 4. Dessin du Héros (Silhouette Dynamique) 
+            ctx.fillStyle = player.isInvincible ? '#3498db' : '#f1c40f';
+            // Tête
+            ctx.beginPath();
+            ctx.arc(player.x + player.width/2, player.y + 10, 8, 0, Math.PI*2);
+            ctx.fill();
+            // Corps
+            ctx.fillRect(player.x + 5, player.y + 18, player.width - 10, 25);
+            // Jambes (simplifiées)
+            ctx.fillRect(player.x + 8, player.y + 43, 6, 12);
+            ctx.fillRect(player.x + player.width - 14, player.y + 43, 6, 12);
+
+            // 5. Gestion des Obstacles (Dettes/Ignorance posées sur le sol) 
+            if (frame % 100 === 0) {
+                const types = ["DETTE", "IGNORANCE"];
+                obstacles.push({
+                    x: canvas.width,
+                    y: groundY - 40,
+                    text: types[Math.floor(Math.random() * types.length)]
+                });
+            }
+
+            obstacles.forEach((obs, i) => {
+                obs.x -= speed;
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(obs.x, obs.y, 80, 40);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 10px Arial';
+                ctx.fillText(obs.text, obs.x + 5, obs.y + 25);
+
+                // Collision Obstacle
+                if (!player.isInvincible && player.x < obs.x + 80 && player.x + player.width > obs.x && player.y + player.height > obs.y) {
+                    gameOver();
+                }
+            });
+
+            // 6. Gestion des Bonus (Connaissance/Mentor) [cite: 51, 76]
+            if (frame % 250 === 0) {
+                bonuses.push({ 
+                    x: canvas.width, 
+                    y: groundY - 100 - Math.random() * 50, 
+                    type: Math.random() > 0.8 ? 'MENTOR' : 'LIVRE' 
+                });
+            }
+
+            bonuses.forEach((b, i) => {
+                b.x -= speed;
+                ctx.fillStyle = b.type === 'MENTOR' ? '#3498db' : '#2ecc71';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 12, 0, Math.PI*2);
+                ctx.fill();
+
+                // Collision Bonus
+                if (player.x < b.x + 12 && player.x + player.width > b.x - 12 && player.y < b.y + 12 && player.y + player.height > b.y - 12) {
+                    if(b.type === 'MENTOR') activateMentor();
+                    else score += 100;
+                    bonuses.splice(i, 1);
+                }
+            });
+
+            // Nettoyage
+            obstacles = obstacles.filter(o => o.x > -100);
+            bonuses = bonuses.filter(b => b.x > -50);
+
+            score += 0.1;
+            impactEl.innerText = Math.floor(score);
+            frame++;
+            requestAnimationFrame(loop);
+        }
+
+        function activateMentor() {
+            player.isInvincible = true;
+            setTimeout(() => { player.isInvincible = false; }, 5000);
+        }
+
+        function gameOver() {
+            gameActive = false;
+            const screen = document.getElementById('start-screen');
+            screen.style.display = 'flex';
+            screen.innerHTML = `
+                <h1 style="color:#e74c3c">IMPACT : ${Math.floor(score)}</h1>
+                <p>L'ignorance a freiné votre ascension. Formez-vous !</p>
+                <button class="btn-play" onclick="startGame()">RÉESSAYER</button>
+            `;
+        }
+    </script>
+</body>
+</html>

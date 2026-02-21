@@ -1,35 +1,33 @@
+// src/App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
-import { App as CapApp } from '@capacitor/app'; // Import pour gérer l'app native
-import Chatbot from "./components/Chatbot";
+import { Suspense, useEffect } from "react";
+import { App as CapApp } from '@capacitor/app'; 
 
-import AvatarPage from "./pages/AvatarPage"; 
-
-const Index = lazy(() => import("./pages/Index"));
-const Success = lazy(() => import("./pages/Success"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// IMPORT DE TON NOUVEAU COEUR ISOLÉ
+import AppMobile from "./AppMobile"; 
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
   <div className="h-screen w-screen flex items-center justify-center bg-[#050505]">
-    <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+    <div className="w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
   </div>
 );
 
 const App = () => {
-  // --- LOGIQUE MOBILE : Gestion du bouton "Retour" sur Android ---
+  // Gestion du bouton "Retour" physique Android
   useEffect(() => {
-    // On écoute le bouton retour physique du téléphone
     const backListener = CapApp.addListener('backButton', ({ canGoBack }) => {
-      if (!canGoBack) {
-        CapApp.exitApp(); // Quitter l'app si on est à la racine
+      // Dans l'app isolée, si on est sur le Hall, on quitte l'app
+      if (!canGoBack || window.location.pathname === "/") {
+        CapApp.exitApp();
       } else {
-        window.history.back(); // Revenir à la page précédente dans React Router
+        window.history.back();
       }
     });
 
@@ -46,13 +44,11 @@ const App = () => {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/success" element={<Success />} />
-              <Route path="/mon-avatar" element={<AvatarPage />} />
+              {/* LA ROUTE PRINCIPALE DE L'APK EST MAINTENANT APPMOBILE */}
+              <Route path="/" element={<AppMobile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          <Chatbot />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

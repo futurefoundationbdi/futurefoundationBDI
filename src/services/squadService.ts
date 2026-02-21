@@ -1,5 +1,5 @@
 // src/services/squadService.ts
-import { supabase } from './supabaseClient'; // Vérifie bien le nom du fichier importé
+import { supabase } from "../lib/supabaseClient";
 
 const MY_SQUADS_KEY = 'all_my_squads';
 
